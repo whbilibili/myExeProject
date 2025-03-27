@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅行指南</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            border: 12px solid #333;
+            border-radius: 40px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            margin: 20px;
+            display: inline-block;
+            background: #f8f9fa;
+        }
+        .screen-container {
+            display: flex;
+            width: 200%;
+            height: 100%;
+            transition: transform 0.3s ease;
+        }
+        .page {
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .card {
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.85);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .active-tab {
+            border-bottom: 3px solid #3b82f6;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-100">
+    <!-- 首页 -->
+    <div class="phone-frame">
+        <div class="screen-container" id="screenContainer">
+            <!-- 首页 -->
+            <div class="page p-4 gradient-bg">
+                <header class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold text-gray-800">探索世界</h1>
+                    <div class="flex space-x-4">
+                        <i class="fas fa-search text-gray-700 text-xl"></i>
+                        <i class="fas fa-bell text-gray-700 text-xl"></i>
+                    </div>
+                </header>
+
+                <div class="flex space-x-4 mb-6 overflow-x-auto pb-2">
+                    <span class="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-800 shadow-sm">全部</span>
+                    <span class="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-800 shadow-sm">热门</span>
+                    <span class="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-800 shadow-sm">亚洲</span>
+                    <span class="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-800 shadow-sm">欧洲</span>
+                    <span class="px-4 py-2 bg-white rounded-full text-sm font-medium text-gray-800 shadow-sm">美洲</span>
+                </div>
+
+                <div class="mb-6">
+                    <div class="card p-4 mb-4">
+                        <div class="relative h-48 rounded-xl overflow-hidden mb-3">
+                            <img src="https://source.unsplash.com/random/600x400/?japan" class="w-full h-full object-cover">
+                            <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent">
+                                <h3 class="text-white font-bold text-lg">东京深度游</h3>
+                                <p class="text-gray-200 text-sm">5天4夜经典路线</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400 mr-1"></i>
+                                <span class="text-gray-700 font-medium">4.8</span>
+                            </div>
+                            <div class="text-gray-500 text-sm">3.2k收藏</div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 mb-4">
+                        <div class="relative h-48 rounded-xl overflow-hidden mb-3">
+                            <img src="https://source.unsplash.com/random/600x400/?paris" class="w-full h-full object-cover">
+                            <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent">
+                                <h3 class="text-white font-bold text-lg">巴黎浪漫之旅</h3>
+                                <p class="text-gray-200 text-sm">7天6夜蜜月路线</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400 mr-1"></i>
+                                <span class="text-gray-700 font-medium">4.9</span>
+                            </div>
+                            <div class="text-gray-500 text-sm">5.6k收藏</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="absolute bottom-0 left-0 right-0 bg-white p-3 flex justify-around shadow-md">
+                    <div class="flex flex-col items-center active-tab">
+                        <i class="fas fa-home text-blue-500 text-xl"></i>
+                        <span class="text-xs text-blue-500 mt-1">首页</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-compass text-gray-500 text-xl"></i>
+                        <span class="text-xs text-gray-500 mt-1">发现</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-plus-circle text-gray-500 text-xl"></i>
+                        <span class="text-xs text-gray-500 mt-1">发布</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-heart text-gray-500 text-xl"></i>
+                        <span class="text-xs text-gray-500 mt-1">收藏</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-user text-gray-500 text-xl"></i>
+                        <span class="text-xs text-gray-500 mt-1">我的</span>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- 详情页 -->
+            <div class="page bg-white">
+                <div class="relative h-64 overflow-hidden">
+                    <img src="https://source.unsplash.com/random/600x400/?japan" class="w-full h-full object-cover">
+                    <button class="absolute top-4 left-4 bg-white bg-opacity-80 rounded-full w-10 h-10 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-gray-800"></i>
+                    </button>
+                    <button class="absolute top-4 right-4 bg-white bg-opacity-80 rounded-full w-10 h-10 flex items-center justify-center">
+                        <i class="fas fa-heart text-red-500"></i>
+                    </button>
+                </div>
+
+                <div class="p-5">
+                    <h1 class="text-2xl font-bold text-gray-800 mb-2">东京深度游</h1>
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-star text-yellow-400 mr-1"></i>
+                        <span class="text-gray-700 font-medium mr-3">4.8</span>
+                        <i class="fas fa-user-friends text-gray-500 mr-1"></i>
+                        <span class="text-gray-500">3.2k人收藏</span>
+                    </div>
+
+                    <div class="flex space-x-3 mb-6">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">5天4夜</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">经典路线</span>
+                        <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">城市游</span>
+                    </div>
+
+                    <div class="mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-3">行程亮点</h2>
+                        <p class="text-gray-600 leading-relaxed">
+                            探索东京传统与现代的完美融合，从浅草寺的古老庙宇到涩谷的繁华十字路口。品尝正宗寿司，体验温泉文化，登上晴空塔俯瞰城市全景。
+                        </p>
+                    </div>
+
+                    <div class="mb-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-3">每日行程</h2>
+                        <div class="space-y-4">
+                            <div class="flex">
+                                <div class="flex flex-col items-center mr-4">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">1</div>
+                                    <div class="w-px h-full bg-gray-300"></div>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-800">浅草寺 & 晴空塔</h3>
+                                    <p class="text-gray-500 text-sm">体验传统日本文化，登高望远</p>
+                                </div>
+                            </div>
+                            <div class="flex">
+                                <div class="flex flex-col items-center mr-4">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">2</div>
+                                    <div class="w-px h-full bg-gray-300"></div>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-800">涩谷 & 原宿</h3>
+                                    <p class="text-gray-500 text-sm">感受东京潮流文化</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="w-full py-3 bg-blue-500 text-white rounded-lg font-medium shadow-md hover:bg-blue-600 transition">
+                        收藏此攻略
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 点击首页的卡片切换到详情页
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.getElementById('screenContainer').style.transform = 'translateX(-50%)';
+            });
+        });
+    </script>
+</body>
+</html>
