@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt 库 - Prompt 可视化管理工具</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="../css/styles.css" rel="stylesheet">
+  <style>
+    .group-sidebar {
+      width: 250px;
+      height: calc(100vh - 2rem);
+      position: sticky;
+      top: 1rem;
+      overflow-y: auto;
+    }
+    
+    .main-content {
+      width: calc(100% - 270px);
+    }
+    
+    .group-item {
+      transition: all 0.2s ease;
+    }
+    
+    .group-item:hover {
+      background-color: #f3f4f6;
+    }
+    
+    .group-item.active {
+      background-color: #e0e7ff;
+      border-left: 3px solid #4f46e5;
+    }
+    
+    .group-count {
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .drag-over {
+      background-color: #e0e7ff;
+      border: 2px dashed #4f46e5;
+    }
+    
+    @media (max-width: 1024px) {
+      .group-sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        margin-bottom: 1rem;
+      }
+      
+      .main-content {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="p-6 fade-in">
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Prompt 库</h1>
+          <p class="text-gray-600">管理和组织您的所有 Prompt</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="relative">
+            <input type="text" id="search-input" placeholder="搜索 Prompt..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+          </div>
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
+            <i class="fas fa-plus mr-2"></i> 新建 Prompt
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <div class="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+      <!-- 分组侧边栏 -->
+      <div class="group-sidebar bg-white rounded-lg shadow p-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-gray-800">分组</h2>
+          <button id="create-group-btn" class="text-indigo-600 hover:text-indigo-800">
+            <i class="fas fa-plus-circle"></i>
+          </button>
+        </div>
+        
+        <!-- 分组列表 -->
+        <div class="space-y-1" id="group-list">
+          <!-- 所有Prompt -->
+          <div class="group-item active px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="all">
+            <div class="flex items-center">
+              <i class="fas fa-layer-group text-indigo-600 mr-3"></i>
+              <span>所有 Prompt</span>
+            </div>
+            <span class="group-count bg-indigo-100 text-indigo-800 px-2">42</span>
+          </div>
+          
+          <!-- 收藏 -->
+          <div class="group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="favorites">
+            <div class="flex items-center">
+              <i class="fas fa-star text-yellow-500 mr-3"></i>
+              <span>收藏</span>
+            </div>
+            <span class="group-count bg-yellow-100 text-yellow-800 px-2">8</span>
+          </div>
+          
+          <!-- 最近使用 -->
+          <div class="group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="recent">
+            <div class="flex items-center">
+              <i class="fas fa-history text-blue-600 mr-3"></i>
+              <span>最近使用</span>
+            </div>
+            <span class="group-count bg-blue-100 text-blue-800 px-2">15</span>
+          </div>
+          
+          <div class="border-t border-gray-200 my-3"></div>
+          
+          <!-- 自定义分组 -->
+          <div class="group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="writing">
+            <div class="flex items-center">
+              <i class="fas fa-pen-fancy text-indigo-600 mr-3"></i>
+              <span>写作助手</span>
+            </div>
+            <div class="flex items-center">
+              <span class="group-count bg-gray-100 text-gray-800 px-2 mr-2">5</span>
+              <div class="relative">
+                <button class="text-gray-400 hover:text-gray-600 group-edit-btn">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1 group-dropdown">
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">重命名</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">删除分组</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="coding">
+            <div class="flex items-center">
+              <i class="fas fa-code text-blue-600 mr-3"></i>
+              <span>编程工具</span>
+            </div>
+            <div class="flex items-center">
+              <span class="group-count bg-gray-100 text-gray-800 px-2 mr-2">3</span>
+              <div class="relative">
+                <button class="text-gray-400 hover:text-gray-600 group-edit-btn">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1 group-dropdown">
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">重命名</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">删除分组</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="marketing">
+            <div class="flex items-center">
+              <i class="fas fa-bullhorn text-green-600 mr-3"></i>
+              <span>营销策略</span>
+            </div>
+            <div class="flex items-center">
+              <span class="group-count bg-gray-100 text-gray-800 px-2 mr-2">4</span>
+              <div class="relative">
+                <button class="text-gray-400 hover:text-gray-600 group-edit-btn">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1 group-dropdown">
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">重命名</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">删除分组</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 主内容区域 -->
+      <div class="main-content">
+        <!-- Filters and Sort -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+          <div class="flex flex-wrap items-center justify-between">
+            <div class="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
+              <span class="text-sm font-medium text-gray-700">筛选:</span>
+              <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="writing">写作</button>
+              <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="code">代码</button>
+              <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="data">数据</button>
+              <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="marketing">营销</button>
+              <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="seo">SEO</button>
+              <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="creative">创意</button>
+              <button class="px-3 py-1 border border-gray-300 text-gray-700 rounded-full text-sm hover:bg-gray-100">
+                <i class="fas fa-plus-circle mr-1"></i> 更多
+              </button>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-sm font-medium text-gray-700">排序:</span>
+              <select class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option>最近更新</option>
+                <option>使用频率</option>
+                <option>字母顺序</option>
+                <option>创建日期</option>
+              </select>
+              <button class="p-1 border border-gray-300 rounded text-gray-500 hover:bg-gray-100">
+                <i class="fas fa-th-large"></i>
+              </button>
+              <button class="p-1 border border-gray-300 rounded text-gray-500 hover:bg-gray-100">
+                <i class="fas fa-list"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Prompt Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <!-- Prompt Card 1 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="writing,content,marketing" draggable="true">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <div class="bg-indigo-100 p-2 rounded-full">
+                  <i class="fas fa-pen-fancy text-indigo-600"></i>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-gray-400 hover:text-yellow-500">
+                    <i class="fas fa-star"></i>
+                  </button>
+                  <div class="relative">
+                    <button class="text-gray-400 hover:text-gray-600" id="dropdown-trigger-1">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1" id="dropdown-menu-1">
+                      <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">编辑</a>
+                      <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">复制</a>
+                      <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">共享</a>
+                      <div class="relative group">
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex justify-between items-center">
+                          <span>添加到分组</span>
+                          <i class="fas fa-chevron-right text-xs"></i>
+                        </a>
+                        <div class="hidden absolute left-full top-0 w-48 bg-white rounded-md shadow-lg z-20 py-1 group-hover:block">
+                          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-group-id="writing">写作助手</a>
+                          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-group-id="coding">编程工具</a>
+                          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-group-id="marketing">营销策略</a>
+                          <div class="border-t border-gray-200 my-1"></div>
+                          <a href="#" class="block px-4 py-2 text-sm text-indigo-600 hover:bg-gray-100">
+                            <i class="fas fa-plus-circle mr-1"></i> 创建新分组
+                          </a>
+                        </div>
+                      </div>
+                      <div class="border-t border-gray-200 my-1"></div>
+                      <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">删除</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">AI 写作助手</h3>
+              <p class="text-sm text-gray-600 mb-3 prompt-description">帮助快速生成高质量的文章、博客和社交媒体内容</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="tag">写作</span>
+                <span class="tag">内容</span>
+                <span class="tag">营销</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-gray-500">
+                <span>使用次数: 42</span>
+                <span>2天前更新</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Prompt Card 2 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="code,development,programming" draggable="true">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <div class="bg-blue-100 p-2 rounded-full">
+                  <i class="fas fa-code text-blue-600"></i>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-yellow-500">
+                    <i class="fas fa-star"></i>
+                  </button>
+                  <div class="relative">
+                    <button class="text-gray-400 hover:text-gray-600">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1">
+                      <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">编辑</a>
+                      <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">复制</a>
+                      <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">共享</a>
+                      <div class="relative group">
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex justify-between items-center">
+                          <span>添加到分组</span>
+                          <i class="fas fa-chevron-right text-xs"></i>
+                        </a>
+                        <div class="hidden absolute left-full top-0 w-48 bg-white rounded-md shadow-lg z-20 py-1 group-hover:block">
+                          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-group-id="writing">写作助手</a>
+                          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-group-id="coding">编程工具</a>
+                          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" data-group-id="marketing">营销策略</a>
+                          <div class="border-t border-gray-200 my-1"></div>
+                          <a href="#" class="block px-4 py-2 text-sm text-indigo-600 hover:bg-gray-100">
+                            <i class="fas fa-plus-circle mr-1"></i> 创建新分组
+                          </a>
+                        </div>
+                      </div>
+                      <div class="border-t border-gray-200 my-1"></div>
+                      <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">删除</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">代码生成器</h3>
+              <p class="text-sm text-gray-600 mb-3 prompt-description">根据需求描述生成高质量的代码片段和函数</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="tag">代码</span>
+                <span class="tag">开发</span>
+                <span class="tag">编程</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-gray-500">
+                <span>使用次数: 38</span>
+                <span>1周前更新</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 其他Prompt卡片保持不变 -->
+          <!-- ... 其他Prompt卡片 ... -->
+          
+          <!-- Prompt Card 3 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="data,analysis,report" draggable="true">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <div class="bg-green-100 p-2 rounded-full">
+                  <i class="fas fa-chart-pie text-green-600"></i>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-gray-400 hover:text-yellow-500">
+                    <i class="fas fa-star"></i>
+                  </button>
+                  <button class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">数据分析报告生成器</h3>
+              <p class="text-sm text-gray-600 mb-3 prompt-description">将原始数据转化为有洞察力的分析报告</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="tag">数据</span>
+                <span class="tag">分析</span>
+                <span class="tag">报告</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-gray-500">
+                <span>使用次数: 27</span>
+                <span>3天前更新</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Prompt Card 4 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="seo,marketing,content" draggable="true">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <div class="bg-purple-100 p-2 rounded-full">
+                  <i class="fas fa-search text-purple-600"></i>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-gray-400 hover:text-yellow-500">
+                    <i class="fas fa-star"></i>
+                  </button>
+                  <button class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">SEO 优化助手</h3>
+              <p class="text-sm text-gray-600 mb-3 prompt-description">优化内容以提高搜索引擎排名和可见性</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="tag">SEO</span>
+                <span class="tag">营销</span>
+                <span class="tag">内容</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-gray-500">
+                <span>使用次数: 19</span>
+                <span>今天更新</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Prompt Card 5 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="creative,writing,content" draggable="true">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <div class="bg-pink-100 p-2 rounded-full">
+                  <i class="fas fa-lightbulb text-pink-600"></i>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-gray-400 hover:text-yellow-500">
+                    <i class="fas fa-star"></i>
+                  </button>
+                  <button class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">创意故事生成器</h3>
+              <p class="text-sm text-gray-600 mb-3 prompt-description">根据提供的主题和元素生成引人入胜的故事</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="tag">创意</span>
+                <span class="tag">写作</span>
+                <span class="tag">内容</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-gray-500">
+                <span>使用次数: 23</span>
+                <span>5天前更新</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Prompt Card 6 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="code,development,documentation" draggable="true">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <div class="bg-blue-100 p-2 rounded-full">
+                  <i class="fas fa-file-code text-blue-600"></i>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-gray-400 hover:text-yellow-500">
+                    <i class="fas fa-star"></i>
+                  </button>
+                  <button class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">代码注释生成器</h3>
+              <p class="text-sm text-gray-600 mb-3 prompt-description">为代码生成清晰、详细的注释和文档</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="tag">代码</span>
+                <span class="tag">开发</span>
+                <span class="tag">文档</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-gray-500">
+                <span>使用次数: 31</span>
+                <span>2天前更新</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="flex justify-center">
+          <nav class="inline-flex rounded-md shadow">
+            <a href="#" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+            <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-indigo-600 hover:bg-gray-50">1</a>
+            <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">2</a>
+            <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">3</a>
+            <span class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-500">...</span>
+            <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">8</a>
+            <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">9</a>
+            <a href="#" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 创建分组弹窗 -->
+  <div id="create-group-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">创建新分组</h3>
+        <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="mb-4">
+        <label for="group-name" class="block text-sm font-medium text-gray-700 mb-2">分组名称</label>
+        <input type="text" id="group-name" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="输入分组名称">
+      </div>
+      <div class="mb-4">
+        <label for="group-icon" class="block text-sm font-medium text-gray-700 mb-2">选择图标</label>
+        <div class="grid grid-cols-6 gap-2">
+          <button class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-center icon-option" data-icon="fa-pen-fancy">
+            <i class="fas fa-pen-fancy text-indigo-600"></i>
+          </button>
+          <button class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-center icon-option" data-icon="fa-code">
+            <i class="fas fa-code text-blue-600"></i>
+          </button>
+          <button class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-center icon-option" data-icon="fa-chart-pie">
+            <i class="fas fa-chart-pie text-green-600"></i>
+          </button>
+          <button class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-center icon-option" data-icon="fa-lightbulb">
+            <i class="fas fa-lightbulb text-yellow-600"></i>
+          </button>
+          <button class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-center icon-option" data-icon="fa-bullhorn">
+            <i class="fas fa-bullhorn text-red-600"></i>
+          </button>
+          <button class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-center icon-option" data-icon="fa-brain">
+            <i class="fas fa-brain text-purple-600"></i>
+          </button>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-3">
+        <button id="cancel-group-btn" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">取消</button>
+        <button id="save-group-btn" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">保存</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- JavaScript -->
+  <script src="../js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 下拉菜单切换
+      const dropdownTriggers = document.querySelectorAll('.fa-ellipsis-v');
+      
+      dropdownTriggers.forEach((trigger, index) => {
+        trigger.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const dropdown = this.closest('.relative').querySelector('div[class*="hidden"]');
+          
+          // 关闭所有其他下拉菜单
+          document.querySelectorAll('div[class*="hidden"]:not(.group-dropdown)').forEach(menu => {
+            if (menu !== dropdown && !menu.classList.contains('hidden')) {
+              menu.classList.add('hidden');
+            }
+          });
+          
+          dropdown.classList.toggle('hidden');
+        });
+      });
+      
+      // 分组编辑按钮
+      const groupEditBtns = document.querySelectorAll('.group-edit-btn');
+      
+      groupEditBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const dropdown = this.nextElementSibling;
+          
+          // 关闭所有其他下拉菜单
+          document.querySelectorAll('.group-dropdown').forEach(menu => {
+            if (menu !== dropdown && !menu.classList.contains('hidden')) {
+              menu.classList.add('hidden');
+            }
+          });
+          
+          dropdown.classList.toggle('hidden');
+        });
+      });
+      
+      // 点击其他地方关闭下拉菜单
+      document.addEventListener('click', function() {
+        document.querySelectorAll('div[class*="hidden"]').forEach(menu => {
+          if (!menu.classList.contains('hidden')) {
+            menu.classList.add('hidden');
+          }
+        });
+      });
+      
+      // 分组点击事件
+      const groupItems = document.querySelectorAll('.group-item');
+      
+      groupItems.forEach(item => {
+        item.addEventListener('click', function() {
+          // 移除所有活跃状态
+          groupItems.forEach(i => i.classList.remove('active'));
+          
+          // 添加活跃状态
+          this.classList.add('active');
+          
+          // 这里可以添加过滤Prompt的逻辑
+          const groupId = this.getAttribute('data-group-id');
+          console.log('Selected group:', groupId);
+          
+          // 示例：如果选择了特定分组，可以过滤显示相应的Prompt卡片
+          // 实际实现中，可能需要从后端获取该分组下的Prompt
+        });
+      });
+      
+      // 创建分组弹窗
+      const createGroupBtn = document.getElementById('create-group-btn');
+      const createGroupModal = document.getElementById('create-group-modal');
+      const closeModalBtn = document.getElementById('close-modal-btn');
+      const cancelGroupBtn = document.getElementById('cancel-group-btn');
+      const saveGroupBtn = document.getElementById('save-group-btn');
+      const iconOptions = document.querySelectorAll('.icon-option');
+      
+      let selectedIcon = 'fa-pen-fancy';
+      
+      createGroupBtn.addEventListener('click', function() {
+        createGroupModal.classList.remove('hidden');
+      });
+      
+      function closeModal() {
+        createGroupModal.classList.add('hidden');
+        document.getElementById('group-name').value = '';
+        iconOptions.forEach(option => option.classList.remove('ring-2', 'ring-indigo-500'));
+      }
+      
+      closeModalBtn.addEventListener('click', closeModal);
+      cancelGroupBtn.addEventListener('click', closeModal);
+      
+      // 选择图标
+      iconOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          iconOptions.forEach(opt => opt.classList.remove('ring-2', 'ring-indigo-500'));
+          this.classList.add('ring-2', 'ring-indigo-500');
+          selectedIcon = this.getAttribute('data-icon');
+        });
+      });
+      
+      // 保存分组
+      saveGroupBtn.addEventListener('click', function() {
+        const groupName = document.getElementById('group-name').value.trim();
+        
+        if (groupName) {
+          // 创建新分组
+          const groupList = document.getElementById('group-list');
+          const newGroup = document.createElement('div');
+          newGroup.className = 'group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer';
+          newGroup.setAttribute('data-group-id', groupName.toLowerCase().replace(/\s+/g, '-'));
+          
+          newGroup.innerHTML = `
+            <div class="flex items-center">
+              <i class="fas ${selectedIcon} text-indigo-600 mr-3"></i>
+              <span>${groupName}</span>
+            </div>
+            <div class="flex items-center">
+              <span class="group-count bg-gray-100 text-gray-800 px-2 mr-2">0</span>
+              <div class="relative">
+                <button class="text-gray-400 hover:text-gray-600 group-edit-btn">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1 group-dropdown">
+                  <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">重命名</a>
+                  <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">删除分组</a>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // 添加到分组列表
+          const divider = document.querySelector('#group-list .border-t');
+          groupList.insertBefore(newGroup, divider.nextSibling);
+          
+          // 添加点击事件
+          newGroup.addEventListener('click', function() {
+            groupItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            const groupId = this.getAttribute('data-group-id');
+            console.log('Selected group:', groupId);
+          });
+          
+          // 添加编辑按钮事件
+          const newEditBtn = newGroup.querySelector('.group-edit-btn');
+          newEditBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = this.nextElementSibling;
+            
+            document.querySelectorAll('.group-dropdown').forEach(menu => {
+              if (menu !== dropdown && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+              }
+            });
+            
+            dropdown.classList.toggle('hidden');
+          });
+          
+          closeModal();
+        }
+      });
+      
+      // 拖拽功能
+      const promptCards = document.querySelectorAll('.prompt-card');
+      const groupDropTargets = document.querySelectorAll('.group-item');
+      
+      promptCards.forEach(card => {
+        card.addEventListener('dragstart', function(e) {
+          e.dataTransfer.setData('text/plain', this.querySelector('.prompt-title').textContent);
+          this.classList.add('opacity-50');
+        });
+        
+        card.addEventListener('dragend', function() {
+          this.classList.remove('opacity-50');
+        });
+      });
+      
+      groupDropTargets.forEach(target => {
+        target.addEventListener('dragover', function(e) {
+          e.preventDefault();
+          this.classList.add('drag-over');
+        });
+        
+        target.addEventListener('dragleave', function() {
+          this.classList.remove('drag-over');
+        });
+        
+        target.addEventListener('drop', function(e) {
+          e.preventDefault();
+          this.classList.remove('drag-over');
+          
+          const promptTitle = e.dataTransfer.getData('text/plain');
+          const groupId = this.getAttribute('data-group-id');
+          const groupName = this.querySelector('span').textContent;
+          
+          // 更新分组计数
+          const countElement = this.querySelector('.group-count');
+          let count = parseInt(countElement.textContent);
+          countElement.textContent = count + 1;
+          
+          // 显示成功消息
+          alert(`已将 "${promptTitle}" 添加到 "${groupName}" 分组`);
+          
+          // 实际应用中，这里应该发送请求到后端，更新Prompt的分组信息
+          console.log(`Added "${promptTitle}" to group "${groupId}"`);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
