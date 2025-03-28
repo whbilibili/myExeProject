@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅游攻略App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen gap-6 p-6">
+    <!-- 首页 -->
+    <div class="w-[375px] h-[812px] bg-white rounded-[40px] overflow-hidden shadow-xl relative">
+        <!-- 顶部导航 -->
+        <div class="px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-semibold">探索</h1>
+            <i class="ri-search-line text-xl"></i>
+        </div>
+        
+        <!-- 目的地横向滚动 -->
+        <div class="px-6 overflow-x-auto hide-scrollbar">
+            <div class="flex gap-4 pb-4">
+                <div class="flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 flex flex-col items-center justify-center">
+                    <i class="ri-map-pin-line text-xl mb-1"></i>
+                    <span class="text-xs">东京</span>
+                </div>
+                <div class="flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-100 to-pink-50 flex flex-col items-center justify-center">
+                    <i class="ri-map-pin-line text-xl mb-1"></i>
+                    <span class="text-xs">巴黎</span>
+                </div>
+                <div class="flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-purple-50 flex flex-col items-center justify-center">
+                    <i class="ri-map-pin-line text-xl mb-1"></i>
+                    <span class="text-xs">纽约</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 推荐攻略 -->
+        <div class="px-6 space-y-4">
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1480796927426-f609979314bd" class="w-full h-48 object-cover"/>
+                <div class="p-4">
+                    <h3 class="font-medium mb-2">东京三日游完全攻略</h3>
+                    <div class="flex items-center text-sm">
+                        <img src="https://i.pravatar.cc/100" class="w-6 h-6 rounded-full mr-2"/>
+                        <span>by Sarah</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航 -->
+        <div class="absolute bottom-0 w-full px-6 py-4 flex justify-around bg-white border-t">
+            <i class="ri-home-line text-xl"></i>
+            <i class="ri-compass-line text-xl"></i>
+            <i class="ri-heart-line text-xl"></i>
+            <i class="ri-user-line text-xl"></i>
+        </div>
+    </div>
+
+    <!-- 详情页 -->
+    <div class="w-[375px] h-[812px] bg-white rounded-[40px] overflow-hidden shadow-xl relative">
+        <!-- 顶部图片 -->
+        <div class="relative h-72">
+            <img src="https://images.unsplash.com/photo-1480796927426-f609979314bd" class="w-full h-full object-cover"/>
+            <div class="absolute top-0 left-0 right-0 p-6 flex justify-between items-center">
+                <i class="ri-arrow-left-line text-xl text-white"></i>
+                <i class="ri-heart-line text-xl text-white"></i>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="px-6 pt-6 pb-20">
+            <h2 class="text-2xl font-semibold mb-4">东京三日游完全攻略</h2>
+            
+            <div class="flex items-center mb-6">
+                <img src="https://i.pravatar.cc/100" class="w-10 h-10 rounded-full mr-3"/>
+                <div>
+                    <p class="font-medium">Sarah</p>
+                    <p class="text-sm text-gray-500">Travel Blogger</p>
+                </div>
+            </div>
+
+            <p class="text-sm leading-relaxed">
+                东京是一座充满活力的城市，这份攻略将带您探索最精彩的景点。第一天我们从浅草寺开始，然后前往天空树...
+            </p>
+        </div>
+
+        <!-- 底部评论输入框 -->
+        <div class="absolute bottom-0 w-full px-6 py-4 bg-white border-t">
+            <div class="flex items-center gap-4">
+                <input type="text" placeholder="写下你的评论..." class="flex-1 px-4 py-2 rounded-full bg-gray-100"/>
+                <i class="ri-send-plane-line text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body>
+</html>

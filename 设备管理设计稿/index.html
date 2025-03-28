@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅游攻略App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Remix图标库 -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen p-6">
+    <!-- 手机壳容器 -->
+    <div class="flex gap-8">
+        <!-- 首页 -->
+        <div class="w-[375px] h-[812px] bg-white rounded-[40px] overflow-hidden shadow-xl border-8 border-gray-100">
+            <!-- 顶部导航 -->
+            <div class="px-6 py-4 flex justify-between items-center">
+                <h1 class="text-xl font-semibold">探索</h1>
+                <i class="ri-search-line text-xl"></i>
+            </div>
+            
+            <!-- 分类滚动 -->
+            <div class="px-6 pb-4 flex gap-4 overflow-x-auto no-scrollbar">
+                <span class="px-4 py-2 bg-black text-white rounded-full text-sm whitespace-nowrap">热门推荐</span>
+                <span class="px-4 py-2 bg-gray-100 text-black rounded-full text-sm whitespace-nowrap">自然风光</span>
+                <span class="px-4 py-2 bg-gray-100 text-black rounded-full text-sm whitespace-nowrap">人文景观</span>
+                <span class="px-4 py-2 bg-gray-100 text-black rounded-full text-sm whitespace-nowrap">美食攻略</span>
+            </div>
+
+            <!-- 内容卡片 -->
+            <div class="px-6 space-y-6">
+                <div class="rounded-2xl overflow-hidden shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b" class="w-full h-48 object-cover">
+                    <div class="p-4 bg-white">
+                        <h3 class="font-medium mb-2">东京城市探索指南</h3>
+                        <p class="text-sm text-black/60">探索这座不夜城的独特魅力，感受现代与传统的完美融合...</p>
+                        <div class="flex items-center gap-2 mt-3">
+                            <img src="https://i.pravatar.cc/32" class="w-6 h-6 rounded-full">
+                            <span class="text-sm text-black/60">由 Sarah 发布</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 更多卡片... -->
+            </div>
+
+            <!-- 底部导航 -->
+            <div class="fixed bottom-0 w-[375px] px-8 py-6 bg-white border-t flex justify-between">
+                <i class="ri-home-5-line text-xl"></i>
+                <i class="ri-compass-3-line text-xl"></i>
+                <i class="ri-add-circle-line text-2xl"></i>
+                <i class="ri-heart-line text-xl"></i>
+                <i class="ri-user-line text-xl"></i>
+            </div>
+        </div>
+
+        <!-- 详情页 -->
+        <div class="w-[375px] h-[812px] bg-white rounded-[40px] overflow-hidden shadow-xl border-8 border-gray-100">
+            <!-- 顶部图片 -->
+            <div class="relative h-72">
+                <img src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b" class="w-full h-full object-cover">
+                <div class="absolute top-0 left-0 right-0 p-6 flex justify-between">
+                    <i class="ri-arrow-left-line text-white text-xl"></i>
+                    <i class="ri-heart-line text-white text-xl"></i>
+                </div>
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="px-6 py-6 -mt-8 rounded-t-3xl bg-white relative">
+                <h2 class="text-xl font-semibold mb-4">东京城市探索指南</h2>
+                
+                <div class="flex items-center gap-4 mb-6">
+                    <img src="https://i.pravatar.cc/32" class="w-10 h-10 rounded-full">
+                    <div>
+                        <p class="font-medium">Sarah Williams</p>
+                        <p class="text-sm text-black/60">旅行作家 & 摄影师</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 text-sm text-black/80">
+                    <p>东京是一座充满活力与魅力的城市,这里有...</p>
+                    <h3 class="font-medium text-base">必访景点</h3>
+                    <ul class="list-disc pl-4 space-y-2">
+                        <li>浅草寺 - 东京最古老的寺庙</li>
+                        <li>涉谷十字路口 - 世界最繁忙的十字路口</li>
+                        <li>明治神宫 - 城市中的绿洲</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* 隐藏滚动条但保持功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</body>
+</html>

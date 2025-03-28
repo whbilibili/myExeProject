@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备管理</title>
+    <style>
+        :root {
+            /* 基础色彩 */
+            --primary-bg: #E0E5EC;
+            --shadow-dark: #A3B1C6;
+            --shadow-light: #FFFFFF;
+            --accent-blue: #4A90E2;
+            
+            /* 文字色 */
+            --text-primary: #2C3E50;
+            --text-secondary: #7F8C8D;
+            
+            /* 间距 */
+            --spacing-unit: 4px;
+            --spacing-md: calc(var(--spacing-unit) * 6);
+            
+            /* 圆角 */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            
+            /* 字体 */
+            --font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            padding: var(--spacing-md);
+        }
+
+        /* 新拟物效果混入 */
+        .neumorphic-shadow {
+            box-shadow: 
+                8px 8px 16px var(--shadow-dark),
+                -8px -8px 16px var(--shadow-light);
+        }
+
+        .neumorphic-inset {
+            box-shadow: 
+                inset 6px 6px 12px var(--shadow-dark),
+                inset -6px -6px 12px var(--shadow-light);
+        }
+
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 顶部导航 */
+        .header-nav {
+            background: var(--primary-bg);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 
+                8px 8px 16px var(--shadow-dark),
+                -8px -8px 16px var(--shadow-light);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                6px 6px 12px var(--shadow-dark),
+                -6px -6px 12px var(--shadow-light);
+        }
+
+        .btn:active {
+            box-shadow: 
+                inset 6px 6px 12px var(--shadow-dark),
+                inset -6px -6px 12px var(--shadow-light);
+        }
+
+        .btn.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            background: var(--primary-bg);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 
+                8px 8px 16px var(--shadow-dark),
+                -8px -8px 16px var(--shadow-light);
+        }
+
+        /* 输入框和下拉框 */
+        .input, .select {
+            padding: 12px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            box-shadow: 
+                inset 4px 4px 8px var(--shadow-dark),
+                inset -4px -4px 8px var(--shadow-light);
+        }
+
+        /* 设备卡片 */
+        .device-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .device-card {
+            background: var(--primary-bg);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            box-shadow: 
+                8px 8px 16px var(--shadow-dark),
+                -8px -8px 16px var(--shadow-light);
+        }
+
+        .device-card h3 {
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .device-card p {
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .card-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航 -->
+        <div class="header-nav">
+            <div class="left-section">
+                <button class="btn active">移动端</button>
+                <button class="btn">PC端</button>
+            </div>
+            <div class="right-section">
+                <span>私有设备可用时长：200分钟</span>
+                <button class="btn">充值时长</button>
+                <button class="btn">注册设备</button>
+                <button class="btn">我的排队设备 (12)</button>
+            </div>
+        </div>
+
+        <!-- 筛选栏 -->
+        <div class="filter-bar">
+            <div class="left-section">
+                <button class="btn active">个人设备</button>
+                <button class="btn">团队共享</button>
+                <button class="btn">真机</button>
+            </div>
+            <div class="right-section">
+                <select class="select">
+                    <option value="">请选择制造商</option>
+                </select>
+                <select class="select">
+                    <option value="">请选择系统版本</option>
+                </select>
+                <select class="select">
+                    <option value="">请选择设备状态</option>
+                </select>
+                <input type="text" class="input" placeholder="请输入设备名称或型号">
+            </div>
+        </div>
+
+        <!-- 设备列表 -->
+        <div class="device-list">
+            <div class="device-card">
+                <h3>OPPO Find...</h3>
+                <p>系统版本：Android 8</p>
+                <p>CPU类型：xxxx</p>
+                <p>屏幕分辨率：1179×2556</p>
+                <p>序列号：6312385023</p>
+                <div class="card-actions">
+                    <button class="btn">应用管理</button>
+                    <button class="btn">连接设备</button>
+                </div>
+            </div>
+            <!-- 更多设备卡片 -->
+        </div>
+    </div>
+</body>
+</html>
