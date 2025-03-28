@@ -1,0 +1,180 @@
+/* 小象超市App样式 */
+
+:root {
+  --primary-color: #4f46e5;
+  --secondary-color: #818cf8;
+  --accent-color: #f59e0b;
+  --text-color: #1f2937;
+  --light-text: #6b7280;
+  --background-color: #f9fafb;
+  --card-color: #ffffff;
+  --border-color: #e5e7eb;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* iPhone 15 Pro 尺寸 */
+.iphone-frame {
+  width: 393px;
+  height: 852px;
+  background-color: var(--card-color);
+  border-radius: 55px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  margin: 20px;
+  border: 12px solid #1a1a1a;
+}
+
+/* 状态栏 */
+.status-bar {
+  height: 44px;
+  background-color: var(--card-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 600;
+  position: relative;
+  z-index: 10;
+}
+
+/* 底部导航栏 */
+.tab-bar {
+  height: 83px;
+  background-color: var(--card-color);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  z-index: 10;
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--light-text);
+  font-size: 10px;
+  width: 20%;
+}
+
+.tab-item.active {
+  color: var(--primary-color);
+}
+
+.tab-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+/* 内容区域 */
+.content {
+  height: calc(852px - 44px - 83px);
+  overflow-y: auto;
+  position: relative;
+}
+
+/* 通用组件样式 */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: var(--secondary-color);
+}
+
+.card {
+  background-color: var(--card-color);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.product-card {
+  background-color: var(--card-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.product-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.product-info {
+  padding: 12px;
+}
+
+.product-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.product-price {
+  color: var(--accent-color);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.product-original-price {
+  color: var(--light-text);
+  text-decoration: line-through;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.badge {
+  background-color: var(--accent-color);
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* 响应式调整 */
+@media (max-width: 400px) {
+  .iphone-frame {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    margin: 0;
+    border: none;
+  }
+}

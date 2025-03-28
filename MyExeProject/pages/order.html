@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小象超市 - 订单</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .order-header {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .order-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .order-tabs {
+            display: flex;
+            background-color: white;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .order-tab {
+            padding: 12px 0;
+            margin-right: 24px;
+            font-size: 14px;
+            color: var(--light-text);
+            position: relative;
+        }
+        
+        .order-tab.active {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .order-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+        
+        .order-item {
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        
+        .order-store {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .order-store-icon {
+            font-size: 16px;
+            margin-right: 8px;
+        }
+        
+        .order-store-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .order-status {
+            margin-left: auto;
+            font-size: 14px;
+            color: var(--accent-color);
+        }
+        
+        .order-product {
+            display: flex;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .order-product-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+            margin-right: 12px;
+        }
+        
+        .order-product-info {
+            flex: 1;
+        }
+        
+        .order-product-title {
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .order-product-spec {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+        
+        .order-product-price {
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 12px;
+            white-space: nowrap;
+        }
+        
+        .order-product-quantity {
+            font-size: 14px;
+            color: var(--light-text);
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+        
+        .order-summary {
+            padding: 12px 16px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .order-total {
+            font-size: 14px;
+        }
+        
+        .order-total-price {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        
+        .order-actions {
+            display: flex;
+            justify-content: flex-end;
+            padding: 12px 16px;
+        }
+        
+        .order-action-btn {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        
+        .btn-outline {
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .order-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 0;
+        }
+        
+        .order-empty-icon {
+            font-size: 60px;
+            color: #e5e7eb;
+            margin-bottom: 16px;
+        }
+        
+        .order-empty-text {
+            font-size: 16px;
+            color: var(--light-text);
+            margin-bottom: 24px;
+        }
+        
+        .order-empty-btn {
+            padding: 8px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="iphone-frame">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="time">9:41</div>
+            <div class="icons">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi ml-2"></i>
+                <i class="fas fa-battery-full ml-2"></i>
+            </div>
+        </div>
+        
+        <!-- 内容区域 -->
+        <div class="content bg-gray-100">
+            <!-- 订单头部 -->
+            <div class="order-header">
+                <div class="order-title">我的订单</div>
+            </div>
+            
+            <!-- 订单标签页 -->
+            <div class="order-tabs">
+                <div class="order-tab active">全部</div>
+                <div class="order-tab">待付款</div>
+                <div class="order-tab">待发货</div>
+                <div class="order-tab">待收货</div>
+                <div class="order-tab">待评价</div>
+            </div>
+            
+            <!-- 订单列表 -->
+            <div class="p-3">
+                <!-- 订单项 -->
+                <div class="order-item">
+                    <div class="order-store">
+                        <i class="fas fa-store order-store-icon"></i>
+                        <div class="order-store-name">小象超市官方旗舰店</div>
+                        <div class="order-status">待收货</div>
+                    </div>
+                    <div class="order-product">
+                        <img src="https://images.unsplash.com/photo-1550989460-0adf9ea622e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="新西兰奇异果" class="order-product-image">
+                        <div class="order-product-info">
+                            <div class="order-product-title">新西兰奇异果 6个装 单果约90-110g</div>
+                            <div class="order-product-spec">规格：6个装</div>
+                        </div>
+                        <div class="order-product-price">¥29.9</div>
+                        <div class="order-product-quantity">x1</div>
+                    </div>
+                    <div class="order-product">
+                        <img src="https://images.unsplash.com/photo-1603532648955-039310d9ed75?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="有机纯牛奶" class="order-product-image">
+                        <div class="order-product-info">
+                            <div class="order-product-title">有机纯牛奶 250ml*12盒</div>
+                            <div class="order-product-spec">规格：12盒装</div>
+                        </div>
+                        <div class="order-product-price">¥59.9</div>
+                        <div class="order-product-quantity">x1</div>
+                    </div>
+                    <div class="order-summary">
+                        <div class="order-total">共2件商品 合计: <span class="order-total-price">¥89.8</span>（含运费¥0）</div>
+                    </div>
+                    <div class="order-actions">
+                        <button class="order-action-btn btn-outline">查看物流</button>
+                        <button class="order-action-btn btn-outline">联系客服</button>
+                        <button class="order-action-btn btn-primary">确认收货</button>
+                    </div>
+                </div>
+                
+                <div class="order-item">
+                    <div class="order-store">
+                        <i class="fas fa-store order-store-icon"></i>
+                        <div class="order-store-name">小象超市官方旗舰店</div>
+                        <div class="order-status">待评价</div>
+                    </div>
+                    <div class="order-product">
+                        <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="精选水果沙拉" class="order-product-image">
+                        <div class="order-product-info">
+                            <div class="order-product-title">精选水果沙拉 300g</div>
+                            <div class="order-product-spec">规格：300g/盒</div>
+                        </div>
+                        <div class="order-product-price">¥15.9</div>
+                        <div class="order-product-quantity">x2</div>
+                    </div>
+                    <div class="order-summary">
+                        <div class="order-total">共2件商品 合计: <span class="order-total-price">¥31.8</span>（含运费¥0）</div>
+                    </div>
+                    <div class="order-actions">
+                        <button class="order-action-btn btn-outline">再次购买</button>
+                        <button class="order-action-btn btn-outline">联系客服</button>
+                        <button class="order-action-btn btn-primary">评价</button>
+                    </div>
+                </div>
+                
+                <div class="order-item">
+                    <div class="order-store">
+                        <i class="fas fa-store order-store-icon"></i>
+                        <div class="order-store-name">小象超市官方旗舰店</div>
+                        <div class="order-status">已完成</div>
+                    </div>
+                    <div class="order-product">
+                        <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="鲜榨橙汁" class="order-product-image">
+                        <div class="order-product-info">
+                            <div class="order-product-title">鲜榨橙汁 500ml</div>
+                            <div class="order-product-spec">规格：500ml/瓶</div>
+                        </div>
+                        <div class="order-product-price">¥12.9</div>
+                        <div class="order-product-quantity">x2</div>
+                    </div>
+                    <div class="order-summary">
+                        <div class="order-total">共2件商品 合计: <span class="order-total-price">¥25.8</span>（含运费¥0）</div>
+                    </div>
+                    <div class="order-actions">
+                        <button class="order-action-btn btn-outline">删除订单</button>
+                        <button class="order-action-btn btn-outline">联系客服</button>
+                        <button class="order-action-btn btn-primary">再次购买</button>
+                    </div>
+                </div>
+                
+                <!-- 底部空间，防止内容被底部导航栏遮挡 -->
+                <div class="h-20"></div>
+            </div>
+            
+            <!-- 订单为空状态 (默认隐藏) -->
+            <div class="order-empty hidden">
+                <i class="fas fa-clipboard-list order-empty-icon"></i>
+                <div class="order-empty-text">暂无相关订单</div>
+                <button class="order-empty-btn">去购物</button>
+            </div>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <div class="tab-bar">
+            <div class="tab-item" data-page="home.html">
+                <i class="fas fa-home tab-icon"></i>
+                <span>首页</span>
+            </div>
+            <div class="tab-item" data-page="category.html">
+                <i class="fas fa-th-large tab-icon"></i>
+                <span>分类</span>
+            </div>
+            <div class="tab-item" data-page="cart.html">
+                <i class="fas fa-shopping-cart tab-icon"></i>
+                <span>购物车</span>
+            </div>
+            <div class="tab-item active" data-page="order.html">
+                <i class="fas fa-list-alt tab-icon"></i>
+                <span>订单</span>
+            </div>
+            <div class="tab-item" data-page="profile.html">
+                <i class="fas fa-user tab-icon"></i>
+                <span>我的</span>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/main.js"></script>
+    <script>
+        // 订单页面特定的交互逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            const orderTabs = document.querySelectorAll('.order-tab');
+            
+            orderTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 移除所有active类
+                    orderTabs.forEach(t => t.classList.remove('active'));
+                    
+                    // 添加active类到当前点击的项
+                    this.classList.add('active');
+                    
+                    // 这里可以添加切换订单列表的逻辑
+                    // 例如根据选中的标签筛选订单
+                });
+            });
+        });
+    </script>
+</body>
+</html>

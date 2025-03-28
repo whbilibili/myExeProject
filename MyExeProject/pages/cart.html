@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小象超市 - 购物车</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .cart-header {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .cart-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .cart-edit {
+            font-size: 14px;
+            color: var(--primary-color);
+        }
+        
+        .cart-item {
+            display: flex;
+            padding: 16px;
+            background-color: white;
+            margin-bottom: 8px;
+            border-radius: 8px;
+        }
+        
+        .cart-checkbox {
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .custom-checkbox.checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .cart-product-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 12px;
+        }
+        
+        .cart-product-info {
+            flex: 1;
+        }
+        
+        .cart-product-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .cart-product-spec {
+            font-size: 12px;
+            color: var(--light-text);
+            margin-bottom: 8px;
+        }
+        
+        .cart-product-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        
+        .cart-quantity-selector {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+        
+        .cart-quantity-button {
+            width: 24px;
+            height: 24px;
+            background-color: #f3f4f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .cart-quantity-input {
+            width: 36px;
+            text-align: center;
+            font-size: 14px;
+            margin: 0 8px;
+            border: none;
+            outline: none;
+        }
+        
+        .cart-bottom-bar {
+            position: fixed;
+            bottom: 83px;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+        }
+        
+        .cart-select-all {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            margin-right: 16px;
+        }
+        
+        .cart-total {
+            flex: 1;
+            text-align: right;
+            padding-right: 16px;
+        }
+        
+        .cart-total-price {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        
+        .cart-checkout-btn {
+            width: 120px;
+            height: 40px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .cart-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 0;
+        }
+        
+        .cart-empty-icon {
+            font-size: 60px;
+            color: #e5e7eb;
+            margin-bottom: 16px;
+        }
+        
+        .cart-empty-text {
+            font-size: 16px;
+            color: var(--light-text);
+            margin-bottom: 24px;
+        }
+        
+        .cart-empty-btn {
+            padding: 8px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="iphone-frame">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="time">9:41</div>
+            <div class="icons">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi ml-2"></i>
+                <i class="fas fa-battery-full ml-2"></i>
+            </div>
+        </div>
+        
+        <!-- 内容区域 -->
+        <div class="content bg-gray-100">
+            <!-- 购物车头部 -->
+            <div class="cart-header">
+                <div class="cart-title">购物车</div>
+                <div class="cart-edit">编辑</div>
+            </div>
+            
+            <!-- 购物车列表 -->
+            <div class="p-3">
+                <!-- 购物车商品 -->
+                <div class="cart-item">
+                    <div class="cart-checkbox">
+                        <div class="custom-checkbox checked">
+                            <i class="fas fa-check text-xs"></i>
+                        </div>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1550989460-0adf9ea622e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="新西兰奇异果" class="cart-product-image">
+                    <div class="cart-product-info">
+                        <div class="cart-product-title">新西兰奇异果 6个装 单果约90-110g</div>
+                        <div class="cart-product-spec">规格：6个装</div>
+                        <div class="flex justify-between items-center">
+                            <div class="cart-product-price">¥29.9</div>
+                            <div class="cart-quantity-selector">
+                                <button class="cart-quantity-button decrease-btn">-</button>
+                                <input type="text" value="1" class="cart-quantity-input" data-id="1">
+                                <button class="cart-quantity-button increase-btn">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="cart-item">
+                    <div class="cart-checkbox">
+                        <div class="custom-checkbox checked">
+                            <i class="fas fa-check text-xs"></i>
+                        </div>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1603532648955-039310d9ed75?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="有机纯牛奶" class="cart-product-image">
+                    <div class="cart-product-info">
+                        <div class="cart-product-title">有机纯牛奶 250ml*12盒</div>
+                        <div class="cart-product-spec">规格：12盒装</div>
+                        <div class="flex justify-between items-center">
+                            <div class="cart-product-price">¥59.9</div>
+                            <div class="cart-quantity-selector">
+                                <button class="cart-quantity-button decrease-btn">-</button>
+                                <input type="text" value="1" class="cart-quantity-input" data-id="2">
+                                <button class="cart-quantity-button increase-btn">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="cart-item">
+                    <div class="cart-checkbox">
+                        <div class="custom-checkbox">
+                            <i class="fas fa-check text-xs"></i>
+                        </div>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="精选水果沙拉" class="cart-product-image">
+                    <div class="cart-product-info">
+                        <div class="cart-product-title">精选水果沙拉 300g</div>
+                        <div class="cart-product-spec">规格：300g/盒</div>
+                        <div class="flex justify-between items-center">
+                            <div class="cart-product-price">¥15.9</div>
+                            <div class="cart-quantity-selector">
+                                <button class="cart-quantity-button decrease-btn">-</button>
+                                <input type="text" value="2" class="cart-quantity-input" data-id="3">
+                                <button class="cart-quantity-button increase-btn">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 猜你喜欢 -->
+                <div class="bg-white rounded-lg p-4 mt-4">
+                    <div class="text-base font-medium mb-3">猜你喜欢</div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="product-card relative">
+                            <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="鲜榨橙汁" class="product-image">
+                            <div class="product-info">
+                                <div class="product-title">鲜榨橙汁 500ml</div>
+                                <div class="flex items-center">
+                                    <div class="product-price">¥12.9</div>
+                                </div>
+                            </div>
+                            <button class="add-to-cart-btn" onclick="addToCart(4, '鲜榨橙汁 500ml', 12.9)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="product-card relative">
+                            <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="全麦面包" class="product-image">
+                            <div class="product-info">
+                                <div class="product-title">全麦面包 350g</div>
+                                <div class="flex items-center">
+                                    <div class="product-price">¥8.9</div>
+                                </div>
+                            </div>
+                            <button class="add-to-cart-btn" onclick="addToCart(5, '全麦面包 350g', 8.9)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 底部空间，防止内容被底部导航栏遮挡 -->
+                <div class="h-32"></div>
+            </div>
+            
+            <!-- 购物车为空状态 (默认隐藏) -->
+            <div class="cart-empty hidden">
+                <i class="fas fa-shopping-cart cart-empty-icon"></i>
+                <div class="cart-empty-text">购物车还是空的，快去选购吧~</div>
+                <button class="cart-empty-btn">去购物</button>
+            </div>
+            
+            <!-- 底部结算栏 -->
+            <div class="cart-bottom-bar">
+                <div class="cart-select-all">
+                    <div class="custom-checkbox checked mr-2">
+                        <i class="fas fa-check text-xs"></i>
+                    </div>
+                    <span>全选</span>
+                </div>
+                <div class="cart-total">
+                    <div>合计: <span class="cart-total-price">¥89.8</span></div>
+                    <div class="text-xs text-gray-500">总额¥105.7 立减¥15.9</div>
+                </div>
+                <button class="cart-checkout-btn">
+                    结算(2)
+                </button>
+            </div>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <div class="tab-bar">
+            <div class="tab-item" data-page="home.html">
+                <i class="fas fa-home tab-icon"></i>
+                <span>首页</span>
+            </div>
+            <div class="tab-item" data-page="category.html">
+                <i class="fas fa-th-large tab-icon"></i>
+                <span>分类</span>
+            </div>
+            <div class="tab-item active" data-page="cart.html">
+                <i class="fas fa-shopping-cart tab-icon"></i>
+                <span>购物车</span>
+            </div>
+            <div class="tab-item" data-page="order.html">
+                <i class="fas fa-list-alt tab-icon"></i>
+                <span>订单</span>
+            </div>
+            <div class="tab-item" data-page="profile.html">
+                <i class="fas fa-user tab-icon"></i>
+                <span>我的</span>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/main.js"></script>
+    <script>
+        // 购物车页面特定的交互逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            // 复选框交互
+            const checkboxes = document.querySelectorAll('.custom-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('click', function() {
+                    this.classList.toggle('checked');
+                    updateTotalPrice();
+                });
+            });
+            
+            // 编辑按钮交互
+            const editButton = document.querySelector('.cart-edit');
+            let isEditing = false;
+            
+            editButton.addEventListener('click', function() {
+                isEditing = !isEditing;
+                this.textContent = isEditing ? '完成' : '编辑';
+                
+                // 这里可以添加编辑模式的逻辑
+                // 例如显示删除按钮等
+            });
+            
+            // 更新总价
+            function updateTotalPrice() {
+                // 这里可以添加计算总价的逻辑
+                // 根据选中的商品和数量计算总价
+            }
+        });
+    </script>
+</body>
+</html>

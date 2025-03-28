@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>小象超市 - 首页</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .carousel {
+            position: relative;
+            height: 180px;
+            overflow: hidden;
+            border-radius: 12px;
+            margin: 0 16px 16px;
+        }
+        
+        .carousel-item {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .carousel-item.active {
+            opacity: 1;
+        }
+        
+        .carousel-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            padding: 0 16px;
+            margin-bottom: 16px;
+        }
+        
+        .category-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .category-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #f3f4f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 4px;
+            color: var(--primary-color);
+        }
+        
+        .category-name {
+            font-size: 12px;
+            color: var(--text-color);
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 16px 16px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-more {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 0 16px;
+            margin-bottom: 16px;
+        }
+        
+        .add-to-cart-btn {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="iphone-frame">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="time">9:41</div>
+            <div class="icons">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi ml-2"></i>
+                <i class="fas fa-battery-full ml-2"></i>
+            </div>
+        </div>
+        
+        <!-- 内容区域 -->
+        <div class="content bg-gray-50">
+            <!-- 搜索栏 -->
+            <div class="px-4 py-3 bg-white sticky top-0 z-10 shadow-sm">
+                <div class="flex items-center bg-gray-100 rounded-full px-3 py-2">
+                    <i class="fas fa-search text-gray-400 mr-2"></i>
+                    <input type="text" placeholder="搜索商品" class="bg-transparent w-full outline-none text-sm">
+                </div>
+            </div>
+            
+            <!-- 轮播图 -->
+            <div class="carousel mt-3">
+                <div class="carousel-item active">
+                    <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="促销活动" class="carousel-img">
+                </div>
+                <div class="carousel-item">
+                    <img src="https://images.unsplash.com/photo-1550989460-0adf9ea622e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="新品上市" class="carousel-img">
+                </div>
+                <div class="carousel-item">
+                    <img src="https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80" alt="限时折扣" class="carousel-img">
+                </div>
+            </div>
+            
+            <!-- 分类导航 -->
+            <div class="category-grid">
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-apple-alt"></i>
+                    </div>
+                    <div class="category-name">生鲜水果</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-drumstick-bite"></i>
+                    </div>
+                    <div class="category-name">肉禽蛋奶</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-fish"></i>
+                    </div>
+                    <div class="category-name">海鲜水产</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-carrot"></i>
+                    </div>
+                    <div class="category-name">蔬菜豆制</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-cookie"></i>
+                    </div>
+                    <div class="category-name">休闲零食</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-wine-bottle"></i>
+                    </div>
+                    <div class="category-name">酒水饮料</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-bread-slice"></i>
+                    </div>
+                    <div class="category-name">粮油调味</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-ice-cream"></i>
+                    </div>
+                    <div class="category-name">冰品冷藏</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-baby"></i>
+                    </div>
+                    <div class="category-name">母婴用品</div>
+                </div>
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </div>
+                    <div class="category-name">更多分类</div>
+                </div>
+            </div>
+            
+            <!-- 限时抢购 -->
+            <div class="bg-white rounded-lg mx-4 p-3 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center">
+                        <span class="text-red-500 font-bold mr-2">限时抢购</span>
+                        <div class="bg-red-500 text-white text-xs px-1 rounded">
+                            <span>01</span>:<span>45</span>:<span>30</span>
+                        </div>
+                    </div>
+                    <span class="text-xs text-gray-500">更多 ></span>
+                </div>
+                <div class="flex overflow-x-auto pb-2">
+                    <div class="flex-shrink-0 w-24 mr-3">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="沙拉" class="w-full h-24 object-cover rounded-lg">
+                            <div class="absolute bottom-0 left-0 right-0 bg-red-500 text-white text-xs text-center">
+                                ¥12.9
+                            </div>
+                        </div>
+                        <div class="text-xs mt-1 text-center">鲜果沙拉</div>
+                    </div>
+                    <div class="flex-shrink-0 w-24 mr-3">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="果汁" class="w-full h-24 object-cover rounded-lg">
+                            <div class="absolute bottom-0 left-0 right-0 bg-red-500 text-white text-xs text-center">
+                                ¥9.9
+                            </div>
+                        </div>
+                        <div class="text-xs mt-1 text-center">鲜榨果汁</div>
+                    </div>
+                    <div class="flex-shrink-0 w-24 mr-3">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1603532648955-039310d9ed75?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="牛奶" class="w-full h-24 object-cover rounded-lg">
+                            <div class="absolute bottom-0 left-0 right-0 bg-red-500 text-white text-xs text-center">
+                                ¥5.5
+                            </div>
+                        </div>
+                        <div class="text-xs mt-1 text-center">有机牛奶</div>
+                    </div>
+                    <div class="flex-shrink-0 w-24 mr-3">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="面包" class="w-full h-24 object-cover rounded-lg">
+                            <div class="absolute bottom-0 left-0 right-0 bg-red-500 text-white text-xs text-center">
+                                ¥8.8
+                            </div>
+                        </div>
+                        <div class="text-xs mt-1 text-center">全麦面包</div>
+                    </div>
+                    <div class="flex-shrink-0 w-24">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="水果" class="w-full h-24 object-cover rounded-lg">
+                            <div class="absolute bottom-0 left-0 right-0 bg-red-500 text-white text-xs text-center">
+                                ¥15.8
+                            </div>
+                        </div>
+                        <div class="text-xs mt-1 text-center">进口水果</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 新鲜好物 -->
+            <div class="section-title">
+                <span>新鲜好物</span>
+                <span class="section-more">更多 ></span>
+            </div>
+            <div class="product-grid">
+                <div class="product-card relative">
+                    <img src="https://images.unsplash.com/photo-1550989460-0adf9ea622e2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="新西兰奇异果" class="product-image">
+                    <div class="product-info">
+                        <div class="product-title">新西兰奇异果 6个装</div>
+                        <div class="flex items-center">
+                            <div class="product-price">¥29.9</div>
+                            <div class="product-original-price">¥39.9</div>
+                        </div>
+                    </div>
+                    <button class="add-to-cart-btn" onclick="addToCart(1, '新西兰奇异果 6个装', 29.9)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="product-card relative">
+                    <img src="https://images.unsplash.com/photo-1603532648955-039310d9ed75?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="有机纯牛奶" class="product-image">
+                    <div class="product-info">
+                        <div class="product-title">有机纯牛奶 250ml*12盒</div>
+                        <div class="flex items-center">
+                            <div class="product-price">¥59.9</div>
+                            <div class="product-original-price">¥79.9</div>
+                        </div>
+                    </div>
+                    <button class="add-to-cart-btn" onclick="addToCart(2, '有机纯牛奶 250ml*12盒', 59.9)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="product-card relative">
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="精选水果沙拉" class="product-image">
+                    <div class="product-info">
+                        <div class="product-title">精选水果沙拉 300g</div>
+                        <div class="flex items-center">
+                            <div class="product-price">¥15.9</div>
+                            <div class="product-original-price">¥19.9</div>
+                        </div>
+                    </div>
+                    <button class="add-to-cart-btn" onclick="addToCart(3, '精选水果沙拉 300g', 15.9)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="product-card relative">
+                    <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="鲜榨橙汁" class="product-image">
+                    <div class="product-info">
+                        <div class="product-title">鲜榨橙汁 500ml</div>
+                        <div class="flex items-center">
+                            <div class="product-price">¥12.9</div>
+                            <div class="product-original-price">¥15.9</div>
+                        </div>
+                    </div>
+                    <button class="add-to-cart-btn" onclick="addToCart(4, '鲜榨橙汁 500ml', 12.9)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 热卖推荐 -->
+            <div class="section-title">
+                <span>热卖推荐</span>
+                <span class="section-more">更多 ></span>
+            </div>
+            <div class="product-grid">
+                <div class="product-card relative">
+                    <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="全麦面包" class="product-image">
+                    <div class="product-info">
+                        <div class="product-title">全麦面包 350g</div>
+                        <div class="flex items-center">
+                            <div class="product-price">¥8.9</div>
+                            <div class="product-original-price">¥12.9</div>
+                        </div>
+                    </div>
+                    <button class="add-to-cart-btn" onclick="addToCart(5, '全麦面包 350g', 8.9)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="product-card relative">
+                    <img src="https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="进口水果礼盒" class="product-image">
+                    <div class="product-info">
+                        <div class="product-title">进口水果礼盒 2.5kg</div>
+                        <div class="flex items-center">
+                            <div class="product-price">¥99.9</div>
+                            <div class="product-original-price">¥129.9</div>
+                        </div>
+                    </div>
+                    <button class="add-to-cart-btn" onclick="addToCart(6, '进口水果礼盒 2.5kg', 99.9)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="product-card relative">
+                    <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="新鲜三文鱼" class="product-image">
+                    <div class="product-info">
+                        <div class="product-title">新鲜三文鱼 300g</div>
+                        <div class="flex items-center">
+                            <div class="product-price">¥49.9</div>
+                            <div class="product-original-price">¥59.9</div>
+                        </div>
+                    </div>
+                    <button class="add-to-cart-btn" onclick="addToCart(7, '新鲜三文鱼 300g', 49.9)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="product-card relative">
+                    <img src="https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="有机蔬菜礼盒" class="product-image">
+                    <div class="product-info">
+                        <div class="product-title">有机蔬菜礼盒 5kg</div>
+                        <div class="flex items-center">
+                            <div class="product-price">¥69.9</div>
+                            <div class="product-original-price">¥89.9</div>
+                        </div>
+                    </div>
+                    <button class="add-to-cart-btn" onclick="addToCart(8, '有机蔬菜礼盒 5kg', 69.9)">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 底部空间，防止内容被底部导航栏遮挡 -->
+            <div class="h-20"></div>
+        </div>
+        
+        <!-- 底部导航栏 -->
+        <div class="tab-bar">
+            <div class="tab-item active" data-page="home.html">
+                <i class="fas fa-home tab-icon"></i>
+                <span>首页</span>
+            </div>
+            <div class="tab-item" data-page="category.html">
+                <i class="fas fa-th-large tab-icon"></i>
+                <span>分类</span>
+            </div>
+            <div class="tab-item" data-page="cart.html">
+                <i class="fas fa-shopping-cart tab-icon"></i>
+                <span>购物车</span>
+            </div>
+            <div class="tab-item" data-page="order.html">
+                <i class="fas fa-list-alt tab-icon"></i>
+                <span>订单</span>
+            </div>
+            <div class="tab-item" data-page="profile.html">
+                <i class="fas fa-user tab-icon"></i>
+                <span>我的</span>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/main.js"></script>
+</body>
+</html>
