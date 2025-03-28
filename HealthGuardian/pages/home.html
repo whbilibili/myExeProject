@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthGuardian - 首页</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="iphone-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="carrier">中国移动</div>
+      <div class="time">14:30</div>
+      <div class="battery">
+        85% <i class="fas fa-battery-three-quarters"></i>
+      </div>
+    </div>
+    
+    <!-- App Container -->
+    <div class="app-container">
+      <!-- Header with User Info -->
+      <div class="d-flex align-center justify-between mb-20">
+        <div class="d-flex align-center">
+          <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User Avatar" class="avatar">
+          <div style="margin-left: 15px;">
+            <h2 style="font-size: 20px; margin-bottom: 5px;">你好，李小姐</h2>
+            <p class="text-muted" style="font-size: 14px;">今天感觉如何？</p>
+          </div>
+        </div>
+        <div>
+          <i class="fas fa-bell" style="font-size: 22px; color: var(--primary-color);"></i>
+        </div>
+      </div>
+      
+      <!-- Health Score Card -->
+      <div class="card" style="background: linear-gradient(135deg, #6e8efb, #a777e3); color: white;">
+        <div class="d-flex justify-between align-center">
+          <div>
+            <h3 style="font-size: 16px; margin-bottom: 5px;">今日健康评分</h3>
+            <p style="font-size: 14px; opacity: 0.8;">基于您的生理数据分析</p>
+          </div>
+          <div style="text-align: center;">
+            <div style="width: 70px; height: 70px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700;">
+              86
+            </div>
+            <p style="font-size: 12px; margin-top: 5px;">良好</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Health Metrics -->
+      <div class="card">
+        <div class="card-title">
+          <span>健康指标</span>
+          <a href="#" class="more">查看全部</a>
+        </div>
+        
+        <div class="metric-item">
+          <div class="metric-icon bg-primary">
+            <i class="fas fa-heartbeat"></i>
+          </div>
+          <div class="metric-info">
+            <div class="metric-value">72 <span style="font-size: 14px;">bpm</span></div>
+            <div class="metric-label">心率</div>
+          </div>
+          <div>
+            <span class="badge badge-success">正常</span>
+          </div>
+        </div>
+        
+        <div class="metric-item">
+          <div class="metric-icon bg-warning">
+            <i class="fas fa-tint"></i>
+          </div>
+          <div class="metric-info">
+            <div class="metric-value">126/82 <span style="font-size: 14px;">mmHg</span></div>
+            <div class="metric-label">血压</div>
+          </div>
+          <div>
+            <span class="badge badge-warning">偏高</span>
+          </div>
+        </div>
+        
+        <div class="metric-item">
+          <div class="metric-icon bg-success">
+            <i class="fas fa-walking"></i>
+          </div>
+          <div class="metric-info">
+            <div class="metric-value">6,248 <span style="font-size: 14px;">步</span></div>
+            <div class="metric-label">今日步数</div>
+          </div>
+          <div>
+            <span class="badge badge-success">达标</span>
+          </div>
+        </div>
+        
+        <div class="metric-item">
+          <div class="metric-icon" style="background-color: #ff7a5c;">
+            <i class="fas fa-burn"></i>
+          </div>
+          <div class="metric-info">
+            <div class="metric-value">1,248 <span style="font-size: 14px;">kcal</span></div>
+            <div class="metric-label">消耗热量</div>
+          </div>
+          <div>
+            <span class="badge badge-success">良好</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Today's Tasks -->
+      <div class="card">
+        <div class="card-title">
+          <span>今日任务</span>
+          <a href="#" class="more">全部</a>
+        </div>
+        
+        <div class="list-item">
+          <div class="list-item-icon">
+            <i class="fas fa-pills"></i>
+          </div>
+          <div class="list-item-content">
+            <div class="list-item-title">服用降压药</div>
+            <div class="list-item-subtitle">早餐后30分钟</div>
+          </div>
+          <div class="list-item-action">
+            <button class="btn btn-outline" style="padding: 8px 15px; font-size: 12px;">完成</button>
+          </div>
+        </div>
+        
+        <div class="list-item">
+          <div class="list-item-icon">
+            <i class="fas fa-running"></i>
+          </div>
+          <div class="list-item-content">
+            <div class="list-item-title">30分钟有氧运动</div>
+            <div class="list-item-subtitle">推荐：快走或慢跑</div>
+          </div>
+          <div class="list-item-action">
+            <button class="btn btn-outline" style="padding: 8px 15px; font-size: 12px;">完成</button>
+          </div>
+        </div>
+        
+        <div class="list-item">
+          <div class="list-item-icon">
+            <i class="fas fa-apple-alt"></i>
+          </div>
+          <div class="list-item-content">
+            <div class="list-item-title">记录今日饮食</div>
+            <div class="list-item-subtitle">已记录：早餐</div>
+          </div>
+          <div class="list-item-action">
+            <button class="btn" style="padding: 8px 15px; font-size: 12px;">记录</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Health Insights -->
+      <div class="card">
+        <div class="card-title">
+          <span>健康洞察</span>
+        </div>
+        
+        <div style="background-color: rgba(74, 122, 255, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+          <div class="d-flex align-center mb-10">
+            <i class="fas fa-lightbulb" style="color: var(--primary-color); font-size: 20px; margin-right: 10px;"></i>
+            <h4 style="font-size: 16px;">血压偏高提醒</h4>
+          </div>
+          <p style="font-size: 14px; line-height: 1.5;">您的血压近期有轻微升高趋势，建议减少盐分摄入，增加有氧运动，并保持规律作息。</p>
+        </div>
+        
+        <div style="background-color: rgba(76, 175, 80, 0.1); padding: 15px; border-radius: 10px;">
+          <div class="d-flex align-center mb-10">
+            <i class="fas fa-check-circle" style="color: var(--success-color); font-size: 20px; margin-right: 10px;"></i>
+            <h4 style="font-size: 16px;">睡眠质量改善</h4>
+          </div>
+          <p style="font-size: 14px; line-height: 1.5;">您的睡眠质量较上周有明显改善，深度睡眠时间增加了15%，继续保持良好的睡前习惯。</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item active" data-page="home">
+        <i class="fas fa-home"></i>
+        <span>首页</span>
+      </div>
+      <div class="tab-item" data-page="data">
+        <i class="fas fa-chart-line"></i>
+        <span>数据</span>
+      </div>
+      <div class="tab-item" data-page="plan">
+        <i class="fas fa-clipboard-list"></i>
+        <span>方案</span>
+      </div>
+      <div class="tab-item" data-page="consult">
+        <i class="fas fa-comment-medical"></i>
+        <span>问诊</span>
+      </div>
+      <div class="tab-item" data-page="profile">
+        <i class="fas fa-user"></i>
+        <span>我的</span>
+      </div>
+    </div>
+  </div>
+  
+  <script src="../js/app.js"></script>
+</body>
+</html>

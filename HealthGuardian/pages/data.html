@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthGuardian - 数据详情</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="iphone-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="carrier">中国移动</div>
+      <div class="time">14:30</div>
+      <div class="battery">
+        85% <i class="fas fa-battery-three-quarters"></i>
+      </div>
+    </div>
+    
+    <!-- App Container -->
+    <div class="app-container">
+      <!-- Header -->
+      <div class="d-flex align-center justify-between mb-20">
+        <h2 style="font-size: 22px;">健康数据</h2>
+        <div>
+          <i class="fas fa-calendar-alt" style="font-size: 20px; color: var(--primary-color);"></i>
+        </div>
+      </div>
+      
+      <!-- Data Filter -->
+      <div class="d-flex mb-20" style="overflow-x: auto; padding-bottom: 10px;">
+        <div style="padding: 8px 20px; background-color: var(--primary-color); color: white; border-radius: 20px; margin-right: 10px; font-size: 14px; white-space: nowrap;">
+          今日
+        </div>
+        <div style="padding: 8px 20px; background-color: #f0f0f0; color: var(--text-color); border-radius: 20px; margin-right: 10px; font-size: 14px; white-space: nowrap;">
+          本周
+        </div>
+        <div style="padding: 8px 20px; background-color: #f0f0f0; color: var(--text-color); border-radius: 20px; margin-right: 10px; font-size: 14px; white-space: nowrap;">
+          本月
+        </div>
+        <div style="padding: 8px 20px; background-color: #f0f0f0; color: var(--text-color); border-radius: 20px; margin-right: 10px; font-size: 14px; white-space: nowrap;">
+          三个月
+        </div>
+        <div style="padding: 8px 20px; background-color: #f0f0f0; color: var(--text-color); border-radius: 20px; margin-right: 10px; font-size: 14px; white-space: nowrap;">
+          半年
+        </div>
+      </div>
+      
+      <!-- Heart Rate Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>心率</span>
+          <div class="d-flex align-center">
+            <span style="font-size: 14px; color: var(--text-muted); margin-right: 10px;">平均: 72 bpm</span>
+            <i class="fas fa-ellipsis-v" style="color: var(--text-muted);"></i>
+          </div>
+        </div>
+        
+        <div class="chart-container">
+          <canvas id="heartRateChart"></canvas>
+        </div>
+        
+        <div class="d-flex justify-between" style="margin-top: 15px;">
+          <div style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 600; color: var(--primary-color);">68</div>
+            <div style="font-size: 12px; color: var(--text-muted);">最低</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 600; color: var(--primary-color);">72</div>
+            <div style="font-size: 12px; color: var(--text-muted);">平均</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 600; color: var(--primary-color);">86</div>
+            <div style="font-size: 12px; color: var(--text-muted);">最高</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Blood Pressure Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>血压</span>
+          <div class="d-flex align-center">
+            <span style="font-size: 14px; color: var(--text-muted); margin-right: 10px;">平均: 126/82 mmHg</span>
+            <i class="fas fa-ellipsis-v" style="color: var(--text-muted);"></i>
+          </div>
+        </div>
+        
+        <div class="chart-container">
+          <canvas id="bloodPressureChart"></canvas>
+        </div>
+        
+        <div class="d-flex justify-between" style="margin-top: 15px;">
+          <div style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 600; color: var(--warning-color);">120/80</div>
+            <div style="font-size: 12px; color: var(--text-muted);">最低</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 600; color: var(--warning-color);">126/82</div>
+            <div style="font-size: 12px; color: var(--text-muted);">平均</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 600; color: var(--warning-color);">135/88</div>
+            <div style="font-size: 12px; color: var(--text-muted);">最高</div>
+          </div>
+        </div>
+        
+        <div style="background-color: rgba(255, 152, 0, 0.1); padding: 12px; border-radius: 8px; margin-top: 15px;">
+          <div class="d-flex align-center">
+            <i class="fas fa-exclamation-circle" style="color: var(--warning-color); margin-right: 10px;"></i>
+            <p style="font-size: 14px; color: var(--text-color);">您的血压略高于正常范围，建议咨询医生。</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Blood Glucose Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>血糖</span>
+          <div class="d-flex align-center">
+            <span style="font-size: 14px; color: var(--text-muted); margin-right: 10px;">平均: 5.6 mmol/L</span>
+            <i class="fas fa-ellipsis-v" style="color: var(--text-muted);"></i>
+          </div>
+        </div>
+        
+        <div class="chart-container">
+          <canvas id="bloodGlucoseChart"></canvas>
+        </div>
+        
+        <div class="d-flex justify-between" style="margin-top: 15px;">
+          <div style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 600; color: var(--success-color);">4.8</div>
+            <div style="font-size: 12px; color: var(--text-muted);">最低</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 600; color: var(--success-color);">5.6</div>
+            <div style="font-size: 12px; color: var(--text-muted);">平均</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 20px; font-weight: 600; color: var(--success-color);">6.2</div>
+            <div style="font-size: 12px; color: var(--text-muted);">最高</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Sleep Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>睡眠</span>
+          <div class="d-flex align-center">
+            <span style="font-size: 14px; color: var(--text-muted); margin-right: 10px;">平均: 7h 15m</span>
+            <i class="fas fa-ellipsis-v" style="color: var(--text-muted);"></i>
+          </div>
+        </div>
+        
+        <div style="height: 80px; margin: 20px 0; display: flex;">
+          <div style="flex: 2; background-color: #5e60ce; height: 20px; border-radius: 4px 0 0 4px;"></div>
+          <div style="flex: 3; background-color: #5390d9; height: 20px;"></div>
+          <div style="flex: 1; background-color: #4ea8de; height: 20px;"></div>
+          <div style="flex: 2; background-color: #48bfe3; height: 20px; border-radius: 0 4px 4px 0;"></div>
+        </div>
+        
+        <div class="d-flex justify-between">
+          <div>
+            <div style="font-size: 14px; font-weight: 600;">深度睡眠</div>
+            <div style="font-size: 20px; font-weight: 600; color: #5e60ce;">1h 45m</div>
+          </div>
+          <div>
+            <div style="font-size: 14px; font-weight: 600;">浅度睡眠</div>
+            <div style="font-size: 20px; font-weight: 600; color: #5390d9;">4h 10m</div>
+          </div>
+          <div>
+            <div style="font-size: 14px; font-weight: 600;">REM</div>
+            <div style="font-size: 20px; font-weight: 600; color: #48bfe3;">1h 20m</div>
+          </div>
+        </div>
+        
+        <div style="background-color: rgba(94, 96, 206, 0.1); padding: 12px; border-radius: 8px; margin-top: 15px;">
+          <div class="d-flex align-center">
+            <i class="fas fa-info-circle" style="color: #5e60ce; margin-right: 10px;"></i>
+            <p style="font-size: 14px; color: var(--text-color);">您的深度睡眠比例有所提高，睡眠质量正在改善。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item" data-page="home">
+        <i class="fas fa-home"></i>
+        <span>首页</span>
+      </div>
+      <div class="tab-item active" data-page="data">
+        <i class="fas fa-chart-line"></i>
+        <span>数据</span>
+      </div>
+      <div class="tab-item" data-page="plan">
+        <i class="fas fa-clipboard-list"></i>
+        <span>方案</span>
+      </div>
+      <div class="tab-item" data-page="consult">
+        <i class="fas fa-comment-medical"></i>
+        <span>问诊</span>
+      </div>
+      <div class="tab-item" data-page="profile">
+        <i class="fas fa-user"></i>
+        <span>我的</span>
+      </div>
+    </div>
+  </div>
+  
+  <script src="../js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Heart Rate Chart
+      const heartRateCtx = document.getElementById('heartRateChart').getContext('2d');
+      new Chart(heartRateCtx, {
+        type: 'line',
+        data: {
+          labels: ['6:00', '9:00', '12:00', '15:00', '18:00', '21:00', '现在'],
+          datasets: [{
+            label: '心率',
+            data: [68, 72, 75, 71, 74, 78, 72],
+            borderColor: '#4a7aff',
+            backgroundColor: 'rgba(74, 122, 255, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              grid: {
+                display: true,
+                drawBorder: false
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+      
+      // Blood Pressure Chart
+      const bloodPressureCtx = document.getElementById('bloodPressureChart').getContext('2d');
+      new Chart(bloodPressureCtx, {
+        type: 'line',
+        data: {
+          labels: ['6:00', '9:00', '12:00', '15:00', '18:00', '21:00', '现在'],
+          datasets: [
+            {
+              label: '收缩压',
+              data: [125, 128, 130, 126, 132, 135, 126],
+              borderColor: '#ff7a5c',
+              backgroundColor: 'rgba(255, 122, 92, 0)',
+              tension: 0.4,
+              fill: false
+            },
+            {
+              label: '舒张压',
+              data: [82, 84, 85, 80, 86, 88, 82],
+              borderColor: '#6c63ff',
+              backgroundColor: 'rgba(108, 99, 255, 0)',
+              tension: 0.4,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              grid: {
+                display: true,
+                drawBorder: false
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+      
+      // Blood Glucose Chart
+      const bloodGlucoseCtx = document.getElementById('bloodGlucoseChart').getContext('2d');
+      new Chart(bloodGlucoseCtx, {
+        type: 'line',
+        data: {
+          labels: ['早餐前', '早餐后', '午餐前', '午餐后', '晚餐前', '晚餐后', '睡前'],
+          datasets: [{
+            label: '血糖',
+            data: [5.2, 6.1, 5.0, 6.2, 5.3, 5.8, 5.4],
+            borderColor: '#4caf50',
+            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              grid: {
+                display: true,
+                drawBorder: false
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

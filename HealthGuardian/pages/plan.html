@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthGuardian - 健康方案</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="iphone-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="carrier">中国移动</div>
+      <div class="time">14:30</div>
+      <div class="battery">
+        85% <i class="fas fa-battery-three-quarters"></i>
+      </div>
+    </div>
+    
+    <!-- App Container -->
+    <div class="app-container">
+      <!-- Header -->
+      <div class="d-flex align-center justify-between mb-20">
+        <h2 style="font-size: 22px;">健康方案</h2>
+        <div>
+          <i class="fas fa-sliders-h" style="font-size: 20px; color: var(--primary-color);"></i>
+        </div>
+      </div>
+      
+      <!-- Plan Categories -->
+      <div class="d-flex mb-20" style="overflow-x: auto; padding-bottom: 10px;">
+        <div style="padding: 8px 20px; background-color: var(--primary-color); color: white; border-radius: 20px; margin-right: 10px; font-size: 14px; white-space: nowrap;">
+          全部
+        </div>
+        <div style="padding: 8px 20px; background-color: #f0f0f0; color: var(--text-color); border-radius: 20px; margin-right: 10px; font-size: 14px; white-space: nowrap;">
+          饮食
+        </div>
+        <div style="padding: 8px 20px; background-color: #f0f0f0; color: var(--text-color); border-radius: 20px; margin-right: 10px; font-size: 14px; white-space: nowrap;">
+          运动
+        </div>
+        <div style="padding: 8px 20px; background-color: #f0f0f0; color: var(--text-color); border-radius: 20px; margin-right: 10px; font-size: 14px; white-space: nowrap;">
+          睡眠
+        </div>
+        <div style="padding: 8px 20px; background-color: #f0f0f0; color: var(--text-color); border-radius: 20px; margin-right: 10px; font-size: 14px; white-space: nowrap;">
+          心理
+        </div>
+      </div>
+      
+      <!-- Plan Overview Card -->
+      <div class="card" style="background: linear-gradient(135deg, #4a7aff, #6c63ff); color: white;">
+        <div class="d-flex justify-between align-center">
+          <div>
+            <h3 style="font-size: 18px; margin-bottom: 5px;">您的个性化健康方案</h3>
+            <p style="font-size: 14px; opacity: 0.8;">基于您的健康数据智能生成</p>
+          </div>
+          <div style="text-align: center;">
+            <div style="width: 60px; height: 60px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center;">
+              <i class="fas fa-heartbeat" style="font-size: 24px;"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-top: 15px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 14px;">完成进度</span>
+            <span style="font-size: 14px;">65%</span>
+          </div>
+          <div style="height: 8px; background-color: rgba(255, 255, 255, 0.2); border-radius: 4px; overflow: hidden;">
+            <div style="width: 65%; height: 100%; background-color: white; border-radius: 4px;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Diet Plan Card -->
+      <div class="card">
+        <div class="card-title">
+          <div class="d-flex align-center">
+            <div style="width: 30px; height: 30px; border-radius: 50%; background-color: rgba(76, 175, 80, 0.1); display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+              <i class="fas fa-apple-alt" style="color: var(--success-color);"></i>
+            </div>
+            <span>饮食方案</span>
+          </div>
+          <a href="#" class="more">详情</a>
+        </div>
+        
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">根据您的血压和血糖数据，为您定制的低盐、低糖饮食方案</p>
+        
+        <div style="background-color: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+          <h4 style="font-size: 16px; margin-bottom: 10px;">今日饮食建议</h4>
+          
+          <div class="d-flex align-center mb-10">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #e3f2fd; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-coffee" style="color: #1976d2;"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; margin-bottom: 3px;">早餐</div>
+              <div style="font-size: 14px; color: var(--text-muted);">全麦面包、鸡蛋、牛奶、蓝莓</div>
+            </div>
+          </div>
+          
+          <div class="d-flex align-center mb-10">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #e8f5e9; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-drumstick-bite" style="color: #388e3c;"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; margin-bottom: 3px;">午餐</div>
+              <div style="font-size: 14px; color: var(--text-muted);">糙米饭、清蒸鱼、西兰花、番茄汤</div>
+            </div>
+          </div>
+          
+          <div class="d-flex align-center">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #fff3e0; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-utensils" style="color: #f57c00;"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; margin-bottom: 3px;">晚餐</div>
+              <div style="font-size: 14px; color: var(--text-muted);">藜麦沙拉、鸡胸肉、南瓜汤</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background-color: rgba(76, 175, 80, 0.1); padding: 12px; border-radius: 8px;">
+          <div class="d-flex align-center">
+            <i class="fas fa-lightbulb" style="color: var(--success-color); margin-right: 10px;"></i>
+            <p style="font-size: 14px; color: var(--text-color);">建议减少盐分摄入，每日控制在5g以内，有助于降低血压。</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Exercise Plan Card -->
+      <div class="card">
+        <div class="card-title">
+          <div class="d-flex align-center">
+            <div style="width: 30px; height: 30px; border-radius: 50%; background-color: rgba(255, 122, 92, 0.1); display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+              <i class="fas fa-running" style="color: #ff7a5c;"></i>
+            </div>
+            <span>运动方案</span>
+          </div>
+          <a href="#" class="more">详情</a>
+        </div>
+        
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">根据您的身体状况和偏好，为您定制的适度有氧运动计划</p>
+        
+        <div style="background-color: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+          <h4 style="font-size: 16px; margin-bottom: 10px;">今日运动计划</h4>
+          
+          <div class="d-flex align-center mb-10">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #ffebee; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-walking" style="color: #c62828;"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; margin-bottom: 3px;">晨间快走</div>
+              <div style="font-size: 14px; color: var(--text-muted);">20分钟，中等强度</div>
+            </div>
+            <div>
+              <span class="badge badge-success">已完成</span>
+            </div>
+          </div>
+          
+          <div class="d-flex align-center mb-10">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #e0f7fa; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-dumbbell" style="color: #00838f;"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; margin-bottom: 3px;">力量训练</div>
+              <div style="font-size: 14px; color: var(--text-muted);">15分钟，轻度强度</div>
+            </div>
+            <div>
+              <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">开始</button>
+            </div>
+          </div>
+          
+          <div class="d-flex align-center">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background-color: #f3e5f5; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-biking" style="color: #6a1b9a;"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; margin-bottom: 3px;">室内自行车</div>
+              <div style="font-size: 14px; color: var(--text-muted);">30分钟，中等强度</div>
+            </div>
+            <div>
+              <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">开始</button>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background-color: rgba(255, 122, 92, 0.1); padding: 12px; border-radius: 8px;">
+          <div class="d-flex align-center">
+            <i class="fas fa-lightbulb" style="color: #ff7a5c; margin-right: 10px;"></i>
+            <p style="font-size: 14px; color: var(--text-color);">每周保持150分钟中等强度有氧运动，有助于控制血压和血糖。</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Sleep Plan Card -->
+      <div class="card">
+        <div class="card-title">
+          <div class="d-flex align-center">
+            <div style="width: 30px; height: 30px; border-radius: 50%; background-color: rgba(108, 99, 255, 0.1); display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+              <i class="fas fa-moon" style="color: #6c63ff;"></i>
+            </div>
+            <span>睡眠方案</span>
+          </div>
+          <a href="#" class="more">详情</a>
+        </div>
+        
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">根据您的睡眠模式分析，为您定制的睡眠改善计划</p>
+        
+        <div style="background-color: rgba(108, 99, 255, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+          <h4 style="font-size: 16px; margin-bottom: 10px; color: #6c63ff;">睡眠建议</h4>
+          
+          <div class="d-flex align-center mb-10">
+            <i class="fas fa-check-circle" style="color: #6c63ff; margin-right: 10px;"></i>
+            <p style="font-size: 14px;">保持规律的睡眠时间，建议23:00-7:00</p>
+          </div>
+          
+          <div class="d-flex align-center mb-10">
+            <i class="fas fa-check-circle" style="color: #6c63ff; margin-right: 10px;"></i>
+            <p style="font-size: 14px;">睡前1小时避免使用电子设备</p>
+          </div>
+          
+          <div class="d-flex align-center mb-10">
+            <i class="fas fa-check-circle" style="color: #6c63ff; margin-right: 10px;"></i>
+            <p style="font-size: 14px;">睡前可进行10分钟冥想放松</p>
+          </div>
+          
+          <div class="d-flex align-center">
+            <i class="fas fa-check-circle" style="color: #6c63ff; margin-right: 10px;"></i>
+            <p style="font-size: 14px;">保持卧室温度在18-22°C之间</p>
+          </div>
+        </div>
+        
+        <button class="btn" style="width: 100%; background-color: #6c63ff;">
+          <i class="fas fa-play-circle" style="margin-right: 8px;"></i> 开始睡前冥想
+        </button>
+      </div>
+      
+      <!-- Mental Health Card -->
+      <div class="card">
+        <div class="card-title">
+          <div class="d-flex align-center">
+            <div style="width: 30px; height: 30px; border-radius: 50%; background-color: rgba(255, 193, 7, 0.1); display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+              <i class="fas fa-brain" style="color: #ffc107;"></i>
+            </div>
+            <span>心理调节</span>
+          </div>
+          <a href="#" class="more">详情</a>
+        </div>
+        
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">根据您的压力水平和情绪状态，为您提供的心理健康建议</p>
+        
+        <div style="display: flex; overflow-x: auto; padding: 5px 0; margin-bottom: 15px;">
+          <div style="min-width: 140px; margin-right: 15px; background-color: #fff8e1; padding: 15px; border-radius: 10px; text-align: center;">
+            <i class="fas fa-spa" style="font-size: 24px; color: #ffa000; margin-bottom: 10px;"></i>
+            <div style="font-weight: 600; margin-bottom: 5px;">冥想</div>
+            <div style="font-size: 12px; color: var(--text-muted);">10分钟</div>
+          </div>
+          
+          <div style="min-width: 140px; margin-right: 15px; background-color: #e8f5e9; padding: 15px; border-radius: 10px; text-align: center;">
+            <i class="fas fa-wind" style="font-size: 24px; color: #388e3c; margin-bottom: 10px;"></i>
+            <div style="font-weight: 600; margin-bottom: 5px;">呼吸练习</div>
+            <div style="font-size: 12px; color: var(--text-muted);">5分钟</div>
+          </div>
+          
+          <div style="min-width: 140px; background-color: #e3f2fd; padding: 15px; border-radius: 10px; text-align: center;">
+            <i class="fas fa-book" style="font-size: 24px; color: #1976d2; margin-bottom: 10px;"></i>
+            <div style="font-weight: 600; margin-bottom: 5px;">正念日记</div>
+            <div style="font-size: 12px; color: var(--text-muted);">15分钟</div>
+          </div>
+        </div>
+        
+        <div style="background-color: rgba(255, 193, 7, 0.1); padding: 12px; border-radius: 8px;">
+          <div class="d-flex align-center">
+            <i class="fas fa-lightbulb" style="color: #ffc107; margin-right: 10px;"></i>
+            <p style="font-size: 14px; color: var(--text-color);">每天进行10-15分钟的冥想，有助于降低压力水平，改善睡眠质量。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item" data-page="home">
+        <i class="fas fa-home"></i>
+        <span>首页</span>
+      </div>
+      <div class="tab-item" data-page="data">
+        <i class="fas fa-chart-line"></i>
+        <span>数据</span>
+      </div>
+      <div class="tab-item active" data-page="plan">
+        <i class="fas fa-clipboard-list"></i>
+        <span>方案</span>
+      </div>
+      <div class="tab-item" data-page="consult">
+        <i class="fas fa-comment-medical"></i>
+        <span>问诊</span>
+      </div>
+      <div class="tab-item" data-page="profile">
+        <i class="fas fa-user"></i>
+        <span>我的</span>
+      </div>
+    </div>
+  </div>
+  
+  <script src="../js/app.js"></script>
+</body>
+</html>

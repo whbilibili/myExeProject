@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthGuardian</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="iphone-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="carrier">中国移动</div>
+      <div class="time">14:30</div>
+      <div class="battery">
+        85% <i class="fas fa-battery-three-quarters"></i>
+      </div>
+    </div>
+    
+    <!-- App Container - Content goes here -->
+    <div class="app-container">
+      <!-- Page specific content will be placed here -->
+    </div>
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item active" data-page="home">
+        <i class="fas fa-home"></i>
+        <span>首页</span>
+      </div>
+      <div class="tab-item" data-page="data">
+        <i class="fas fa-chart-line"></i>
+        <span>数据</span>
+      </div>
+      <div class="tab-item" data-page="plan">
+        <i class="fas fa-clipboard-list"></i>
+        <span>方案</span>
+      </div>
+      <div class="tab-item" data-page="consult">
+        <i class="fas fa-comment-medical"></i>
+        <span>问诊</span>
+      </div>
+      <div class="tab-item" data-page="profile">
+        <i class="fas fa-user"></i>
+        <span>我的</span>
+      </div>
+    </div>
+  </div>
+  
+  <script src="../js/app.js"></script>
+</body>
+</html>

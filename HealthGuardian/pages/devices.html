@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthGuardian - 设备管理</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="iphone-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="carrier">中国移动</div>
+      <div class="time">14:30</div>
+      <div class="battery">
+        85% <i class="fas fa-battery-three-quarters"></i>
+      </div>
+    </div>
+    
+    <!-- App Container -->
+    <div class="app-container">
+      <!-- Header -->
+      <div class="d-flex align-center justify-between mb-20">
+        <h2 style="font-size: 22px;">设备管理</h2>
+        <div>
+          <i class="fas fa-plus-circle" style="font-size: 22px; color: var(--primary-color);"></i>
+        </div>
+      </div>
+      
+      <!-- Connected Devices Section -->
+      <div class="card-title mb-10">
+        <span>已连接设备</span>
+      </div>
+      
+      <!-- Smart Watch Device -->
+      <div class="card mb-20">
+        <div class="d-flex align-center justify-between mb-15">
+          <div class="d-flex align-center">
+            <div style="width: 50px; height: 50px; background-color: rgba(74, 122, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-watch" style="font-size: 24px; color: var(--primary-color);"></i>
+            </div>
+            <div>
+              <div style="font-weight: 600; margin-bottom: 3px;">智能手表 Pro</div>
+              <div style="font-size: 14px; color: var(--text-muted);">已连接 · 电量 78%</div>
+            </div>
+          </div>
+          <div>
+            <i class="fas fa-chevron-right" style="color: var(--text-muted);"></i>
+          </div>
+        </div>
+        
+        <div style="background-color: #f8f9fa; border-radius: 10px; padding: 15px;">
+          <div class="d-flex justify-between mb-10">
+            <div style="font-size: 14px;">最后同步</div>
+            <div style="font-size: 14px; font-weight: 500;">今天 13:45</div>
+          </div>
+          
+          <div class="d-flex justify-between mb-10">
+            <div style="font-size: 14px;">数据类型</div>
+            <div style="font-size: 14px; font-weight: 500;">心率、步数、睡眠</div>
+          </div>
+          
+          <div class="d-flex justify-between">
+            <div style="font-size: 14px;">同步频率</div>
+            <div style="font-size: 14px; font-weight: 500;">每小时</div>
+          </div>
+        </div>
+        
+        <div class="d-flex mt-15">
+          <button class="btn btn-outline" style="flex: 1; margin-right: 10px; font-size: 14px;">
+            <i class="fas fa-sync-alt" style="margin-right: 5px;"></i> 立即同步
+          </button>
+          <button class="btn" style="flex: 1; font-size: 14px;">
+            <i class="fas fa-cog" style="margin-right: 5px;"></i> 设置
+          </button>
+        </div>
+      </div>
+      
+      <!-- Blood Pressure Monitor Device -->
+      <div class="card mb-20">
+        <div class="d-flex align-center justify-between mb-15">
+          <div class="d-flex align-center">
+            <div style="width: 50px; height: 50px; background-color: rgba(255, 122, 92, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-heartbeat" style="font-size: 24px; color: #ff7a5c;"></i>
+            </div>
+            <div>
+              <div style="font-weight: 600; margin-bottom: 3px;">智能血压计</div>
+              <div style="font-size: 14px; color: var(--text-muted);">已连接 · 电量 92%</div>
+            </div>
+          </div>
+          <div>
+            <i class="fas fa-chevron-right" style="color: var(--text-muted);"></i>
+          </div>
+        </div>
+        
+        <div style="background-color: #f8f9fa; border-radius: 10px; padding: 15px;">
+          <div class="d-flex justify-between mb-10">
+            <div style="font-size: 14px;">最后同步</div>
+            <div style="font-size: 14px; font-weight: 500;">今天 08:30</div>
+          </div>
+          
+          <div class="d-flex justify-between mb-10">
+            <div style="font-size: 14px;">数据类型</div>
+            <div style="font-size: 14px; font-weight: 500;">收缩压、舒张压、心率</div>
+          </div>
+          
+          <div class="d-flex justify-between">
+            <div style="font-size: 14px;">同步频率</div>
+            <div style="font-size: 14px; font-weight: 500;">每次测量后</div>
+          </div>
+        </div>
+        
+        <div class="d-flex mt-15">
+          <button class="btn btn-outline" style="flex: 1; margin-right: 10px; font-size: 14px;">
+            <i class="fas fa-sync-alt" style="margin-right: 5px;"></i> 立即同步
+          </button>
+          <button class="btn" style="flex: 1; font-size: 14px;">
+            <i class="fas fa-cog" style="margin-right: 5px;"></i> 设置
+          </button>
+        </div>
+      </div>
+      
+      <!-- Blood Glucose Monitor Device -->
+      <div class="card mb-20">
+        <div class="d-flex align-center justify-between mb-15">
+          <div class="d-flex align-center">
+            <div style="width: 50px; height: 50px; background-color: rgba(76, 175, 80, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-tint" style="font-size: 24px; color: var(--success-color);"></i>
+            </div>
+            <div>
+              <div style="font-weight: 600; margin-bottom: 3px;">智能血糖仪</div>
+              <div style="font-size: 14px; color: var(--text-muted);">已连接 · 电量 65%</div>
+            </div>
+          </div>
+          <div>
+            <i class="fas fa-chevron-right" style="color: var(--text-muted);"></i>
+          </div>
+        </div>
+        
+        <div style="background-color: #f8f9fa; border-radius: 10px; padding: 15px;">
+          <div class="d-flex justify-between mb-10">
+            <div style="font-size: 14px;">最后同步</div>
+            <div style="font-size: 14px; font-weight: 500;">昨天 19:15</div>
+          </div>
+          
+          <div class="d-flex justify-between mb-10">
+            <div style="font-size: 14px;">数据类型</div>
+            <div style="font-size: 14px; font-weight: 500;">血糖值</div>
+          </div>
+          
+          <div class="d-flex justify-between">
+            <div style="font-size: 14px;">同步频率</div>
+            <div style="font-size: 14px; font-weight: 500;">每次测量后</div>
+          </div>
+        </div>
+        
+        <div class="d-flex mt-15">
+          <button class="btn btn-outline" style="flex: 1; margin-right: 10px; font-size: 14px;">
+            <i class="fas fa-sync-alt" style="margin-right: 5px;"></i> 立即同步
+          </button>
+          <button class="btn" style="flex: 1; font-size: 14px;">
+            <i class="fas fa-cog" style="margin-right: 5px;"></i> 设置
+          </button>
+        </div>
+      </div>
+      
+      <!-- Available Devices Section -->
+      <div class="card-title mb-10 mt-20">
+        <span>可添加设备</span>
+      </div>
+      
+      <div class="card mb-15">
+        <div class="d-flex align-center justify-between">
+          <div class="d-flex align-center">
+            <div style="width: 50px; height: 50px; background-color: rgba(108, 99, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-weight" style="font-size: 24px; color: #6c63ff;"></i>
+            </div>
+            <div>
+              <div style="font-weight: 600; margin-bottom: 3px;">智能体重秤</div>
+              <div style="font-size: 14px; color: var(--text-muted);">测量体重、体脂率、BMI等</div>
+            </div>
+          </div>
+          <button class="btn connect-device-btn" data-device-id="scale" style="padding: 8px 15px; font-size: 14px;">
+            连接
+          </button>
+        </div>
+      </div>
+      
+      <div class="card mb-15">
+        <div class="d-flex align-center justify-between">
+          <div class="d-flex align-center">
+            <div style="width: 50px; height: 50px; background-color: rgba(255, 193, 7, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-bed" style="font-size: 24px; color: #ffc107;"></i>
+            </div>
+            <div>
+              <div style="font-weight: 600; margin-bottom: 3px;">智能睡眠监测器</div>
+              <div style="font-size: 14px; color: var(--text-muted);">监测睡眠质量、呼吸频率等</div>
+            </div>
+          </div>
+          <button class="btn connect-device-btn" data-device-id="sleep" style="padding: 8px 15px; font-size: 14px;">
+            连接
+          </button>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="d-flex align-center justify-between">
+          <div class="d-flex align-center">
+            <div style="width: 50px; height: 50px; background-color: rgba(233, 30, 99, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+              <i class="fas fa-lungs" style="font-size: 24px; color: #e91e63;"></i>
+            </div>
+            <div>
+              <div style="font-weight: 600; margin-bottom: 3px;">智能血氧仪</div>
+              <div style="font-size: 14px; color: var(--text-muted);">测量血氧饱和度、脉率等</div>
+            </div>
+          </div>
+          <button class="btn connect-device-btn" data-device-id="oximeter" style="padding: 8px 15px; font-size: 14px;">
+            连接
+          </button>
+        </div>
+      </div>
+      
+      <!-- View All Devices Button -->
+      <button class="btn btn-outline" style="width: 100%; margin-top: 20px;">
+        查看全部支持设备
+      </button>
+    </div>
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item" data-page="home">
+        <i class="fas fa-home"></i>
+        <span>首页</span>
+      </div>
+      <div class="tab-item" data-page="data">
+        <i class="fas fa-chart-line"></i>
+        <span>数据</span>
+      </div>
+      <div class="tab-item" data-page="plan">
+        <i class="fas fa-clipboard-list"></i>
+        <span>方案</span>
+      </div>
+      <div class="tab-item" data-page="consult">
+        <i class="fas fa-comment-medical"></i>
+        <span>问诊</span>
+      </div>
+      <div class="tab-item active" data-page="profile">
+        <i class="fas fa-user"></i>
+        <span>我的</span>
+      </div>
+    </div>
+  </div>
+  
+  <script src="../js/app.js"></script>
+</body>
+</html>
