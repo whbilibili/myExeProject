@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt 可视化管理工具 - 所有页面预览</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="css/styles.css" rel="stylesheet">
+  <style>
+    .page-container {
+      border: 1px solid #e5e7eb;
+      margin-bottom: 50px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+    
+    .page-title {
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background-color: #4f46e5;
+      color: white;
+      padding: 2px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 10;
+    }
+    
+    .page-frame {
+      width: 100%;
+      height: 800px;
+      border: none;
+      overflow: hidden;
+    }
+    
+    .sidebar-preview {
+      width: 280px;
+      height: 100%;
+      background-color: white;
+      border-right: 1px solid #e5e7eb;
+      float: left;
+    }
+    
+    .content-preview {
+      margin-left: 280px;
+      height: 100%;
+      background-color: #f9fafb;
+      overflow: hidden;
+    }
+    
+    .group-sidebar-preview {
+      width: 250px;
+      background-color: white;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      float: left;
+    }
+    
+    .main-content-preview {
+      margin-left: 270px;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-8">
+  <header class="mb-8 text-center">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Prompt 可视化管理工具</h1>
+    <p class="text-gray-600">所有页面预览</p>
+  </header>
+  
+  <!-- 主页预览 -->
+  <div class="page-container">
+    <div class="page-title">主页 (index.html)</div>
+    <div style="height: 800px; overflow: hidden;">
+      <div class="sidebar-preview">
+        <!-- Logo -->
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center space-x-2">
+            <i class="fas fa-brain text-indigo-600 text-2xl"></i>
+            <h1 class="text-xl font-bold text-gray-800">Prompt Manager</h1>
+          </div>
+        </div>
+        
+        <!-- Navigation -->
+        <nav class="px-4 py-6">
+          <ul class="space-y-2">
+            <li>
+              <a href="#" class="flex items-center px-4 py-3 text-gray-700 bg-indigo-50 rounded-lg">
+                <i class="fas fa-home mr-3 text-indigo-600"></i>
+                <span>仪表盘</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="flex items-center px-4 py-3 text-gray-600 hover:bg-indigo-50 rounded-lg">
+                <i class="fas fa-book mr-3 text-gray-500"></i>
+                <span>Prompt 库</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="flex items-center px-4 py-3 text-gray-600 hover:bg-indigo-50 rounded-lg">
+                <i class="fas fa-edit mr-3 text-gray-500"></i>
+                <span>编辑器</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="flex items-center px-4 py-3 text-gray-600 hover:bg-indigo-50 rounded-lg">
+                <i class="fas fa-clipboard-list mr-3 text-gray-500"></i>
+                <span>模板中心</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="flex items-center px-4 py-3 text-gray-600 hover:bg-indigo-50 rounded-lg">
+                <i class="fas fa-users mr-3 text-gray-500"></i>
+                <span>协作</span>
+              </a>
+            </li>
+          </ul>
+          
+          <div class="mt-8">
+            <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">收藏</h3>
+            <ul class="mt-2 space-y-1">
+              <li>
+                <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-indigo-50 rounded-lg">
+                  <i class="fas fa-star mr-3 text-yellow-500"></i>
+                  <span>AI 写作助手</span>
+                </a>
+              </li>
+              <li>
+                <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-indigo-50 rounded-lg">
+                  <i class="fas fa-star mr-3 text-yellow-500"></i>
+                  <span>代码生成器</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+        
+        <!-- User Profile -->
+        <div class="absolute bottom-0 left-0 right-0 px-6 py-4 border-t border-gray-200" style="width: 280px;">
+          <div class="flex items-center">
+            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" class="w-10 h-10 rounded-full">
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-700">张明</p>
+              <p class="text-xs text-gray-500">产品经理</p>
+            </div>
+            <div class="ml-auto">
+              <button class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-cog"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="content-preview">
+        <div class="w-full h-full flex items-center justify-center">
+          <div class="text-center">
+            <i class="fas fa-desktop text-indigo-300 text-6xl mb-4"></i>
+            <p class="text-gray-500">内容区域 - 通过iframe加载其他页面</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 仪表盘预览 -->
+  <div class="page-container">
+    <div class="page-title">仪表盘 (dashboard.html)</div>
+    <div class="p-6 bg-gray-50" style="height: 800px; overflow: hidden;">
+      <!-- Header -->
+      <header class="mb-8">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">欢迎回来，张明</h1>
+            <p class="text-gray-600">这是您的 Prompt 管理仪表盘</p>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <input type="text" placeholder="搜索..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            </div>
+            <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
+              <i class="fas fa-plus mr-2"></i> 新建 Prompt
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Prompts -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-500">总 Prompt 数</p>
+              <p class="text-2xl font-bold text-gray-800">42</p>
+            </div>
+            <div class="bg-indigo-100 p-3 rounded-full">
+              <i class="fas fa-file-alt text-indigo-600 text-xl"></i>
+            </div>
+          </div>
+          <div class="mt-4">
+            <span class="text-green-500 text-sm font-medium flex items-center">
+              <i class="fas fa-arrow-up mr-1"></i> 12% <span class="text-gray-500 ml-1">相比上月</span>
+            </span>
+          </div>
+        </div>
+        
+        <!-- Used Prompts -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-500">本月使用次数</p>
+              <p class="text-2xl font-bold text-gray-800">128</p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-full">
+              <i class="fas fa-bolt text-green-600 text-xl"></i>
+            </div>
+          </div>
+          <div class="mt-4">
+            <span class="text-green-500 text-sm font-medium flex items-center">
+              <i class="fas fa-arrow-up mr-1"></i> 18% <span class="text-gray-500 ml-1">相比上月</span>
+            </span>
+          </div>
+        </div>
+        
+        <!-- Shared Prompts -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-500">已共享 Prompt</p>
+              <p class="text-2xl font-bold text-gray-800">15</p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-full">
+              <i class="fas fa-share-alt text-blue-600 text-xl"></i>
+            </div>
+          </div>
+          <div class="mt-4">
+            <span class="text-green-500 text-sm font-medium flex items-center">
+              <i class="fas fa-arrow-up mr-1"></i> 5% <span class="text-gray-500 ml-1">相比上月</span>
+            </span>
+          </div>
+        </div>
+        
+        <!-- Favorites -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-500">收藏数量</p>
+              <p class="text-2xl font-bold text-gray-800">8</p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-full">
+              <i class="fas fa-star text-yellow-600 text-xl"></i>
+            </div>
+          </div>
+          <div class="mt-4">
+            <span class="text-gray-500 text-sm font-medium flex items-center">
+              <i class="fas fa-minus mr-1"></i> 0% <span class="text-gray-500 ml-1">相比上月</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Charts and Recent Activity -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Usage Chart -->
+        <div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">Prompt 使用趋势</h2>
+          <div class="h-64 flex items-center justify-center">
+            <div class="text-center">
+              <i class="fas fa-chart-line text-indigo-300 text-4xl mb-2"></i>
+              <p class="text-gray-500">使用趋势图表</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">最近活动</h2>
+          <div class="space-y-4">
+            <div class="flex items-start">
+              <div class="bg-indigo-100 p-2 rounded-full">
+                <i class="fas fa-edit text-indigo-600"></i>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-gray-800">编辑了 "产品描述生成器"</p>
+                <p class="text-xs text-gray-500">今天 14:32</p>
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="bg-green-100 p-2 rounded-full">
+                <i class="fas fa-plus text-green-600"></i>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-gray-800">创建了 "SEO 优化助手"</p>
+                <p class="text-xs text-gray-500">今天 11:15</p>
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="bg-blue-100 p-2 rounded-full">
+                <i class="fas fa-share-alt text-blue-600"></i>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-gray-800">共享了 "代码注释生成器" 给李华</p>
+                <p class="text-xs text-gray-500">昨天 16:48</p>
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div class="bg-yellow-100 p-2 rounded-full">
+                <i class="fas fa-star text-yellow-600"></i>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-gray-800">收藏了 "AI 写作助手"</p>
+                <p class="text-xs text-gray-500">昨天 10:23</p>
+              </div>
+            </div>
+          </div>
+          <a href="#" class="block text-center text-indigo-600 hover:text-indigo-800 text-sm font-medium mt-4">查看全部活动</a>
+        </div>
+      </div>
+      
+      <!-- Quick Access -->
+      <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-gray-800">快速访问</h2>
+          <a href="#" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">查看全部</a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Prompt Card 1 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <div class="bg-indigo-100 p-2 rounded-full">
+                  <i class="fas fa-pen-fancy text-indigo-600"></i>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-gray-400 hover:text-yellow-500">
+                    <i class="fas fa-star"></i>
+                  </button>
+                  <button class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-1">AI 写作助手</h3>
+              <p class="text-sm text-gray-600 mb-3">帮助快速生成高质量的文章、博客和社交媒体内容</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="tag">写作</span>
+                <span class="tag">内容</span>
+                <span class="tag">营销</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-gray-500">
+                <span>使用次数: 42</span>
+                <span>2天前更新</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Prompt Card 2 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-3">
+                <div class="bg-blue-100 p-2 rounded-full">
+                  <i class="fas fa-code text-blue-600"></i>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="text-yellow-500">
+                    <i class="fas fa-star"></i>
+                  </button>
+                  <button class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-800 mb-1">代码生成器</h3>
+              <p class="text-sm text-gray-600 mb-3">根据需求描述生成高质量的代码片段和函数</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="tag">代码</span>
+                <span class="tag">开发</span>
+                <span class="tag">编程</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-gray-500">
+                <span>使用次数: 38</span>
+                <span>1周前更新</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Prompt库预览 -->
+  <div class="page-container">
+    <div class="page-title">Prompt库 (prompt-library.html)</div>
+    <div class="p-6 bg-gray-50" style="height: 800px; overflow: hidden;">
+      <!-- Header -->
+      <header class="mb-8">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">Prompt 库</h1>
+            <p class="text-gray-600">管理和组织您的所有 Prompt</p>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <input type="text" id="search-input" placeholder="搜索 Prompt..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            </div>
+            <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
+              <i class="fas fa-plus mr-2"></i> 新建 Prompt
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <div class="flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+        <!-- 分组侧边栏 -->
+        <div class="group-sidebar-preview">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-800">分组</h2>
+            <button id="create-group-btn" class="text-indigo-600 hover:text-indigo-800">
+              <i class="fas fa-plus-circle"></i>
+            </button>
+          </div>
+          
+          <!-- 分组列表 -->
+          <div class="space-y-1">
+            <!-- 所有Prompt -->
+            <div class="group-item active px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="all">
+              <div class="flex items-center">
+                <i class="fas fa-layer-group text-indigo-600 mr-3"></i>
+                <span>所有 Prompt</span>
+              </div>
+              <span class="group-count bg-indigo-100 text-indigo-800 px-2">42</span>
+            </div>
+            
+            <!-- 收藏 -->
+            <div class="group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="favorites">
+              <div class="flex items-center">
+                <i class="fas fa-star text-yellow-500 mr-3"></i>
+                <span>收藏</span>
+              </div>
+              <span class="group-count bg-yellow-100 text-yellow-800 px-2">8</span>
+            </div>
+            
+            <!-- 最近使用 -->
+            <div class="group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="recent">
+              <div class="flex items-center">
+                <i class="fas fa-history text-blue-600 mr-3"></i>
+                <span>最近使用</span>
+              </div>
+              <span class="group-count bg-blue-100 text-blue-800 px-2">15</span>
+            </div>
+            
+            <div class="border-t border-gray-200 my-3"></div>
+            
+            <!-- 自定义分组 -->
+            <div class="group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="writing">
+              <div class="flex items-center">
+                <i class="fas fa-pen-fancy text-indigo-600 mr-3"></i>
+                <span>写作助手</span>
+              </div>
+              <div class="flex items-center">
+                <span class="group-count bg-gray-100 text-gray-800 px-2 mr-2">5</span>
+                <div class="relative">
+                  <button class="text-gray-400 hover:text-gray-600 group-edit-btn">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="coding">
+              <div class="flex items-center">
+                <i class="fas fa-code text-blue-600 mr-3"></i>
+                <span>编程工具</span>
+              </div>
+              <div class="flex items-center">
+                <span class="group-count bg-gray-100 text-gray-800 px-2 mr-2">3</span>
+                <div class="relative">
+                  <button class="text-gray-400 hover:text-gray-600 group-edit-btn">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="group-item px-3 py-2 rounded-md flex justify-between items-center cursor-pointer" data-group-id="marketing">
+              <div class="flex items-center">
+                <i class="fas fa-bullhorn text-green-600 mr-3"></i>
+                <span>营销策略</span>
+              </div>
+              <div class="flex items-center">
+                <span class="group-count bg-gray-100 text-gray-800 px-2 mr-2">4</span>
+                <div class="relative">
+                  <button class="text-gray-400 hover:text-gray-600 group-edit-btn">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="main-content-preview">
+          <!-- Filters and Sort -->
+          <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex flex-wrap items-center justify-between">
+              <div class="flex flex-wrap items-center space-x-2 mb-2 md:mb-0">
+                <span class="text-sm font-medium text-gray-700">筛选:</span>
+                <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="writing">写作</button>
+                <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="code">代码</button>
+                <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="data">数据</button>
+                <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="marketing">营销</button>
+                <button class="tag-filter px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm hover:bg-indigo-200" data-tag="seo">SEO</button>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-sm font-medium text-gray-700">排序:</span>
+                <select class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                  <option>最近更新</option>
+                  <option>使用频率</option>
+                  <option>字母顺序</option>
+                  <option>创建日期</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Prompt Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Prompt Card 1 -->
+            <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="writing,content,marketing" draggable="true">
+              <div class="p-5">
+                <div class="flex justify-between items-start mb-3">
+                  <div class="bg-indigo-100 p-2 rounded-full">
+                    <i class="fas fa-pen-fancy text-indigo-600"></i>
+                  </div>
+                  <div class="flex space-x-2">
+                    <button class="text-gray-400 hover:text-yellow-500">
+                      <i class="fas fa-star"></i>
+                    </button>
+                    <div class="relative">
+                      <button class="text-gray-400 hover:text-gray-600" id="dropdown-trigger-1">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">AI 写作助手</h3>
+                <p class="text-sm text-gray-600 mb-3 prompt-description">帮助快速生成高质量的文章、博客和社交媒体内容</p>
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <span class="tag">写作</span>
+                  <span class="tag">内容</span>
+                  <span class="tag">营销</span>
+                </div>
+                <div class="flex justify-between items-center text-xs text-gray-500">
+                  <span>使用次数: 42</span>
+                  <span>2天前更新</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Prompt Card 2 -->
+            <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="code,development,programming" draggable="true">
+              <div class="p-5">
+                <div class="flex justify-between items-start mb-3">
+                  <div class="bg-blue-100 p-2 rounded-full">
+                    <i class="fas fa-code text-blue-600"></i>
+                  </div>
+                  <div class="flex space-x-2">
+                    <button class="text-yellow-500">
+                      <i class="fas fa-star"></i>
+                    </button>
+                    <div class="relative">
+                      <button class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">代码生成器</h3>
+                <p class="text-sm text-gray-600 mb-3 prompt-description">根据需求描述生成高质量的代码片段和函数</p>
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <span class="tag">代码</span>
+                  <span class="tag">开发</span>
+                  <span class="tag">编程</span>
+                </div>
+                <div class="flex justify-between items-center text-xs text-gray-500">
+                  <span>使用次数: 38</span>
+                  <span>1周前更新</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 创建分组弹窗 (隐藏状态) -->
+      <div id="create-group-modal" class="hidden">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">创建新分组</h3>
+            <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="mb-4">
+            <label for="group-name" class="block text-sm font-medium text-gray-700 mb-2">分组名称</label>
+            <input type="text" id="group-name" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="输入分组名称">
+          </div>
+          <div class="mb-4">
+            <label for="group-icon" class="block text-sm font-medium text-gray-700 mb-2">选择图标</label>
+            <div class="grid grid-cols-6 gap-2">
+              <button class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-center icon-option" data-icon="fa-pen-fancy">
+                <i class="fas fa-pen-fancy text-indigo-600"></i>
+              </button>
+              <button class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-center icon-option" data-icon="fa-code">
+                <i class="fas fa-code text-blue-600"></i>
+              </button>
+              <button class="p-2 border border-gray-300 rounded hover:bg-gray-100 text-center icon-option" data-icon="fa-chart-pie">
+                <i class="fas fa-chart-pie text-green-600"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex justify-end space-x-3">
+            <button id="cancel-group-btn" class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">取消</button>
+            <button id="save-group-btn" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 编辑器预览 -->
+  <div class="page-container">
+    <div class="page-title">编辑器 (editor.html)</div>
+    <div class="p-6 bg-gray-50" style="height: 800px; overflow: hidden;">
+      <!-- Header -->
+      <header class="mb-6">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center">
+            <button class="mr-4 text-gray-500 hover:text-gray-700">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <div>
+              <h1 class="text-2xl font-bold text-gray-800">编辑 Prompt</h1>
+              <p class="text-gray-600">创建和编辑您的 Prompt</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors flex items-center">
+              <i class="fas fa-eye mr-2"></i> 预览
+            </button>
+            <button class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors flex items-center">
+              <i class="fas fa-history mr-2"></i> 历史版本
+            </button>
+            <button id="save-prompt" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
+              <i class="fas fa-save mr-2"></i> 保存
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Main Editor Area -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column - Editor -->
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-lg shadow">
+            <!-- Title Input -->
+            <div class="p-4 border-b border-gray-200">
+              <input type="text" placeholder="Prompt 标题" value="AI 写作助手" class="w-full text-xl font-semibold text-gray-800 focus:outline-none">
+            </div>
+            
+            <!-- Toolbar -->
+            <div class="flex flex-wrap items-center p-2 border-b border-gray-200 bg-gray-50">
+              <div class="flex items-center space-x-1 mr-4">
+                <button class="format-btn p-2 rounded hover:bg-gray-200" data-format="bold" data-tooltip="加粗">
+                  <i class="fas fa-bold text-gray-700"></i>
+                </button>
+                <button class="format-btn p-2 rounded hover:bg-gray-200" data-format="italic" data-tooltip="斜体">
+                  <i class="fas fa-italic text-gray-700"></i>
+                </button>
+                <button class="format-btn p-2 rounded hover:bg-gray-200" data-format="underline" data-tooltip="下划线">
+                  <i class="fas fa-underline text-gray-700"></i>
+                </button>
+              </div>
+              <div class="flex items-center space-x-1 mr-4">
+                <button class="p-2 rounded hover:bg-gray-200" data-tooltip="标题">
+                  <i class="fas fa-heading text-gray-700"></i>
+                </button>
+                <button class="p-2 rounded hover:bg-gray-200" data-tooltip="列表">
+                  <i class="fas fa-list-ul text-gray-700"></i>
+                </button>
+                <button class="p-2 rounded hover:bg-gray-200" data-tooltip="有序列表">
+                  <i class="fas fa-list-ol text-gray-700"></i>
+                </button>
+              </div>
+              <div class="flex items-center space-x-1 mr-4">
+                <button class="format-btn p-2 rounded hover:bg-gray-200" data-format="code" data-tooltip="代码">
+                  <i class="fas fa-code text-gray-700"></i>
+                </button>
+                <button class="p-2 rounded hover:bg-gray-200" data-tooltip="引用">
+                  <i class="fas fa-quote-right text-gray-700"></i>
+                </button>
+                <button class="p-2 rounded hover:bg-gray-200" data-tooltip="链接">
+                  <i class="fas fa-link text-gray-700"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Editor Content -->
+            <div id="prompt-editor" class="p-4">
+              <div id="editor-content" class="min-h-[200px] focus:outline-none" contenteditable="true">
+                <p>我希望你充当一名专业的内容创作者，帮助我生成高质量的<span class="bg-yellow-100 px-1 rounded">{内容类型}</span>。</p>
+                <p>请按照以下要求进行创作：</p>
+                <ul>
+                  <li>主题：<span class="bg-yellow-100 px-1 rounded">{主题}</span></li>
+                  <li>目标受众：<span class="bg-yellow-100 px-1 rounded">{目标受众}</span></li>
+                  <li>风格：<span class="bg-yellow-100 px-1 rounded">{风格}</span></li>
+                  <li>字数要求：<span class="bg-yellow-100 px-1 rounded">{字数}</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Variables Section -->
+          <div class="bg-white rounded-lg shadow mt-6 p-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">变量管理</h3>
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Variable 1 -->
+                <div class="border border-gray-200 rounded-lg p-3">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-gray-700">内容类型</span>
+                    <button class="text-gray-400 hover:text-gray-600">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                  </div>
+                  <input type="text" value="博客文章" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                  <div class="mt-2 text-xs text-gray-500">
+                    <span>可选值：博客文章, 社交媒体帖子, 新闻稿, 产品描述</span>
+                  </div>
+                </div>
+                
+                <!-- Variable 2 -->
+                <div class="border border-gray-200 rounded-lg p-3">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium text-gray-700">主题</span>
+                    <button class="text-gray-400 hover:text-gray-600">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                  </div>
+                  <input type="text" value="人工智能在日常生活中的应用" class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right Column - Settings -->
+        <div class="lg:col-span-1">
+          <!-- Prompt Settings -->
+          <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Prompt 设置</h3>
+            
+            <!-- Categories -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">分类</label>
+              <select class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option>内容创作</option>
+                <option>代码生成</option>
+                <option>数据分析</option>
+                <option>营销</option>
+                <option>创意写作</option>
+                <option>其他</option>
+              </select>
+            </div>
+            
+            <!-- Tags -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">标签</label>
+              <div class="flex flex-wrap gap-2 mb-2">
+                <span class="tag flex items-center">
+                  写作
+                  <button class="ml-1 text-indigo-700 hover:text-indigo-900">
+                    <i class="fas fa-times-circle"></i>
+                  </button>
+                </span>
+                <span class="tag flex items-center">
+                  内容
+                  <button class="ml-1 text-indigo-700 hover:text-indigo-900">
+                    <i class="fas fa-times-circle"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+            
+            <!-- Description -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">描述</label>
+              <textarea class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 h-24">帮助快速生成高质量的文章、博客和社交媒体内容</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 模板中心预览 -->
+  <div class="page-container">
+    <div class="page-title">模板中心 (templates.html)</div>
+    <div class="p-6 bg-gray-50" style="height: 800px; overflow: hidden;">
+      <!-- Header -->
+      <header class="mb-8">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">模板中心</h1>
+            <p class="text-gray-600">浏览和使用预设的 Prompt 模板</p>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <input type="text" id="search-input" placeholder="搜索模板..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            </div>
+            <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
+              <i class="fas fa-plus mr-2"></i> 提交模板
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Categories -->
+      <div class="mb-8">
+        <div class="flex flex-wrap items-center space-x-2 mb-4">
+          <button class="px-4 py-2 bg-indigo-600 text-white rounded-full text-sm">全部</button>
+          <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">内容创作</button>
+          <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">代码生成</button>
+          <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">数据分析</button>
+          <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">营销</button>
+          <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">创意写作</button>
+        </div>
+      </div>
+      
+      <!-- Featured Templates -->
+      <div class="mb-10">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">精选模板</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Template Card 1 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+            <div class="relative">
+              <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Template" class="w-full h-40 object-cover rounded-t-lg">
+              <div class="absolute top-2 right-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded">精选</div>
+            </div>
+            <div class="p-5">
+              <h3 class="text-lg font-semibold text-gray-800 mb-1">专业博客文章生成器</h3>
+              <p class="text-sm text-gray-600 mb-3">生成结构清晰、内容丰富的专业博客文章</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="tag">内容创作</span>
+                <span class="tag">博客</span>
+                <span class="tag">SEO</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                  <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Author" class="w-6 h-6 rounded-full mr-2">
+                  <span class="text-xs text-gray-500">官方模板</span>
+                </div>
+                <div class="flex items-center text-xs text-gray-500">
+                  <i class="fas fa-download mr-1"></i>
+                  <span>2.4k 次使用</span>
+                </div>
+              </div>
+              <div class="mt-4 flex justify-between">
+                <button class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 text-sm">
+                  <i class="far fa-eye mr-1"></i> 预览
+                </button>
+                <button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                  <i class="fas fa-plus mr-1"></i> 使用模板
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Template Card 2 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+            <div class="relative">
+              <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Template" class="w-full h-40 object-cover rounded-t-lg">
+              <div class="absolute top-2 right-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded">精选</div>
+            </div>
+            <div class="p-5">
+              <h3 class="text-lg font-semibold text-gray-800 mb-1">代码重构助手</h3>
+              <p class="text-sm text-gray-600 mb-3">优化和重构现有代码，提高可读性和性能</p>
+              <div class="flex flex-wrap gap-2 mb-3">
+                <span class="tag">代码</span>
+                <span class="tag">重构</span>
+                <span class="tag">优化</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                  <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Author" class="w-6 h-6 rounded-full mr-2">
+                  <span class="text-xs text-gray-500">官方模板</span>
+                </div>
+                <div class="flex items-center text-xs text-gray-500">
+                  <i class="fas fa-download mr-1"></i>
+                  <span>1.8k 次使用</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 协作页面预览 -->
+  <div class="page-container">
+    <div class="page-title">协作 (collaboration.html)</div>
+    <div class="p-6 bg-gray-50" style="height: 800px; overflow: hidden;">
+      <!-- Header -->
+      <header class="mb-8">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">协作</h1>
+            <p class="text-gray-600">管理共享和团队协作</p>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
+              <i class="fas fa-plus mr-2"></i> 创建团队
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Tabs -->
+      <div class="mb-6 border-b border-gray-200">
+        <ul class="flex flex-wrap -mb-px">
+          <li class="mr-2">
+            <a href="#" class="inline-block py-2 px-4 text-indigo-600 border-b-2 border-indigo-600 font-medium">共享给我的</a>
+          </li>
+          <li class="mr-2">
+            <a href="#" class="inline-block py-2 px-4 text-gray-500 hover:text-gray-700 font-medium">我共享的</a>
+          </li>
+          <li class="mr-2">
+            <a href="#" class="inline-block py-2 px-4 text-gray-500 hover:text-gray-700 font-medium">团队</a>
+          </li>
+        </ul>
+      </div>
+      
+      <!-- Shared With Me -->
+      <div class="mb-10">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-gray-800">共享给我的 Prompt</h2>
+          <div class="flex items-center space-x-2">
+            <div class="relative">
+              <input type="text" placeholder="搜索..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            </div>
+            <select class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <option>所有权限</option>
+              <option>可编辑</option>
+              <option>只读</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Shared Items Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prompt</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">共享者</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">权限</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">共享日期</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <!-- Item 1 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="bg-indigo-100 p-2 rounded-full mr-3">
+                      <i class="fas fa-pen-fancy text-indigo-600"></i>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">SEO 优化助手</div>
+                      <div class="text-sm text-gray-500">优化内容以提高搜索引擎排名和可见性</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <img src="https://randomuser.me/api/portraits/women/28.jpg" alt="User" class="w-8 h-8 rounded-full mr-2">
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">王芳</div>
+                      <div class="text-sm text-gray-500">内容编辑</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">可编辑</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-07-15</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">查看</a>
+                  <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">编辑</a>
+                  <a href="#" class="text-red-600 hover:text-red-900">移除</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Teams Section -->
+      <div>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">我的团队</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Team Card 1 -->
+          <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="p-5">
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center">
+                  <div class="bg-indigo-100 p-3 rounded-full mr-3">
+                    <i class="fas fa-users text-indigo-600"></i>
+                  </div>
+                  <h3 class="text-lg font-semibold text-gray-800">内容创作团队</h3>
+                </div>
+                <div class="relative">
+                  <button class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                </div>
+              </div>
+              <p class="text-sm text-gray-600 mb-4">负责创建和优化各类内容的团队</p>
+              
+              <div class="mb-4">
+                <div class="flex -space-x-2 overflow-hidden">
+                  <img src="https://randomuser.me/api/portraits/men/32.jpg" class="inline-block h-8 w-8 rounded-full ring-2 ring-white" alt="User">
+                  <img src="https://randomuser.me/api/portraits/women/28.jpg" class="inline-block h-8 w-8 rounded-full ring-2 ring-white" alt="User">
+                  <img src="https://randomuser.me/api/portraits/men/43.jpg" class="inline-block h-8 w-8 rounded-full ring-2 ring-white" alt="User">
+                  <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 ring-2 ring-white text-xs font-medium text-gray-500">+2</div>
+                </div>
+              </div>
+              
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500">共享 Prompt: 12</span>
+                <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">管理</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <footer class="mt-8 text-center text-gray-500 text-sm">
+    <p>Prompt 可视化管理工具 - 所有页面预览</p>
+  </footer>
+</body>
+</html>
