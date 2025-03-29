@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>仪表盘 - Prompt 可视化管理工具</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom CSS -->
+  <link href="../css/styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+  <div class="p-6 fade-in">
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">欢迎回来，张明</h1>
+          <p class="text-gray-600">这是您的 Prompt 管理仪表盘</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="relative">
+            <input type="text" placeholder="搜索..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+          </div>
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
+            <i class="fas fa-plus mr-2"></i> 新建 Prompt
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Total Prompts -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-500">总 Prompt 数</p>
+            <p class="text-2xl font-bold text-gray-800">42</p>
+          </div>
+          <div class="bg-indigo-100 p-3 rounded-full">
+            <i class="fas fa-file-alt text-indigo-600 text-xl"></i>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="text-green-500 text-sm font-medium flex items-center">
+            <i class="fas fa-arrow-up mr-1"></i> 12% <span class="text-gray-500 ml-1">相比上月</span>
+          </span>
+        </div>
+      </div>
+      
+      <!-- Used Prompts -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-500">本月使用次数</p>
+            <p class="text-2xl font-bold text-gray-800">128</p>
+          </div>
+          <div class="bg-green-100 p-3 rounded-full">
+            <i class="fas fa-bolt text-green-600 text-xl"></i>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="text-green-500 text-sm font-medium flex items-center">
+            <i class="fas fa-arrow-up mr-1"></i> 18% <span class="text-gray-500 ml-1">相比上月</span>
+          </span>
+        </div>
+      </div>
+      
+      <!-- Shared Prompts -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-500">已共享 Prompt</p>
+            <p class="text-2xl font-bold text-gray-800">15</p>
+          </div>
+          <div class="bg-blue-100 p-3 rounded-full">
+            <i class="fas fa-share-alt text-blue-600 text-xl"></i>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="text-green-500 text-sm font-medium flex items-center">
+            <i class="fas fa-arrow-up mr-1"></i> 5% <span class="text-gray-500 ml-1">相比上月</span>
+          </span>
+        </div>
+      </div>
+      
+      <!-- Favorites -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-500">收藏数量</p>
+            <p class="text-2xl font-bold text-gray-800">8</p>
+          </div>
+          <div class="bg-yellow-100 p-3 rounded-full">
+            <i class="fas fa-star text-yellow-600 text-xl"></i>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="text-gray-500 text-sm font-medium flex items-center">
+            <i class="fas fa-minus mr-1"></i> 0% <span class="text-gray-500 ml-1">相比上月</span>
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Charts and Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <!-- Usage Chart -->
+      <div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Prompt 使用趋势</h2>
+        <div class="h-64">
+          <canvas id="usageChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- Recent Activity -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">最近活动</h2>
+        <div class="space-y-4">
+          <div class="flex items-start">
+            <div class="bg-indigo-100 p-2 rounded-full">
+              <i class="fas fa-edit text-indigo-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-800">编辑了 "产品描述生成器"</p>
+              <p class="text-xs text-gray-500">今天 14:32</p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="bg-green-100 p-2 rounded-full">
+              <i class="fas fa-plus text-green-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-800">创建了 "SEO 优化助手"</p>
+              <p class="text-xs text-gray-500">今天 11:15</p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="bg-blue-100 p-2 rounded-full">
+              <i class="fas fa-share-alt text-blue-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-800">共享了 "代码注释生成器" 给李华</p>
+              <p class="text-xs text-gray-500">昨天 16:48</p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="bg-yellow-100 p-2 rounded-full">
+              <i class="fas fa-star text-yellow-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-800">收藏了 "AI 写作助手"</p>
+              <p class="text-xs text-gray-500">昨天 10:23</p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="bg-purple-100 p-2 rounded-full">
+              <i class="fas fa-bolt text-purple-600"></i>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-gray-800">使用了 "数据分析报告生成器"</p>
+              <p class="text-xs text-gray-500">2天前 09:17</p>
+            </div>
+          </div>
+        </div>
+        <a href="#" class="block text-center text-indigo-600 hover:text-indigo-800 text-sm font-medium mt-4">查看全部活动</a>
+      </div>
+    </div>
+    
+    <!-- Quick Access -->
+    <div class="mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-semibold text-gray-800">快速访问</h2>
+        <a href="#" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">查看全部</a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Prompt Card 1 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="writing,content,marketing">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+              <div class="bg-indigo-100 p-2 rounded-full">
+                <i class="fas fa-pen-fancy text-indigo-600"></i>
+              </div>
+              <div class="flex space-x-2">
+                <button class="text-gray-400 hover:text-yellow-500">
+                  <i class="fas fa-star"></i>
+                </button>
+                <button class="text-gray-400 hover:text-gray-600">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">AI 写作助手</h3>
+            <p class="text-sm text-gray-600 mb-3 prompt-description">帮助快速生成高质量的文章、博客和社交媒体内容</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">写作</span>
+              <span class="tag">内容</span>
+              <span class="tag">营销</span>
+            </div>
+            <div class="flex justify-between items-center text-xs text-gray-500">
+              <span>使用次数: 42</span>
+              <span>2天前更新</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Prompt Card 2 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="code,development,programming">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+              <div class="bg-blue-100 p-2 rounded-full">
+                <i class="fas fa-code text-blue-600"></i>
+              </div>
+              <div class="flex space-x-2">
+                <button class="text-yellow-500">
+                  <i class="fas fa-star"></i>
+                </button>
+                <button class="text-gray-400 hover:text-gray-600">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">代码生成器</h3>
+            <p class="text-sm text-gray-600 mb-3 prompt-description">根据需求描述生成高质量的代码片段和函数</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">代码</span>
+              <span class="tag">开发</span>
+              <span class="tag">编程</span>
+            </div>
+            <div class="flex justify-between items-center text-xs text-gray-500">
+              <span>使用次数: 38</span>
+              <span>1周前更新</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Prompt Card 3 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="data,analysis,report">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+              <div class="bg-green-100 p-2 rounded-full">
+                <i class="fas fa-chart-pie text-green-600"></i>
+              </div>
+              <div class="flex space-x-2">
+                <button class="text-gray-400 hover:text-yellow-500">
+                  <i class="fas fa-star"></i>
+                </button>
+                <button class="text-gray-400 hover:text-gray-600">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">数据分析报告生成器</h3>
+            <p class="text-sm text-gray-600 mb-3 prompt-description">将原始数据转化为有洞察力的分析报告</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">数据</span>
+              <span class="tag">分析</span>
+              <span class="tag">报告</span>
+            </div>
+            <div class="flex justify-between items-center text-xs text-gray-500">
+              <span>使用次数: 27</span>
+              <span>3天前更新</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Prompt Card 4 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card" data-tags="seo,marketing,content">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+              <div class="bg-purple-100 p-2 rounded-full">
+                <i class="fas fa-search text-purple-600"></i>
+              </div>
+              <div class="flex space-x-2">
+                <button class="text-gray-400 hover:text-yellow-500">
+                  <i class="fas fa-star"></i>
+                </button>
+                <button class="text-gray-400 hover:text-gray-600">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1 prompt-title">SEO 优化助手</h3>
+            <p class="text-sm text-gray-600 mb-3 prompt-description">优化内容以提高搜索引擎排名和可见性</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">SEO</span>
+              <span class="tag">营销</span>
+              <span class="tag">内容</span>
+            </div>
+            <div class="flex justify-between items-center text-xs text-gray-500">
+              <span>使用次数: 19</span>
+              <span>今天更新</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- JavaScript for Charts -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Usage Chart
+      const ctx = document.getElementById('usageChart').getContext('2d');
+      const usageChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
+          datasets: [{
+            label: 'Prompt 使用次数',
+            data: [65, 78, 52, 91, 85, 107, 128],
+            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+            borderColor: 'rgba(79, 70, 229, 1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                display: true,
+                color: 'rgba(0, 0, 0, 0.05)'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

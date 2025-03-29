@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模板中心 - Prompt 可视化管理工具</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="../css/styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+  <div class="p-6 fade-in">
+    <!-- Header -->
+    <header class="mb-8">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">模板中心</h1>
+          <p class="text-gray-600">浏览和使用预设的 Prompt 模板</p>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="relative">
+            <input type="text" id="search-input" placeholder="搜索模板..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+          </div>
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center">
+            <i class="fas fa-plus mr-2"></i> 提交模板
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Categories -->
+    <div class="mb-8">
+      <div class="flex flex-wrap items-center space-x-2 mb-4">
+        <button class="px-4 py-2 bg-indigo-600 text-white rounded-full text-sm">全部</button>
+        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">内容创作</button>
+        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">代码生成</button>
+        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">数据分析</button>
+        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">营销</button>
+        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">创意写作</button>
+        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">教育</button>
+        <button class="px-4 py-2 bg-white text-gray-700 rounded-full text-sm hover:bg-gray-100 shadow-sm">商业</button>
+      </div>
+    </div>
+    
+    <!-- Featured Templates -->
+    <div class="mb-10">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">精选模板</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Template Card 1 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+          <div class="relative">
+            <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Template" class="w-full h-40 object-cover rounded-t-lg">
+            <div class="absolute top-2 right-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded">精选</div>
+          </div>
+          <div class="p-5">
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">专业博客文章生成器</h3>
+            <p class="text-sm text-gray-600 mb-3">生成结构清晰、内容丰富的专业博客文章</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">内容创作</span>
+              <span class="tag">博客</span>
+              <span class="tag">SEO</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="flex items-center">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Author" class="w-6 h-6 rounded-full mr-2">
+                <span class="text-xs text-gray-500">官方模板</span>
+              </div>
+              <div class="flex items-center text-xs text-gray-500">
+                <i class="fas fa-download mr-1"></i>
+                <span>2.4k 次使用</span>
+              </div>
+            </div>
+            <div class="mt-4 flex justify-between">
+              <button class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 text-sm">
+                <i class="far fa-eye mr-1"></i> 预览
+              </button>
+              <button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-1"></i> 使用模板
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Template Card 2 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+          <div class="relative">
+            <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Template" class="w-full h-40 object-cover rounded-t-lg">
+            <div class="absolute top-2 right-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded">精选</div>
+          </div>
+          <div class="p-5">
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">代码重构助手</h3>
+            <p class="text-sm text-gray-600 mb-3">优化和重构现有代码，提高可读性和性能</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">代码</span>
+              <span class="tag">重构</span>
+              <span class="tag">优化</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="flex items-center">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Author" class="w-6 h-6 rounded-full mr-2">
+                <span class="text-xs text-gray-500">官方模板</span>
+              </div>
+              <div class="flex items-center text-xs text-gray-500">
+                <i class="fas fa-download mr-1"></i>
+                <span>1.8k 次使用</span>
+              </div>
+            </div>
+            <div class="mt-4 flex justify-between">
+              <button class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 text-sm">
+                <i class="far fa-eye mr-1"></i> 预览
+              </button>
+              <button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-1"></i> 使用模板
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Template Card 3 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+          <div class="relative">
+            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Template" class="w-full h-40 object-cover rounded-t-lg">
+            <div class="absolute top-2 right-2 bg-indigo-600 text-white text-xs px-2 py-1 rounded">精选</div>
+          </div>
+          <div class="p-5">
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">数据分析报告生成器</h3>
+            <p class="text-sm text-gray-600 mb-3">将原始数据转化为有洞察力的分析报告</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">数据</span>
+              <span class="tag">分析</span>
+              <span class="tag">报告</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="flex items-center">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Author" class="w-6 h-6 rounded-full mr-2">
+                <span class="text-xs text-gray-500">官方模板</span>
+              </div>
+              <div class="flex items-center text-xs text-gray-500">
+                <i class="fas fa-download mr-1"></i>
+                <span>1.5k 次使用</span>
+              </div>
+            </div>
+            <div class="mt-4 flex justify-between">
+              <button class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 text-sm">
+                <i class="far fa-eye mr-1"></i> 预览
+              </button>
+              <button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-1"></i> 使用模板
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- All Templates -->
+    <div>
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">所有模板</h2>
+        <div class="flex items-center space-x-2">
+          <span class="text-sm text-gray-600">排序:</span>
+          <select class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <option>热门程度</option>
+            <option>最新添加</option>
+            <option>使用次数</option>
+            <option>字母顺序</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Template Card 1 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+              <div class="bg-indigo-100 p-2 rounded-full">
+                <i class="fas fa-pen-fancy text-indigo-600"></i>
+              </div>
+              <div class="flex items-center text-xs text-gray-500">
+                <i class="fas fa-download mr-1"></i>
+                <span>1.2k</span>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">SEO 优化文案生成器</h3>
+            <p class="text-sm text-gray-600 mb-3">生成针对搜索引擎优化的高质量文案</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">SEO</span>
+              <span class="tag">营销</span>
+              <span class="tag">内容</span>
+            </div>
+            <div class="flex justify-between">
+              <button class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 text-sm">
+                <i class="far fa-eye mr-1"></i> 预览
+              </button>
+              <button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-1"></i> 使用模板
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Template Card 2 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+              <div class="bg-blue-100 p-2 rounded-full">
+                <i class="fas fa-code text-blue-600"></i>
+              </div>
+              <div class="flex items-center text-xs text-gray-500">
+                <i class="fas fa-download mr-1"></i>
+                <span>980</span>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">API 文档生成器</h3>
+            <p class="text-sm text-gray-600 mb-3">根据代码自动生成清晰、详细的 API 文档</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">代码</span>
+              <span class="tag">文档</span>
+              <span class="tag">API</span>
+            </div>
+            <div class="flex justify-between">
+              <button class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 text-sm">
+                <i class="far fa-eye mr-1"></i> 预览
+              </button>
+              <button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-1"></i> 使用模板
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Template Card 3 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+              <div class="bg-green-100 p-2 rounded-full">
+                <i class="fas fa-chart-line text-green-600"></i>
+              </div>
+              <div class="flex items-center text-xs text-gray-500">
+                <i class="fas fa-download mr-1"></i>
+                <span>850</span>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">市场趋势分析助手</h3>
+            <p class="text-sm text-gray-600 mb-3">分析市场数据并提供有价值的趋势洞察</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">市场</span>
+              <span class="tag">分析</span>
+              <span class="tag">趋势</span>
+            </div>
+            <div class="flex justify-between">
+              <button class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 text-sm">
+                <i class="far fa-eye mr-1"></i> 预览
+              </button>
+              <button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-1"></i> 使用模板
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Template Card 4 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+              <div class="bg-purple-100 p-2 rounded-full">
+                <i class="fas fa-envelope text-purple-600"></i>
+              </div>
+              <div class="flex items-center text-xs text-gray-500">
+                <i class="fas fa-download mr-1"></i>
+                <span>780</span>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">邮件营销系列生成器</h3>
+            <p class="text-sm text-gray-600 mb-3">创建引人入胜的邮件营销系列，提高转化率</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">邮件</span>
+              <span class="tag">营销</span>
+              <span class="tag">转化</span>
+            </div>
+            <div class="flex justify-between">
+              <button class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 text-sm">
+                <i class="far fa-eye mr-1"></i> 预览
+              </button>
+              <button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-1"></i> 使用模板
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Template Card 5 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+              <div class="bg-pink-100 p-2 rounded-full">
+                <i class="fas fa-lightbulb text-pink-600"></i>
+              </div>
+              <div class="flex items-center text-xs text-gray-500">
+                <i class="fas fa-download mr-1"></i>
+                <span>720</span>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">创意故事生成器</h3>
+            <p class="text-sm text-gray-600 mb-3">根据提供的主题和元素生成引人入胜的故事</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">创意</span>
+              <span class="tag">故事</span>
+              <span class="tag">写作</span>
+            </div>
+            <div class="flex justify-between">
+              <button class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 text-sm">
+                <i class="far fa-eye mr-1"></i> 预览
+              </button>
+              <button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-1"></i> 使用模板
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Template Card 6 -->
+        <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow prompt-card">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+              <div class="bg-yellow-100 p-2 rounded-full">
+                <i class="fas fa-graduation-cap text-yellow-600"></i>
+              </div>
+              <div class="flex items-center text-xs text-gray-500">
+                <i class="fas fa-download mr-1"></i>
+                <span>650</span>
+              </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1">教育课程大纲生成器</h3>
+            <p class="text-sm text-gray-600 mb-3">创建结构化的教育课程大纲和学习目标</p>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span class="tag">教育</span>
+              <span class="tag">课程</span>
+              <span class="tag">大纲</span>
+            </div>
+            <div class="flex justify-between">
+              <button class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 text-sm">
+                <i class="far fa-eye mr-1"></i> 预览
+              </button>
+              <button class="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm">
+                <i class="fas fa-plus mr-1"></i> 使用模板
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="flex justify-center mt-8">
+        <nav class="inline-flex rounded-md shadow">
+          <a href="#" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <i class="fas fa-chevron-left"></i>
+          </a>
+          <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-indigo-600 hover:bg-gray-50">1</a>
+          <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">2</a>
+          <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">3</a>
+          <span class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-500">...</span>
+          <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">8</a>
+          <a href="#" class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">9</a>
+          <a href="#" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <i class="fas fa-chevron-right"></i>
+          </a>
+        </nav>
+      </div>
+    </div>
+  </div>
+  
+  <!-- JavaScript -->
+  <script src="../js/main.js"></script>
+</body>
+</html>

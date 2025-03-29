@@ -1,0 +1,92 @@
+/* Custom styles for Prompt Visual Manager */
+
+:root {
+  --primary-color: #4f46e5;
+  --secondary-color: #818cf8;
+  --accent-color: #c7d2fe;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --sidebar-width: 280px;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: var(--bg-primary);
+  border-right: 1px solid #e5e7eb;
+  z-index: 10;
+}
+
+.main-content {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+}
+
+.prompt-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.prompt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.editor-container {
+  height: calc(100vh - 64px);
+}
+
+.tag {
+  background-color: var(--accent-color);
+  color: var(--primary-color);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
