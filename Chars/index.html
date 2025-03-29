@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts 统计图表示例</title>
+    <!-- 引入 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+    <!-- 为每个图表准备容器 -->
+    <div id="barChart" style="width: 600px;height:400px;"></div>
+    <div id="lineChart" style="width: 600px;height:400px;"></div>
+    <div id="pieChart" style="width: 600px;height:400px;"></div>
+    <div id="radarChart" style="width: 600px;height:400px;"></div>
+
+    <script>
+        // 初始化图表实例
+        const barChart = echarts.init(document.getElementById('barChart'));
+        const lineChart = echarts.init(document.getElementById('lineChart'));
+        const pieChart = echarts.init(document.getElementById('pieChart'));
+        const radarChart = echarts.init(document.getElementById('radarChart'));
+
+        // 柱状图配置
+        const barOption = {
+            title: { text: '月度销售额统计' },
+            tooltip: {},
+            xAxis: {
+                data: ['1月', '2月', '3月', '4月', '5月', '6月']
+            },
+            yAxis: {},
+            series: [{
+                name: '销售额',
+                type: 'bar',
+                data: [5000, 8000, 6000, 9000, 7500, 12000]
+            }]
+        };
+
+        // 折线图配置
+        const lineOption = {
+            title: { text: '年度用户增长趋势' },
+            xAxis: {
+                type: 'category',
+                data: ['1月', '2月', '3月', '4月', '5月', '6月']
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                data: [150, 230, 224, 218, 335, 400],
+                type: 'line',
+                smooth: true
+            }]
+        };
+
+        // 饼图配置
+        const pieOption = {
+            title: { text: '产品类别占比' },
+            tooltip: {
+                trigger: 'item'
+            },
+            series: [{
+                type: 'pie',
+                data: [
+                    { value: 335, name: '电子产品' },
+                    { value: 234, name: '服装' },
+                    { value: 135, name: '食品' },
+                    { value: 154, name: '图书' }
+                ]
+            }]
+        };
+
+        // 雷达图配置
+        const radarOption = {
+            title: { text: '产品性能评估' },
+            radar: {
+                indicator: [
+                    { name: '性能', max: 100 },
+                    { name: '质量', max: 100 },
+                    { name: '价格', max: 100 },
+                    { name: '服务', max: 100 },
+                    { name: '外观', max: 100 }
+                ]
+            },
+            series: [{
+                type: 'radar',
+                data: [
+                    {
+                        value: [80, 90, 70, 85, 88],
+                        name: '产品评分'
+                    }
+                ]
+            }]
+        };
+
+        // 使用配置渲染图表
+        barChart.setOption(barOption);
+        lineChart.setOption(lineOption);
+        pieChart.setOption(pieOption);
+        radarChart.setOption(radarOption);
+    </script>
+</body>
+</html>
