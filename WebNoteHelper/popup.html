@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Web Note Helper</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1><i class="fas fa-sticky-note"></i> 网页笔记助手</h1>
+    
+    <div class="current-url">
+      <p id="current-site"><i class="fas fa-globe"></i> 当前网站: <span id="site-url"></span></p>
+    </div>
+    
+    <div class="note-input">
+      <textarea id="note-content" placeholder="在这里输入你的笔记..."></textarea>
+      <button id="save-note"><i class="fas fa-save"></i> 保存笔记</button>
+    </div>
+    
+    <div class="notes-container">
+      <h2><i class="fas fa-thumbtack"></i> 当前网站笔记</h2>
+      <div id="site-notes" class="notes-list"></div>
+      
+      <h2><i class="fas fa-list"></i> 所有笔记</h2>
+      <div id="all-notes" class="notes-list"></div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
