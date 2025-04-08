@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录系统原型</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+        .preview-frame {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="preview-container">
+        <div class="preview-frame">
+            <iframe src="pages/login.html" width="100%" height="800px" frameborder="0"></iframe>
+        </div>
+        <div class="preview-frame">
+            <iframe src="pages/password-login.html" width="100%" height="800px" frameborder="0"></iframe>
+        </div>
+        <div class="preview-frame">
+            <iframe src="pages/reset-password.html" width="100%" height="800px" frameborder="0"></iframe>
+        </div>
+    </div>
+</body>
+</html>
