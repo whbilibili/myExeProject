@@ -1,0 +1,91 @@
+<!--
+ * @Author: wanghong52 wanghong52@meituan.com
+ * @Date: 2025-04-15 14:57:41
+ * @LastEditors: wanghong52 wanghong52@meituan.com
+ * @LastEditTime: 2025-04-15 14:57:46
+ * @FilePath: /MyExeProject/RBAC权限模型/effective-permissions-modal.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!-- This is the content for the modal -->
+<div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-auto my-12">
+    <div class="flex justify-between items-start mb-4">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900">有效权限</h2>
+            <p class="text-sm text-gray-600">用户 <span class="font-medium">Alice Anderson</span> 在 <span class="font-medium">"Marketing Space"</span> 上的最终权限</p>
+        </div>
+        <button onclick="/* Close Modal */" class="text-gray-400 hover:text-gray-600">
+            <span class="sr-only">关闭</span>
+            <!-- Heroicon: x -->
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="max-h-96 overflow-y-auto pr-2">
+        <ul class="divide-y divide-gray-200">
+            <!-- 示例权限 1 (直接分配) -->
+            <li class="py-3 flex justify-between items-center">
+                <div>
+                    <p class="text-sm font-medium text-gray-900">space:manage_members</p>
+                    <p class="text-xs text-gray-500">管理空间成员和角色分配</p>
+                </div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    直接分配通过角色 '空间所有者' 在此空间
+                </span>
+            </li>
+             <!-- 示例权限 2 (直接分配) -->
+            <li class="py-3 flex justify-between items-center">
+                <div>
+                    <p class="text-sm font-medium text-gray-900">space:create_app</p>
+                    <p class="text-xs text-gray-500">在空间中创建新应用</p>
+                </div>
+                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    直接分配通过角色 '空间所有者' 在此空间
+                </span>
+            </li>
+            <!-- 示例权限 3 (可能是继承来的，假设Bob在App上的权限也包含table:view) -->
+             <li class="py-3 flex justify-between items-center">
+                <div>
+                    <p class="text-sm font-medium text-gray-900">table:view</p>
+                    <p class="text-xs text-gray-500">查看表格结构和数据</p>
+                </div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    继承自应用 'Campaign App' 通过角色 '应用管理员'
+                </span>
+                 <!-- 或者，如果Alice的角色直接包含 -->
+                 <!-- <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    直接分配通过角色 '空间所有者' 在此空间
+                </span> -->
+            </li>
+             <!-- 示例权限 4 (可能是继承来的) -->
+             <li class="py-3 flex justify-between items-center">
+                <div>
+                    <p class="text-sm font-medium text-gray-900">app:view</p>
+                    <p class="text-xs text-gray-500">查看应用信息</p>
+                </div>
+                 <!-- 假设Alice的空间所有者角色也包含此权限 -->
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    直接分配通过角色 '空间所有者' 在此空间
+                </span>
+            </li>
+
+            <!-- More effective permissions listed here -->
+             <li class="py-3 flex justify-between items-center">
+                <div>
+                    <p class="text-sm font-medium text-gray-900">space:view</p>
+                    <p class="text-xs text-gray-500">查看空间信息</p>
+                </div>
+                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    直接分配通过角色 '空间所有者' 在此空间
+                </span>
+            </li>
+
+        </ul>
+    </div>
+    <div class="mt-5 sm:mt-6">
+        <button type="button" onclick="/* Close Modal */" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm">
+            关闭
+        </button>
+    </div>
+</div>

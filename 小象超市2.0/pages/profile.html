@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+         body { background-color: #f7f7f7; }
+        .profile-header {
+            background: linear-gradient(to bottom, #6EE7B7, #34D399); /* Green gradient */
+            padding: 30px 20px 50px 20px; /* Extra padding bottom for overlap */
+            color: white;
+        }
+        .info-card {
+            background-color: white;
+            border-radius: 12px;
+            margin: -30px 16px 16px 16px; /* Overlap header */
+            padding: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+         .list-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 15px;
+            color: #333;
+         }
+        .list-item:last-child {
+            border-bottom: none;
+        }
+        .list-item i {
+            margin-right: 12px;
+            width: 20px; /* Align icons */
+            text-align: center;
+            color: #666;
+        }
+        .list-item .icon-arrow {
+             margin-left: auto;
+             color: #cccccc;
+         }
+    </style>
+</head>
+<body class="pb-16">
+
+    <!-- Profile Header -->
+    <header class="profile-header">
+        <div class="flex items-center space-x-4">
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=128&h=128&q=80" alt="用户头像" class="w-16 h-16 rounded-full border-2 border-white">
+            <div>
+                <h2 class="text-xl font-semibold">小象用户_1234</h2>
+                <span class="text-sm opacity-90">会员等级: Lv.3</span>
+            </div>
+            <a href="#" class="ml-auto text-white opacity-80 hover:opacity-100"><i class="fa-solid fa-cog text-xl"></i></a>
+        </div>
+    </header>
+
+    <!-- Info Card -->
+    <div class="info-card grid grid-cols-3 gap-4 text-center">
+        <a href="#" class="text-gray-700">
+            <div class="text-2xl font-bold">12</div>
+            <div class="text-xs text-gray-500 mt-1">优惠券</div>
+        </a>
+         <a href="#" class="text-gray-700">
+            <div class="text-2xl font-bold">5</div>
+            <div class="text-xs text-gray-500 mt-1">待收货</div>
+        </a>
+         <a href="#" class="text-gray-700">
+            <div class="text-2xl font-bold">¥ 88.8</div>
+            <div class="text-xs text-gray-500 mt-1">余额</div>
+        </a>
+    </div>
+
+    <!-- Order Section -->
+    <section class="bg-white mx-4 rounded-lg shadow overflow-hidden mb-4">
+         <a href="#" class="flex justify-between items-center p-4 border-b border-gray-100">
+            <h3 class="font-medium">我的订单</h3>
+            <span class="text-xs text-gray-400 flex items-center">查看全部 <i class="fa-solid fa-chevron-right text-xs ml-1"></i></span>
+         </a>
+         <div class="grid grid-cols-4 gap-2 py-4 text-center text-gray-600">
+            <a href="#" class="flex flex-col items-center space-y-1 text-xs">
+                <i class="fa-regular fa-credit-card text-2xl"></i>
+                <span>待付款</span>
+            </a>
+            <a href="#" class="flex flex-col items-center space-y-1 text-xs">
+                <i class="fa-solid fa-box text-2xl"></i>
+                <span>待发货</span>
+            </a>
+             <a href="#" class="flex flex-col items-center space-y-1 text-xs">
+                <i class="fa-solid fa-truck-fast text-2xl"></i>
+                <span>待收货</span>
+            </a>
+             <a href="#" class="flex flex-col items-center space-y-1 text-xs">
+                <i class="fa-regular fa-comment-dots text-2xl"></i>
+                <span>待评价</span>
+            </a>
+         </div>
+    </section>
+
+    <!-- List Menu -->
+    <section class="bg-white mx-4 rounded-lg shadow overflow-hidden">
+        <div class="px-4">
+            <a href="#" class="list-item">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>地址管理</span>
+                <i class="fa-solid fa-chevron-right icon-arrow"></i>
+            </a>
+            <a href="#" class="list-item">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>账号安全</span>
+                 <i class="fa-solid fa-chevron-right icon-arrow"></i>
+            </a>
+             <a href="#" class="list-item">
+                <i class="fa-regular fa-circle-question"></i>
+                <span>帮助与客服</span>
+                <i class="fa-solid fa-chevron-right icon-arrow"></i>
+            </a>
+            <a href="#" class="list-item">
+                <i class="fa-solid fa-gift"></i>
+                <span>邀请有礼</span>
+                <i class="fa-solid fa-chevron-right icon-arrow"></i>
+            </a>
+             <a href="#" class="list-item">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>退出登录</span>
+                <i class="fa-solid fa-chevron-right icon-arrow"></i>
+            </a>
+        </div>
+    </section>
+
+</body>
+</html> 

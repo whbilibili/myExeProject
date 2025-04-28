@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邀请成员弹窗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 添加一些基础样式和可能的自定义 */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            /* 添加一个浅灰色背景以便查看弹窗轮廓 */
+            background-color: #f3f4f6;
+            /* 让弹窗居中显示 (可选) */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        /* 定义一个简单的复制成功提示动画 */
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+        .copied-feedback {
+            animation: fadeOut 1.5s ease-out forwards;
+        }
+        /* 移除 backdrop 样式，因为页面本身就是弹窗 */
+    </style>
+    <!-- 引入 Heroicons 图标库 (可选, 用于按钮图标) -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/heroicons@2.1.1/24/outline/esm/index.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/heroicons@2.1.1/24/solid/esm/index.js"></script>
+</head>
+<body>
+
+    <!-- 弹窗内容 -->
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden relative" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <!-- 关闭按钮 (在这个独立页面可能不需要，或需要不同逻辑) -->
+        <button id="closeModalBtn" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition duration-150 ease-in-out" aria-label="关闭">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <div class="p-6 sm:p-8">
+            <!-- 标题 -->
+            <h2 id="modal-title" class="text-xl sm:text-2xl font-semibold text-gray-800 mb-2 text-center">邀请新成员</h2>
+            <p class="text-sm text-gray-500 mb-6 text-center">通过下方任一方式邀请新成员加入您的通讯录</p>
+
+            <!-- 邀请码区域 -->
+            <div class="mb-6">
+                <label for="inviteCode" class="block text-sm font-medium text-gray-700 mb-1">邀请码</label>
+                <div class="flex items-center space-x-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <span id="inviteCodeDisplay" class="flex-grow text-gray-900 font-mono text-lg select-all"></span> <!-- 初始为空 -->
+                    <div class="relative flex space-x-1">
+                        <button data-copy-target="inviteCodeDisplay" class="copy-btn p-1.5 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" title="复制邀请码">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 4.875v-4.875a.375.375 0 00-.375-.375h-1.5a.375.375 0 00-.375.375v4.875m0 0a.375.375 0 00.375.375h1.5a.375.375 0 00.375-.375z" />
+                            </svg>
+                        </button>
+                        <button id="regenerateCodeBtn" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" title="重新生成">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                        </button>
+                        <!-- 复制成功提示 -->
+                        <span class="copy-feedback absolute -top-7 right-0 text-xs bg-gray-700 text-white px-2 py-1 rounded opacity-0 pointer-events-none">已复制!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 邀请链接区域 -->
+            <div>
+                <label for="inviteLink" class="block text-sm font-medium text-gray-700 mb-1">邀请链接</label>
+                <div class="flex items-center space-x-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                    <span id="inviteLinkDisplay" class="flex-grow text-gray-700 text-sm truncate select-all"></span> <!-- 初始为空 -->
+                     <div class="relative flex space-x-1">
+                         <button data-copy-target="inviteLinkDisplay" class="copy-btn p-1.5 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" title="复制邀请链接">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 4.875v-4.875a.375.375 0 00-.375-.375h-1.5a.375.375 0 00-.375.375v4.875m0 0a.375.375 0 00.375.375h1.5a.375.375 0 00.375-.375z" />
+                            </svg>
+                        </button>
+                        <button id="regenerateLinkBtn" class="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1" title="重新生成">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                        </button>
+                         <!-- 复制成功提示 -->
+                         <span class="copy-feedback absolute -top-7 right-0 text-xs bg-gray-700 text-white px-2 py-1 rounded opacity-0 pointer-events-none">已复制!</span>
+                    </div>
+                </div>
+            </div>
+
+             <!-- 有效期提示 (可选) -->
+            <!-- <p class="text-xs text-gray-400 mt-4 text-center">邀请码和链接将在 7 天后失效</p> -->
+        </div>
+    </div>
+
+    <script>
+        // 不需要 openModalBtn 和 inviteModal (弹窗容器) 的引用了
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const regenerateCodeBtn = document.getElementById('regenerateCodeBtn');
+        const inviteCodeDisplay = document.getElementById('inviteCodeDisplay');
+        const inviteLinkDisplay = document.getElementById('inviteLinkDisplay');
+        const copyBtns = document.querySelectorAll('.copy-btn');
+        const regenerateLinkBtn = document.getElementById('regenerateLinkBtn');
+
+        // --- 模拟功能 ---
+        function generateRandomCode(length = 6) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        function updateInviteInfo() {
+            const newCode = generateRandomCode();
+            const newLink = `https://your-app.com/join?code=${newCode}`; // 确保这里的域名是正确的
+            inviteCodeDisplay.textContent = newCode;
+            inviteLinkDisplay.textContent = newLink;
+        }
+
+        // --- 事件监听 ---
+        // openModalBtn 的监听器移除
+
+        // closeModalBtn 的逻辑可能需要调整，取决于这个独立页面如何使用
+        // 例如，可能只是隐藏自身，或者通知父窗口 (如果嵌入在 iframe 中)
+        closeModalBtn.addEventListener('click', () => {
+             console.log("关闭按钮被点击");
+             // window.close(); // 这可能不会生效，取决于浏览器安全设置
+             // 或者隐藏元素: document.body.innerHTML = '';
+        });
+
+        // regenerate 和 copy 按钮的逻辑保持不变
+        regenerateCodeBtn.addEventListener('click', updateInviteInfo);
+        regenerateLinkBtn.addEventListener('click', updateInviteInfo);
+
+        copyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-copy-target');
+                const targetElement = document.getElementById(targetId);
+                if (!targetElement) return; // 防止目标元素不存在时出错
+                const textToCopy = targetElement.textContent || targetElement.innerText;
+                if (!textToCopy) return; // 防止内容为空时复制
+
+                // 定位相对按钮的提示元素
+                const feedbackElement = btn.parentElement.querySelector('.copy-feedback');
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    // 显示复制成功提示
+                    if (feedbackElement) {
+                        feedbackElement.classList.remove('copied-feedback', 'opacity-0');
+                        void feedbackElement.offsetWidth; // 强制 reflow 确保动画重置
+                        feedbackElement.classList.add('copied-feedback');
+                        feedbackElement.style.opacity = '1'; // 先设为可见
+                    }
+                    console.log('Copied:', textToCopy);
+
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                    alert('复制失败，请手动复制。'); // 简单的用户反馈
+                });
+            });
+        });
+
+        // 页面加载时立即生成初始邀请码和链接
+        updateInviteInfo();
+
+    </script>
+
+</body>
+</html> 

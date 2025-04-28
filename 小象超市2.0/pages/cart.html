@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购物车</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+     <style>
+        body { background-color: #f7f7f7; }
+        /* 固定底部的结算栏 */
+        .checkout-bar {
+             position: fixed;
+             bottom: 83px; /* Tab Bar 的高度 */
+             left: 0;
+             right: 0;
+             width: 393px; /* 同手机宽度 */
+             margin: 0 auto; /* 居中（如果index.html布局变化需调整） */
+             background-color: #ffffff;
+             border-top: 1px solid #e5e7eb;
+             padding: 10px 16px;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="pb-28"> <!-- 留出底部结算栏空间 -->
+
+    <!-- App Bar -->
+    <header class="sticky top-0 bg-white p-4 shadow-sm z-10 flex justify-between items-center">
+         <h1 class="text-lg font-semibold">购物车</h1>
+         <button class="text-sm text-gray-600 hover:text-green-600">管理</button>
+    </header>
+
+    <!-- Cart Items -->
+    <main class="p-4 space-y-4">
+        <!-- Cart Item 1 -->
+        <div class="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
+            <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 focus:ring-green-400" checked>
+            <img src="https://images.unsplash.com/photo-1550258987-190a2d41a8ba?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&q=80" alt="商品图片" class="w-20 h-20 object-cover rounded">
+            <div class="flex-grow">
+                <h3 class="text-sm font-medium">新鲜红富士苹果 500g</h3>
+                <p class="text-xs text-gray-500 mt-1">清脆爽甜</p>
+                <div class="flex justify-between items-center mt-2">
+                    <span class="text-red-600 font-bold text-sm">¥ 9.9</span>
+                    <!-- Quantity Selector -->
+                    <div class="flex items-center border border-gray-200 rounded">
+                        <button class="px-2 py-1 text-gray-500 hover:bg-gray-100">-</button>
+                        <span class="px-3 py-1 text-sm">1</span>
+                        <button class="px-2 py-1 text-green-500 hover:bg-gray-100">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Item 2 -->
+        <div class="bg-white rounded-lg shadow p-4 flex items-center space-x-4">
+            <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 focus:ring-green-400" checked>
+            <img src="https://images.unsplash.com/photo-1607623814040-M705231816b8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&q=80" alt="商品图片" class="w-20 h-20 object-cover rounded">
+            <div class="flex-grow">
+                <h3 class="text-sm font-medium">散养土鸡蛋 10枚</h3>
+                <p class="text-xs text-gray-500 mt-1">蛋黄饱满</p>
+                 <div class="flex justify-between items-center mt-2">
+                    <span class="text-red-600 font-bold text-sm">¥ 15.8</span>
+                    <!-- Quantity Selector -->
+                    <div class="flex items-center border border-gray-200 rounded">
+                        <button class="px-2 py-1 text-gray-500 hover:bg-gray-100">-</button>
+                        <span class="px-3 py-1 text-sm">1</span>
+                        <button class="px-2 py-1 text-green-500 hover:bg-gray-100">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         <!-- Cart Item 3 (Unchecked) -->
+        <div class="bg-white rounded-lg shadow p-4 flex items-center space-x-4 opacity-70">
+            <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 focus:ring-green-400">
+            <img src="https://images.unsplash.com/photo-1615485925576-845445414b3a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&q=80" alt="商品图片" class="w-20 h-20 object-cover rounded">
+            <div class="flex-grow">
+                <h3 class="text-sm font-medium">有机西兰花 300g</h3>
+                 <p class="text-xs text-gray-500 mt-1">营养丰富</p>
+                 <div class="flex justify-between items-center mt-2">
+                    <span class="text-red-600 font-bold text-sm">¥ 6.5</span>
+                    <!-- Quantity Selector -->
+                    <div class="flex items-center border border-gray-200 rounded">
+                        <button class="px-2 py-1 text-gray-500 hover:bg-gray-100">-</button>
+                        <span class="px-3 py-1 text-sm">2</span>
+                        <button class="px-2 py-1 text-green-500 hover:bg-gray-100">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty Cart Placeholder (Hidden by default) -->
+        <!--
+        <div class="text-center py-20 text-gray-500">
+            <i class="fa-solid fa-cart-arrow-down text-6xl mb-4"></i>
+            <p>购物车还是空的</p>
+            <p class="text-sm mt-2">快去逛逛吧~</p>
+            <button class="mt-6 bg-green-500 text-white px-6 py-2 rounded-full text-sm hover:bg-green-600">去首页</button>
+        </div>
+         -->
+    </main>
+
+    <!-- Fixed Checkout Bar -->
+    <div class="checkout-bar">
+        <div class="flex items-center space-x-2">
+             <input type="checkbox" id="select-all" class="form-checkbox h-5 w-5 text-green-500 rounded border-gray-300 focus:ring-green-400" checked>
+             <label for="select-all" class="text-sm">全选</label>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div class="text-sm">
+                合计: <span class="text-red-600 font-bold text-base">¥ 25.70</span>
+            </div>
+            <button class="bg-green-500 text-white px-8 py-2.5 rounded-full font-medium text-sm hover:bg-green-600">结算(2)</button>
+        </div>
+    </div>
+
+</body>
+</html> 

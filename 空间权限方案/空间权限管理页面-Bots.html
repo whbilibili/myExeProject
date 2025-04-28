@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bots 平台 - 角色权限管理</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <style>
+        /* Basic Accordion Arrow Styling */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details > summary .chevron { transition: transform 0.2s ease-in-out; }
+        details[open] > summary .chevron { transform: rotate(90deg); }
+
+        /* Minimal active state for demo */
+        .sidebar-link.active {
+             background-color: #eef2ff; /* bg-indigo-50 */
+             color: #4f46e5; /* text-indigo-600 */
+             font-weight: 600; /* font-semibold */
+        }
+         .sidebar-link.active svg {
+             color: #4f46e5; /* text-indigo-600 */
+         }
+         /* Active state for Role List */
+        .role-link.active {
+            background-color: #eef2ff; /* bg-indigo-50 - Use a slightly different active color */
+             color: #4338ca; /* text-indigo-700 */
+             font-weight: 600; /* font-semibold */
+        }
+        /* Tab Active State */
+         .tab-link.tab-active {
+            border-color: #4f46e5; /* Tailwind indigo-600 */
+            color: #4f46e5;
+         }
+         /* Hide inactive tab content */
+         .tab-content > div:not(.active) {
+            display: none;
+         }
+
+         /* Ensure scrollable sections within fixed height */
+         .column-container {
+             height: 100vh;
+             display: flex;
+             overflow: hidden; /* Prevent body scroll */
+         }
+         .scrollable-sidebar, .scrollable-main {
+            height: 100vh;
+            overflow-y: auto; /* Changed from auto to scroll to always show bar if needed */
+            display: flex;
+            flex-direction: column;
+         }
+          .sidebar-nav { /* For nav inside sidebars */
+            flex-grow: 1;
+            overflow-y: auto;
+         }
+         .main-content-area { /* For content inside main area */
+            flex-grow: 1;
+            overflow-y: auto;
+         }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="column-container font-sans antialiased text-gray-900">
+        <!-- Column 1: Left Sidebar - Bots Navigation -->
+        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0 scrollable-sidebar">
+            <!-- Logo/Header -->
+            <div class="h-16 flex items-center justify-between px-4 border-b border-gray-200 shrink-0">
+                 <div class="flex items-center space-x-2">
+                    <svg class="h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21M3 3h18v18H3V3z"></path></svg>
+                    <span class="text-xl font-bold text-gray-800">Bots</span>
+                 </div>
+                 <button class="text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+                 </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="py-4 space-y-4 sidebar-nav">
+                <!-- Home -->
+                <div><a href="#" class="sidebar-link flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>首页</a></div>
+                <!-- Market Section -->
+                <div><h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">市场</h3><ul><li><a href="#" class="sidebar-link flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V8.25a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 8.25v10.5A2.25 2.25 0 0 0 6.75 21h10.5Zm-3.75-6.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm3-6h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm3-6h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" /></svg>智能体</a></li><li><a href="#" class="sidebar-link flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 0 0 2.122 2.122l7.81-7.81" /></svg>工作流</a></li><li><a href="#" class="sidebar-link flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 0 0-.12-1.03l-2.268-9.64a3.375 3.375 0 0 0-3.285-2.65H7.928a3.375 3.375 0 0 0-3.285 2.65l-2.268 9.64a4.5 4.5 0 0 0-.12 1.03v.228m19.5 0a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3m19.5 0a3 3 0 0 0-3-3H5.25a3 3 0 0 0-3 3m16.5 0h.008v.008h-.008v-.008Zm-3 0h.008v.008h-.008v-.008Zm-3 0h.008v.008h-.008v-.008Zm-3 0h.008v.008h-.008v-.008Z" /></svg>工具</a></li><li><a href="#" class="sidebar-link flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-400"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>知识库</a></li></ul></div>
+                <!-- Workspace Section -->
+                <div><div class="flex items-center justify-between px-4 mb-2 mt-4"><h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">工作空间</h3><div class="flex items-center space-x-1"><button class="text-gray-400 hover:text-gray-600 p-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg></button><button class="text-gray-400 hover:text-gray-600 p-1"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg></button></div></div><ul><li><a href="#" class="sidebar-link flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2 active"><svg class="w-5 h-5 mr-3 text-indigo-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6H3a1 1 0 0 1-.707-1.707l7-7Z" clip-rule="evenodd" /></svg>质效技术部</a></li><li><a href="#" class="sidebar-link flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"><svg class="w-5 h-5 mr-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v13A1.5 1.5 0 0 0 3.5 18h13a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 16.5 2h-13ZM11 9.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2ZM5 9.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2ZM11 5.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2ZM5 5.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2Z" /></svg>质效技术部</a></li><li><a href="#" class="sidebar-link flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"><svg class="w-5 h-5 mr-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v13A1.5 1.5 0 0 0 3.5 18h13a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 16.5 2h-13ZM11 9.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2ZM5 9.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2ZM11 5.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2ZM5 5.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2Z" /></svg>质效技术部</a></li><li><a href="#" class="sidebar-link flex items-center px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md mx-2"><svg class="w-5 h-5 mr-3 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v13A1.5 1.5 0 0 0 3.5 18h13a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 16.5 2h-13ZM11 9.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2ZM5 9.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2ZM11 5.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2ZM5 5.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2Z" /></svg>质效技术部</a></li></ul></div>
+            </nav>
+
+            <!-- Bottom User Profile Section -->
+            <div class="p-4 border-t border-gray-200 mt-auto shrink-0"><div class="flex items-center justify-between"><div class="flex items-center space-x-3"><img class="h-8 w-8 rounded-full object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="User avatar"><span class="text-sm font-medium text-gray-700">迪丽热巴</span></div><button class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 0 1 0 1.255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 0 1-.22.128c-.333.184-.582.496-.645.87l-.213 1.28c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 0 1 0-1.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.184.582-.496.644-.87l.214-1.281Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg></button></div></div>
+        </aside>
+
+        <!-- Column 2: Middle Sidebar - Role List -->
+        <aside class="w-72 bg-white border-r border-gray-200 flex flex-col shrink-0 scrollable-sidebar">
+             <div class="p-4 border-b border-gray-200 shrink-0">
+                <h2 class="text-lg font-semibold">角色列表</h2>
+                <div class="mt-4 relative">
+                    <input type="search" placeholder="搜索角色名称/描述" class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                         <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+                    </div>
+                </div>
+            </div>
+            <nav class="py-4 space-y-4 sidebar-nav">
+                <div>
+                    <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">系统角色</h3>
+                    <ul>
+                        <li><a href="#" class="role-link flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-2">管理员 <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">系统</span></a></li>
+                        <li><a href="#" class="role-link flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-2">成员 <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">系统</span></a></li>
+                    </ul>
+                </div>
+                 <div>
+                     <div class="flex items-center justify-between px-4 mb-2">
+                         <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider">自定义角色</h3>
+                         <button class="text-indigo-600 hover:text-indigo-800">
+                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg>
+                         </button>
+                    </div>
+                    <ul>
+                        <li><a href="#" class="role-link flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-2">成员部门管理</a></li>
+                        <li><a href="#" class="role-link flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-2">财务角色</a></li>
+                         <li><a href="#" class="role-link flex items-center justify-between px-4 py-2 text-sm hover:bg-gray-100 rounded-md mx-2 active">运营角色</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Column 3: Right Content Area - Permissions -->
+        <main class="flex-1 flex flex-col bg-gray-50 scrollable-main">
+            <!-- Top Header -->
+            <header class="bg-white border-b border-gray-200 p-4 flex items-center justify-between shrink-0">
+                 <h1 class="text-xl font-semibold">运营角色</h1>
+                 <div class="flex items-center space-x-3">
+                    <button id="save-button" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">保存更改</button>
+                    <button id="delete-button" class="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 border border-transparent rounded-md shadow-sm hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">删除角色</button>
+                </div>
+            </header>
+
+            <!-- Main Content: Added Tab Structure -->
+            <div class="p-6 main-content-area">
+                <!-- Tab Navigation -->
+                 <div class="border-b border-gray-200 mb-6">
+                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <a href="#basic-info" data-tab="basic-info-content" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            基本信息
+                        </a>
+                        <a href="#role-members" data-tab="role-members-content" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            角色成员
+                        </a>
+                        <a href="#role-permissions" data-tab="role-permissions-content" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 tab-active">
+                            角色权限
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Tab Content Area -->
+                <div class="tab-content">
+
+                    <!-- Tab 1: Basic Info -->
+                    <div id="basic-info-content" class="space-y-6">
+                         <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                 <div class="md:col-span-2 space-y-4">
+                                     <div>
+                                        <label for="role-name" class="block text-sm font-medium text-gray-700 mb-1">角色名称 <span class="text-red-500">*</span></label>
+                                        <input type="text" id="role-name" value="运营角色" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                        <p class="mt-1 text-xs text-gray-500 text-right">4 / 50</p>
+                                    </div>
+                                     <div>
+                                        <label for="role-description" class="block text-sm font-medium text-gray-700 mb-1">角色描述</label>
+                                        <textarea id="role-description" rows="4" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none disabled:bg-gray-100 disabled:cursor-not-allowed">汤之问棘也是已：穷发之北，有冥海者，天池也。有鱼焉，其广数千里，未有知其修者，其名为鲲。有鸟焉，其名为鹏，背若泰山，翼若垂天之云，抟扶摇羊角而上者九万里，绝云气，负青天，然后图南，且适南冥也。</textarea>
+                                         <p class="mt-1 text-xs text-gray-500 text-right">100 / 200</p>
+                                    </div>
+                                </div>
+                                <div class="space-y-4">
+                                    <div class="bg-gray-50 p-4 rounded-md border border-gray-200 text-center">
+                                        <p class="text-3xl font-semibold text-indigo-600">30</p>
+                                        <p class="text-sm text-gray-500 mt-1">成员数量</p>
+                                    </div>
+                                    <div class="bg-gray-50 p-4 rounded-md border border-gray-200 text-center">
+                                        <p class="text-3xl font-semibold text-green-600">30</p>
+                                        <p class="text-sm text-gray-500 mt-1">权限数量</p>
+                                    </div>
+                                     <div class="bg-gray-50 p-4 rounded-md border border-gray-200 text-center">
+                                        <p class="text-sm text-gray-500">更新时间</p>
+                                        <p class="text-lg font-medium text-gray-700 mt-1">2033-12-12 12:12:12</p>
+                                    </div>
+                                </div>
+                            </div>
+                         </div>
+                    </div>
+
+                    <!-- Tab 2: Role Members -->
+                    <div id="role-members-content" class="space-y-6">
+                        <div class="flex items-center justify-between">
+                             <div class="relative w-72">
+                                <input type="search" placeholder="按关键词搜索" class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                     <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+                                </div>
+                            </div>
+                             <div class="flex space-x-3">
+                                <button class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 inline-block mr-1 -ml-1"> <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg>添加成员</button>
+                                <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">批量移除</button>
+                             </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                             <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50"><tr><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><input type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">成员</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">所属部门</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">加入时间</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th></tr></thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">xxxxx部门</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">部门</span></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">质效技术部</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2021-02-28 10:30</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"><a href="#" class="text-red-600 hover:text-red-900">移除</a></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap"><input type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">张三</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">个人</span></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">外卖测试组</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2020-03-28 16:50</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"><a href="#" class="text-red-600 hover:text-red-900">移除</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <nav class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-b-lg" aria-label="Pagination">
+                            <div class="hidden sm:block">
+                                <p class="text-sm text-gray-700">
+                                    共 <span class="font-medium">200</span> 条
+                                </p>
+                            </div>
+                            <div class="flex-1 flex justify-between sm:justify-end">
+                                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"> 上一页 </a>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px ml-3" aria-label="Pagination">
+                                    <a href="#" aria-current="page" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-indigo-50 text-sm font-medium text-indigo-600 z-10"> 1 </a>
+                                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"> 2 </a>
+                                    <a href="#" class="relative hidden items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 md:inline-flex"> 3 </a>
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"> ... </span>
+                                    <a href="#" class="relative hidden items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 md:inline-flex"> 50 </a>
+                                </nav>
+                                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"> 下一页 </a>
+                            </div>
+                        </nav>
+                    </div>
+
+                    <!-- Tab 3: Role Permissions -->
+                    <div id="role-permissions-content" class="space-y-6 active">
+                         <!-- Info Alert -->
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-md" role="alert">
+                            <div class="flex items-start">
+                                <div class="shrink-0 mt-0.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-600"> <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-blue-700">
+                                        权限设置：勾选下列权限项，为该角色分配对应的操作权限。为 Bots 设置权限时，您也可以按需一并调整该空间下 ABS 与 AutoMan 的权限。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Permissions Accordion -->
+                         <div class="space-y-1">
+                            <!-- Section: General/Space Permissions -->
+                             <details class="permission-section bg-white border border-gray-200 rounded-lg shadow-sm" open>
+                                <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 rounded-t-lg data-[open]:rounded-b-none">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-gray-500"> <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>
+                                        <span class="font-medium text-gray-800">通用 / 空间权限</span>
+                                    </div>
+                                    <div class="flex items-center space-x-4">
+                                         <label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"><span class="text-sm text-gray-600">全选</span></label>
+                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 chevron"> <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                                    </div>
+                                </summary>
+                                <div class="p-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 管理空间权限</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 管理空间成员</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 删除空间</label>
+                                </div>
+                             </details>
+                            <details class="permission-section bg-white border border-gray-200 rounded-lg shadow-sm">
+                               <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 rounded-lg data-[open]:rounded-b-none">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-purple-600"> <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V8.25a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 8.25v10.5A2.25 2.25 0 0 0 6.75 21h10.5Zm-3.75-6.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm3-6h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm3-6h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" /></svg>
+                                        <span class="font-medium text-gray-800">Bots 权限</span>
+                                    </div>
+                                     <div class="flex items-center space-x-4">
+                                         <label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"><span class="text-sm text-gray-600">全选</span></label>
+                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 chevron"> <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                                    </div>
+                                </summary>
+                                 <div class="p-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 创建/管理智能体</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 创建/管理知识库</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 创建/管理工作流</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 创建/管理组件</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed">允许访问/使用Bots下所有资源</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 管理Bots所有资源</label>
+                                </div>
+                            </details>
+                             <details class="permission-section bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 rounded-lg data-[open]:rounded-b-none">
+                                     <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-indigo-600"> <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5 3 11.25l3.75 3.75M17.25 7.5 21 11.25l-3.75 3.75M14.25 3l-4.5 18" /></svg>
+                                        <span class="font-medium text-gray-800">AutoMan 权限</span>
+                                    </div>
+                                     <div class="flex items-center space-x-4">
+                                         <label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"><span class="text-sm text-gray-600">全选</span></label>
+                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 chevron"> <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                                    </div>
+                                </summary>
+                                 <div class="p-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 管理设备连接</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 管理元素库</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 管理指令库</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 创建/执行自动化任务</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 查看执行日志</label>
+                                </div>
+                            </details>
+                            <details class="permission-section bg-white border border-gray-200 rounded-lg shadow-sm">
+                               <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 rounded-lg data-[open]:rounded-b-none">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-teal-600"> <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg>
+                                        <span class="font-medium text-gray-800">ABS (多维表格) 权限</span>
+                                    </div>
+                                    <div class="flex items-center space-x-4">
+                                         <label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"><span class="text-sm text-gray-600">全选</span></label>
+                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 chevron"> <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                                    </div>
+                                </summary>
+                                 <div class="p-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 创建/删除应用</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 创建/删除表格</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 修改表结构/字段</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 导入/导出数据</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 添加/编辑/删除记录</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 管理视图</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 管理自动化</label>
+                                    <label class="flex items-center text-sm text-gray-700 cursor-pointer"><input type="checkbox" class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 disabled:cursor-not-allowed"> 管理表单</label>
+                                </div>
+                            </details>
+                         </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content > div');
+        const saveButton = document.getElementById('save-button');
+        const deleteButton = document.getElementById('delete-button');
+        const roleLinks = document.querySelectorAll('.role-link');
+        const mainHeader = document.querySelector('main header h1');
+        // --- Get references to form elements ---
+        const roleNameInput = document.getElementById('role-name');
+        const roleDescriptionTextarea = document.getElementById('role-description');
+        const permissionCheckboxes = document.querySelectorAll('#role-permissions-content input[type="checkbox"]');
+
+        // --- Add a global flag to track if a system role is selected ---
+        let isSystemRoleSelected = false;
+
+        // --- Function to update disabled state of form elements ---
+        function updateFormDisabledState(isDisabled) {
+            // Basic Info Tab fields
+            if (roleNameInput) {
+                roleNameInput.disabled = isDisabled;
+            }
+            if (roleDescriptionTextarea) {
+                roleDescriptionTextarea.disabled = isDisabled;
+            }
+
+            // Role Permissions Tab checkboxes
+            permissionCheckboxes.forEach(checkbox => {
+                checkbox.disabled = isDisabled;
+                // Optionally, style the label as well if needed
+                 const label = checkbox.closest('label');
+                 if (label) {
+                     if (isDisabled) {
+                         label.classList.add('cursor-not-allowed', 'text-gray-500');
+                     } else {
+                         label.classList.remove('cursor-not-allowed', 'text-gray-500');
+                     }
+                 }
+            });
+             // Also disable/enable the "全选" checkboxes in permission headers
+             document.querySelectorAll('.permission-section summary input[type="checkbox"]').forEach(selectAllCheckbox => {
+                 selectAllCheckbox.disabled = isDisabled;
+                  const label = selectAllCheckbox.closest('label');
+                  if (label) {
+                      if (isDisabled) {
+                          label.classList.add('cursor-not-allowed');
+                      } else {
+                         label.classList.remove('cursor-not-allowed');
+                      }
+                  }
+             });
+        }
+
+
+        function updateButtonVisibility(activeTabId) {
+            // --- Default: hide buttons initially ---
+            saveButton.style.display = 'none';
+            deleteButton.style.display = 'none';
+
+            // --- Check if a system role is selected ---
+            if (isSystemRoleSelected) {
+                 // If system role, keep save/delete hidden, regardless of tab
+                 return; // Exit the function early
+            }
+
+            // --- If NOT a system role, apply tab-based visibility ---
+            if (activeTabId === 'basic-info-content') {
+                saveButton.style.display = 'inline-flex';
+                deleteButton.style.display = 'inline-flex';
+            } else if (activeTabId === 'role-members-content') {
+                // No header buttons needed for Role Members tab in this design
+            } else if (activeTabId === 'role-permissions-content') {
+                saveButton.style.display = 'inline-flex'; // Show save for permissions
+            }
+        }
+
+        // --- UPDATED switchTab Function ---
+        function switchTab(event) {
+            event.preventDefault();
+            const link = event.currentTarget;
+            const contentId = link.getAttribute('data-tab');
+
+            // --- Activate the clicked tab link ---
+            tabLinks.forEach(l => l.classList.remove('tab-active'));
+            link.classList.add('tab-active');
+
+            // --- Show the corresponding content ---
+            tabContents.forEach(c => {
+                if (c.id === contentId) {
+                    c.classList.add('active');
+                    c.classList.remove('hidden'); // Use remove('hidden') instead of display style
+                } else {
+                    c.classList.remove('active');
+                    c.classList.add('hidden'); // Use add('hidden')
+                }
+            });
+
+            // --- Update button visibility based on the NEWLY active tab ---
+            // The updateButtonVisibility function will internally check isSystemRoleSelected
+            updateButtonVisibility(contentId);
+        }
+
+
+        // --- REVISED selectRole Function ---
+        function selectRole(event) {
+             event.preventDefault();
+             const link = event.currentTarget;
+
+             // --- Update Role List Active State ---
+             roleLinks.forEach(l => l.classList.remove('active'));
+             link.classList.add('active');
+
+             // --- Update Header ---
+             const roleNameElement = link.firstChild;
+             const roleName = roleNameElement.textContent.trim();
+             mainHeader.textContent = `${roleName}`;
+
+             // --- Determine if System Role ---
+             const systemSpan = link.querySelector('span.text-blue-700');
+             isSystemRoleSelected = (systemSpan !== null);
+
+             // --- Update Disabled State for Forms based on the role type ---
+             updateFormDisabledState(isSystemRoleSelected);
+
+             // --- Find the currently active tab ---
+             const currentActiveTabLink = document.querySelector('.tab-link.tab-active');
+             let activeContentId = '';
+
+             if (currentActiveTabLink) {
+                 activeContentId = currentActiveTabLink.getAttribute('data-tab');
+             } else {
+                 // Should not happen after initial load, but as a fallback:
+                 // If no tab is active, try to activate the first one.
+                 if (tabLinks.length > 0) {
+                     // Simulate a click on the first tab to activate it properly
+                     tabLinks[0].click();
+                     // Since click() is asynchronous in some contexts, get ID directly
+                     activeContentId = tabLinks[0].getAttribute('data-tab');
+                 }
+             }
+
+             // --- Update Button Visibility based on the *current* active tab and the new role type ---
+             // updateButtonVisibility function already checks isSystemRoleSelected internally.
+            if (activeContentId) { // Ensure we have an ID before calling
+                 updateButtonVisibility(activeContentId);
+             }
+
+             // In a real app, you would fetch role details here and update the content
+             // within the currently active tab.
+        }
+
+        // --- Initial Setup on page load ---
+        tabLinks.forEach(link => link.addEventListener('click', switchTab));
+        roleLinks.forEach(link => link.addEventListener('click', selectRole));
+
+        const initialRoleLink = document.querySelector('.role-link.active');
+        const initialTabLink = document.querySelector('.tab-link.tab-active');
+        let initialActiveContentId = '';
+
+        // Determine initial selected role type
+        if (initialRoleLink) {
+             const initialRoleName = initialRoleLink.firstChild.textContent.trim();
+             mainHeader.textContent = `${initialRoleName}`;
+             const initialSystemSpan = initialRoleLink.querySelector('span.text-blue-700');
+             isSystemRoleSelected = (initialSystemSpan !== null); // Set flag based on initial role
+        }
+
+        // Determine initial active tab and content
+        if (initialTabLink) {
+             initialActiveContentId = initialTabLink.getAttribute('data-tab');
+             tabContents.forEach(c => {
+                 if (c.id === initialActiveContentId) {
+                     c.classList.add('active');
+                     c.classList.remove('hidden');
+                 } else {
+                     c.classList.remove('active');
+                     c.classList.add('hidden');
+                 }
+             });
+         } else if (tabLinks.length > 0) {
+             // Fallback if no tab is initially active: activate the first one
+              initialActiveContentId = tabLinks[0].getAttribute('data-tab');
+              tabLinks[0].classList.add('tab-active');
+              const firstContent = document.getElementById(initialActiveContentId);
+              firstContent.classList.add('active');
+              firstContent.classList.remove('hidden');
+         }
+
+         // --- Set initial button visibility based on initial role and tab ---
+         updateButtonVisibility(initialActiveContentId);
+         // --- Set initial form disabled state based on initial role ---
+         updateFormDisabledState(isSystemRoleSelected);
+
+
+        // Accordion toggle listener (remains the same)
+        document.querySelectorAll('.permission-section').forEach(details => {
+            details.addEventListener('toggle', event => { });
+        });
+
+    </script>
+</body>
+</html>

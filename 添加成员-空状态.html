@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加成员 - 空状态</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
+        /* 简单的动画效果 (可选) */
+        .list-item-enter { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+     <!-- 可选: Heroicons for icons -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/heroicons@2.1.1/24/outline/esm/index.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/heroicons@2.1.1/24/solid/esm/index.js"></script>
+</head>
+<body>
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-800">添加成员</h2>
+            <button class="text-gray-400 hover:text-gray-600 transition duration-150" aria-label="关闭">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4 sm:p-6">
+            <!-- Input Area -->
+            <div class="mb-4">
+                <label for="memberIdentifier" class="block text-sm font-medium text-gray-700 mb-1">成员标识</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="memberIdentifier" name="memberIdentifier" class="flex-grow block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="输入手机号 / 邮箱 / MIS 号">
+                    <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150">
+                        添加
+                    </button>
+                </div>
+                <p class="mt-1 text-xs text-red-600 h-4"></p> <!-- For error messages -->
+            </div>
+
+            <!-- Pending List Area - Empty State -->
+            <div class="mt-4 border-t border-gray-200 pt-4 min-h-[150px] max-h-[300px] overflow-y-auto">
+                <div class="flex items-center justify-center h-full">
+                    <p class="text-center text-gray-500 text-sm">
+                        请在上方输入框添加成员信息，<br>可一次添加多个成员。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="flex items-center justify-end p-4 sm:p-5 border-t border-gray-200 bg-gray-50 space-x-3">
+            <button type="button" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150">
+                取消
+            </button>
+            <button type="button" id="confirmAddBtn" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150" disabled>
+                确认添加
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Basic JS to enable/disable confirm button based on list content (in a real app)
+        const confirmBtn = document.getElementById('confirmAddBtn');
+        // Example: Check if the list has items to enable the button
+        // const listContainer = document.querySelector('.pending-list-container');
+        // if (listContainer && listContainer.children.length > 0) {
+        //     confirmBtn.disabled = false;
+        // } else {
+        //     confirmBtn.disabled = true; // Keep it disabled for the empty state page
+        // }
+    </script>
+</body>
+</html> 

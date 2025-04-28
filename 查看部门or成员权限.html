@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查看权限 - 张三</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better appearance */
+        .platform-tab-link {
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            color: #6b7280; /* Gray-500 */
+            font-weight: 500;
+             display: inline-flex;
+             align-items: center;
+             gap: 0.5rem;
+        }
+        .platform-tab-link:hover {
+            color: #3b82f6; /* Blue-500 */
+            border-bottom-color: #d1d5db; /* Gray-300 */
+        }
+        .platform-tab-link.active {
+            color: #3b82f6; /* Blue-500 */
+            border-bottom-color: #3b82f6; /* Blue-500 */
+            font-weight: 600;
+        }
+        .platform-tab-content {
+            display: none; /* Hidden by default */
+        }
+        .platform-tab-content.active {
+            display: block; /* Show active tab content */
+        }
+        .sticky-header {
+             top: 0; /* Adjust based on your modal header height if necessary */
+             background-color: white; /* Ensure it covers content below */
+        }
+        /* Subtle scrollbar */
+        .permission-list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .permission-list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .permission-list-container::-webkit-scrollbar-thumb {
+            background: #d1d5db; /* Gray-300 */
+            border-radius: 3px;
+        }
+        .permission-list-container::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af; /* Gray-400 */
+        }
+         /* Ensure grid columns have reasonable min-width if needed */
+         .grid-cols-3 > div:first-child { min-width: 200px; } /* Example for name column */
+    </style>
+</head>
+<body class="bg-gray-100 p-10">
+
+    <!-- Modal -->
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden flex flex-col" style="max-height: 80vh;">
+        <!-- Modal Header -->
+        <div class="flex justify-between items-center p-4 border-b border-gray-200 flex-shrink-0">
+            <h2 class="text-lg font-semibold text-gray-800">查看权限 - 张三</h2>
+            <button id="close-modal-button-top" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Tab Navigation -->
+        <nav class="px-4 border-b border-gray-200 flex-shrink-0">
+             <a href="#" class="platform-tab-link active" data-tab="abs-content"> <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg> ABS (多维表格) </a>
+             <a href="#" class="platform-tab-link" data-tab="automan-content"> <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5 3.75 12l3 4.5m10.5-9L20.25 12l-3 4.5m-8.25-3h6.75" /></svg> AutoMan </a>
+             <a href="#" class="platform-tab-link" data-tab="bots-content"> <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-2.13a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg> Bots </a>
+        </nav>
+
+        <!-- Tab Content Area (Scrollable) -->
+        <div class="overflow-y-auto permission-list-container flex-grow">
+            <!-- ABS Tab Content -->
+            <div id="abs-content" class="platform-tab-content active p-5">
+                <!-- Sticky Table Header -->
+                <div class="grid grid-cols-3 gap-4 pb-2 border-b border-gray-200 mb-3 sticky sticky-header bg-white z-10">
+                    <div class="col-span-1 text-sm font-medium text-gray-600">名称</div>
+                    <div class="col-span-2 text-sm font-medium text-gray-600">权限</div>
+                </div>
+                 <!-- Permission List for ABS -->
+                <div class="space-y-1">
+                    <!-- Level 0: Space -->
+                    <div>
+                        <div class="grid grid-cols-3 gap-4 items-center py-1 hover:bg-gray-50 px-1 rounded cursor-pointer toggle-item" data-target=".space-1-children">
+                            <div class="col-span-1 flex items-center">
+                                 <svg class="w-4 h-4 mr-1 text-gray-500 toggle-icon transform transition-transform duration-200 ease-in-out" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                                 <span class="inline-flex items-center justify-center h-6 w-6 rounded bg-green-100 text-green-700 mr-2 flex-shrink-0"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg></span>
+                                 <span class="text-sm font-medium text-gray-800">空间：销售数据分析空间</span>
+                            </div>
+                            <div class="col-span-2 flex items-center text-sm">
+                                 <span class="inline-flex items-center font-medium text-gray-700 mr-1">编辑者<svg class="w-4 h-4 text-gray-400 ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg></span>
+                                 <span class="text-gray-500">拥有该空间内 ABS 相关编辑权限</span>
+                            </div>
+                        </div>
+
+                         <!-- Children of Space 1 (Initially visible) -->
+                        <div class="pl-5 space-y-1 space-1-children">
+                            <!-- Level 1: Application -->
+                             <div>
+                                <div class="grid grid-cols-3 gap-4 items-center py-1 hover:bg-gray-50 px-1 rounded cursor-pointer toggle-item" data-target=".app-1-children">
+                                    <div class="col-span-1 flex items-center pl-1">
+                                         <svg class="w-4 h-4 mr-1 text-gray-500 toggle-icon transform transition-transform duration-200 ease-in-out" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                                         <svg class="w-5 h-5 text-blue-500 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg>
+                                         <span class="text-sm font-medium text-gray-800">应用：销售管理系统</span>
+                                    </div>
+                                    <div class="col-span-2 flex items-center text-sm">
+                                         <span class="inline-flex items-center font-medium text-gray-700 mr-1">维护者<svg class="w-4 h-4 text-gray-400 ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg></span>
+                                         <span class="text-gray-500">可管理应用内所有资源</span>
+                                    </div>
+                                </div>
+
+                                 <!-- Children of Application 1 (Initially visible) -->
+                                <div class="pl-5 space-y-1 app-1-children">
+                                     <!-- Level 2: Table (within Application) -->
+                                     <div class="grid grid-cols-3 gap-4 items-center py-1 hover:bg-gray-50 px-1 rounded">
+                                        <div class="col-span-1 flex items-center pl-7">
+                                             <svg class="w-5 h-5 text-gray-400 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12M8.25 17.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                                             <span class="text-sm text-gray-800">表格: 2024年Q1销售额汇总</span>
+                                        </div>
+                                         <div class="col-span-2 flex items-center text-sm">
+                                             <span class="inline-flex items-center font-medium text-gray-700 mr-1">编辑者<svg class="w-4 h-4 text-gray-400 ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg></span>
+                                             <span class="text-gray-500">可编辑表格数据和视图</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Level 2: Form (within Application) -->
+                                    <div class="grid grid-cols-3 gap-4 items-center py-1 hover:bg-gray-50 px-1 rounded">
+                                        <div class="col-span-1 flex items-center pl-7">
+                                            <svg class="w-5 h-5 text-gray-400 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.75h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                            <span class="text-sm text-gray-800">表单: 销售线索录入</span>
+                                        </div>
+                                         <div class="col-span-2 flex items-center text-sm">
+                                             <span class="inline-flex items-center font-medium text-gray-700 mr-1">提交者<svg class="w-4 h-4 text-gray-400 ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg></span>
+                                             <span class="text-gray-500">仅可提交表单</span>
+                                         </div>
+                                    </div>
+                                </div>
+                             </div>
+                         </div>
+                    </div>
+
+
+                     <!-- Level 0: Another Space -->
+                    <div>
+                        <div class="grid grid-cols-3 gap-4 items-center py-1 hover:bg-gray-50 px-1 rounded cursor-pointer toggle-item" data-target=".space-2-children">
+                            <div class="col-span-1 flex items-center">
+                                 <svg class="w-4 h-4 mr-1 text-gray-500 toggle-icon transform transition-transform duration-200 ease-in-out" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                                 <span class="inline-flex items-center justify-center h-6 w-6 rounded bg-orange-100 text-orange-700 mr-2 flex-shrink-0"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg></span>
+                                 <span class="text-sm font-medium text-gray-800">空间：产品原型空间</span>
+                            </div>
+                            <div class="col-span-2 flex items-center text-sm">
+                                 <span class="inline-flex items-center font-medium text-gray-700 mr-1">只读成员<svg class="w-4 h-4 text-gray-400 ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg></span>
+                                 <span class="text-gray-500">仅可查看空间内资源</span>
+                            </div>
+                        </div>
+                        <!-- Children of Space 2 (Initially visible) -->
+                        <div class="pl-5 space-y-1 space-2-children">
+                            <!-- Level 1: Application in second space -->
+                             <div>
+                                <div class="grid grid-cols-3 gap-4 items-center py-1 hover:bg-gray-50 px-1 rounded cursor-pointer toggle-item" data-target=".app-2-children">
+                                    <div class="col-span-1 flex items-center pl-1">
+                                         <svg class="w-4 h-4 mr-1 text-gray-500 toggle-icon transform transition-transform duration-200 ease-in-out" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                                         <svg class="w-5 h-5 text-blue-500 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg>
+                                         <span class="text-sm font-medium text-gray-800">应用：需求收集与评审</span>
+                                    </div>
+                                    <div class="col-span-2 flex items-center text-sm">
+                                         <span class="inline-flex items-center font-medium text-gray-700 mr-1">评论者<svg class="w-4 h-4 text-gray-400 ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg></span>
+                                         <span class="text-gray-500">可查看并评论应用内资源</span>
+                                    </div>
+                                </div>
+                                <!-- Children of Application 2 (Initially visible and empty in this example) -->
+                                <div class="pl-5 space-y-1 app-2-children">
+                                    <p class="text-sm text-gray-400 italic px-1 py-1 pl-7">（此应用下无更多资源）</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AutoMan Tab Content -->
+            <div id="automan-content" class="platform-tab-content p-5">
+                 <div class="grid grid-cols-3 gap-4 pb-2 border-b border-gray-200 mb-3 sticky sticky-header bg-white z-10"> <div class="col-span-1 text-sm font-medium text-gray-600">名称</div> <div class="col-span-2 text-sm font-medium text-gray-600">权限</div> </div>
+                 <div class="space-y-3"> <p class="text-sm text-gray-500 italic px-1 py-1">（用户在此平台无相关权限）</p> </div>
+            </div>
+
+             <!-- Bots Tab Content -->
+             <div id="bots-content" class="platform-tab-content p-5">
+                 <div class="grid grid-cols-3 gap-4 pb-2 border-b border-gray-200 mb-3 sticky sticky-header bg-white z-10"> <div class="col-span-1 text-sm font-medium text-gray-600">名称</div> <div class="col-span-2 text-sm font-medium text-gray-600">权限</div> </div>
+                 <div class="space-y-3">
+                     <div class="grid grid-cols-3 gap-4 items-start py-1 hover:bg-gray-50 px-1 rounded">
+                        <div class="col-span-1 flex items-center">
+                             <span class="inline-flex items-center justify-center h-6 w-6 rounded bg-green-100 text-green-700 mr-2 flex-shrink-0"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg></span>
+                             <span class="text-sm font-medium text-gray-800">空间：客服智能助手空间</span>
+                        </div>
+                        <div class="col-span-2 flex items-center text-sm">
+                             <span class="inline-flex items-center font-medium text-gray-700 mr-1">管理员<svg class="w-4 h-4 text-gray-400 ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg></span>
+                             <span class="text-gray-500">拥有该空间内 Bots 相关管理权限</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 items-start py-1 hover:bg-gray-50 px-1 rounded">
+                        <div class="col-span-1 flex items-center pl-6">
+                             <svg class="w-5 h-5 text-purple-500 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-2.13a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
+                            <span class="text-sm text-gray-800">机器人：直播小助手</span>
+                        </div>
+                         <div class="col-span-2 flex items-center text-sm">
+                             <span class="inline-flex items-center font-medium text-gray-700 mr-1">管理员<svg class="w-4 h-4 text-gray-400 ml-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg></span>
+                             <span class="text-gray-500">可以管理和配置该机器人</span>
+                        </div>
+                    </div>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex justify-end p-4 border-t border-gray-200 flex-shrink-0">
+             <button id="close-modal-button-bottom" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"> 关闭 </button>
+        </div>
+    </div>
+
+    <script>
+        const platformTabs = document.querySelectorAll('.platform-tab-link');
+        const platformTabContents = document.querySelectorAll('.platform-tab-content');
+        const modal = document.querySelector('.max-w-4xl'); // Select the modal container itself
+        const closeButtons = document.querySelectorAll('#close-modal-button-top, #close-modal-button-bottom');
+
+        // Function to switch platform tabs
+        function switchPlatformTab(event) {
+            event.preventDefault();
+            const targetTabId = event.currentTarget.getAttribute('data-tab');
+
+            // Remove active class from all tabs and content
+            platformTabs.forEach(tab => tab.classList.remove('active'));
+            platformTabContents.forEach(content => content.classList.remove('active'));
+
+            // Add active class to the clicked tab and corresponding content
+            event.currentTarget.classList.add('active');
+            document.getElementById(targetTabId).classList.add('active');
+        }
+
+        // Add event listeners to tab links
+        platformTabs.forEach(tab => tab.addEventListener('click', switchPlatformTab));
+
+        // Function to close the modal (simple hide)
+        function closeModal() {
+             // In a real application, you might want to remove the modal from the DOM
+             // or use a more sophisticated state management approach.
+             if (modal) modal.style.display = 'none';
+        }
+
+        // Add event listeners to close buttons
+        closeButtons.forEach(button => button.addEventListener('click', closeModal));
+
+        // Initialize the first tab as active on page load
+        // Ensure the default active tab content is displayed correctly
+        const initialActiveTabLink = document.querySelector('.platform-tab-link.active');
+        if (initialActiveTabLink) {
+            const initialActiveTabContentId = initialActiveTabLink.getAttribute('data-tab');
+            const initialActiveTabContent = document.getElementById(initialActiveTabContentId);
+            if (initialActiveTabContent) {
+                initialActiveTabContent.classList.add('active');
+            }
+        } else if (platformTabs.length > 0) {
+             // Fallback if no tab is marked active initially
+            platformTabs[0].classList.add('active');
+            const firstTabContentId = platformTabs[0].getAttribute('data-tab');
+            const firstTabContent = document.getElementById(firstTabContentId);
+            if (firstTabContent) {
+                firstTabContent.classList.add('active');
+            }
+        }
+
+        // --- NEW: Expand/Collapse Logic ---
+        const toggleItems = document.querySelectorAll('.toggle-item');
+
+        toggleItems.forEach(item => {
+            item.addEventListener('click', (event) => {
+                // Prevent click on role description from toggling
+                if (event.target.closest('.col-span-2')) {
+                    return;
+                }
+
+                const targetSelector = item.getAttribute('data-target');
+                const targetElement = item.closest('div[class*="space-y-1"]').querySelector(targetSelector); // Find target within its section
+                const icon = item.querySelector('.toggle-icon');
+
+                if (targetElement) {
+                    targetElement.classList.toggle('hidden');
+                    icon.classList.toggle('-rotate-90'); // Rotate chevron left for collapsed state
+                }
+            });
+             // Initialize icons based on visibility (all start expanded, so no rotation needed initially)
+             const initialTargetSelector = item.getAttribute('data-target');
+             const initialTargetElement = item.closest('div[class*="space-y-1"]')?.querySelector(initialTargetSelector);
+             const initialIcon = item.querySelector('.toggle-icon');
+             if (initialTargetElement && initialIcon) {
+                 if (initialTargetElement.classList.contains('hidden')) {
+                     initialIcon.classList.add('-rotate-90');
+                 } else {
+                     initialIcon.classList.remove('-rotate-90');
+                 }
+             }
+
+        });
+
+        // Optional: Ensure clicking only the icon toggles, not the whole row text
+        // This is handled above by checking event.target source, but could be more specific
+        // document.querySelectorAll('.toggle-icon').forEach(icon => {
+        //     icon.addEventListener('click', (event) => {
+        //         event.stopPropagation(); // Prevent event bubbling to the parent row div
+        //         const parentToggleItem = event.target.closest('.toggle-item');
+        //         if (parentToggleItem) {
+        //             parentToggleItem.click(); // Simulate click on the parent row
+        //         }
+        //     });
+        // });
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>选择订阅方案</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/@heroicons/react@2.1.1/24/outline/esm/index.js" rel="modulepreload">
+    <link href="https://unpkg.com/@heroicons/react@2.1.1/20/solid/esm/index.js" rel="modulepreload"> <!-- For Solid icons -->
+    <style>
+        body { background-color: #f8fafc; /* Tailwind gray-50 */ }
+        /* Simple toggle switch styling */
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #3b82f6; /* Tailwind blue-500 */
+        }
+        .toggle-checkbox:checked + .toggle-label::after {
+            transform: translateX(100%);
+        }
+        .toggle-label::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 1.25rem; /* h-5 */
+            height: 1.25rem; /* w-5 */
+            background-color: white;
+            border-radius: 9999px; /* rounded-full */
+            transition: transform 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-gray-800">
+    <div class="container mx-auto px-4 py-12 lg:px-8">
+
+        <div class="text-center mb-12">
+            <h1 class="text-3xl lg:text-4xl font-bold mb-3">选择适合您团队的方案</h1>
+            <p class="text-lg text-gray-600">从基础功能到企业级定制，总有一款满足您的需求。</p>
+        </div>
+
+        <!-- Billing Cycle Toggle -->
+        <div class="flex justify-center items-center space-x-4 mb-10">
+            <span class="text-gray-600 font-medium">按月支付</span>
+            <label for="billing-cycle-toggle" class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="billing-cycle-toggle" class="sr-only toggle-checkbox">
+                <div class="w-11 h-6 bg-gray-300 rounded-full toggle-label transition duration-200 ease-in-out relative"></div>
+             </label>
+            <span class="text-gray-600 font-medium">
+                按年支付
+                <span class="ml-1 inline-block bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full">节省 16%</span>
+            </span>
+        </div>
+
+        <!-- Pricing Plans Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+            <!-- Plan 1: 基础版 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col border border-gray-200">
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-1">基础版</h3>
+                    <p class="text-gray-500 text-sm mb-3">适合小型团队或个人起步</p>
+                    <p class="text-3xl font-bold mb-1">¥99 <span class="text-base font-normal text-gray-500">/ 月</span></p>
+                    <p class="text-sm text-gray-500">(年付 ¥999)</p>
+                </div>
+
+                <ul class="space-y-3 text-sm text-gray-600 flex-grow mb-6">
+                    <li class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>最多 5 个空间</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>最多 10 个成员</span>
+                    </li>
+                     <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>10 个智能体</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>10,000 Tokens/月</span>
+                    </li>
+                    <li class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-gray-400 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>基础 AutoMan 功能</span>
+                    </li>
+                     <li class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-gray-400 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>基础 ABS 功能 (5k行/表)</span>
+                    </li>
+                </ul>
+
+                <button class="w-full mt-auto bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-150 ease-in-out">
+                    选择方案
+                </button>
+            </div>
+
+            <!-- Plan 2: 标准版 (Current Plan Example) -->
+            <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col ring-2 ring-blue-500 relative">
+                 <span class="absolute top-0 right-0 bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg rounded-tr-lg">当前方案</span>
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-1">标准版</h3>
+                    <p class="text-gray-500 text-sm mb-3">适合成长型中小企业</p>
+                    <p class="text-3xl font-bold mb-1">¥299 <span class="text-base font-normal text-gray-500">/ 月</span></p>
+                     <p class="text-sm text-gray-500">(年付 ¥2999)</p>
+                </div>
+
+                 <ul class="space-y-3 text-sm text-gray-600 flex-grow mb-6">
+                    <li class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>最多 20 个空间</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>最多 50 个成员</span>
+                    </li>
+                     <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>50 个智能体</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>100,000 Tokens/月</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>标准 AutoMan 功能 (100设备)</span>
+                    </li>
+                     <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                         <span>标准 ABS 功能 (50k行/表, 含高级视图)</span>
+                    </li>
+                </ul>
+
+                <button class="w-full mt-auto bg-gray-300 text-gray-500 font-medium py-2 px-4 rounded-lg cursor-not-allowed">
+                    当前方案
+                </button>
+             </div>
+
+             <!-- Plan 3: 高级版 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 flex flex-col border border-gray-200">
+                 <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-1">高级版</h3>
+                    <p class="text-gray-500 text-sm mb-3">适合需要更强性能和更多协作的企业</p>
+                    <p class="text-3xl font-bold mb-1">¥799 <span class="text-base font-normal text-gray-500">/ 月</span></p>
+                     <p class="text-sm text-gray-500">(年付 ¥7999)</p>
+                </div>
+
+                 <ul class="space-y-3 text-sm text-gray-600 flex-grow mb-6">
+                    <li class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>无限空间</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>最多 200 个成员</span>
+                    </li>
+                     <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>200 个智能体</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>500,000 Tokens/月</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                         <span>高级 AutoMan 功能 (500设备)</span>
+                    </li>
+                     <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>高级 ABS 功能 (200k行/表, 全部高级视图)</span>
+                    </li>
+                     <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-green-500 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>优先技术支持</span>
+                    </li>
+                </ul>
+
+                 <button class="w-full mt-auto bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-150 ease-in-out">
+                    升级到此方案
+                </button>
+            </div>
+
+            <!-- Plan 4: 企业版 -->
+            <div class="bg-gradient-to-br from-gray-700 to-gray-900 text-white rounded-lg shadow-xl p-6 flex flex-col border border-gray-700">
+                 <span class="inline-block bg-yellow-400 text-yellow-900 text-xs font-semibold px-3 py-1 rounded-full mb-4 self-start">企业定制</span>
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-1">企业版</h3>
+                    <p class="text-gray-300 text-sm mb-3">为大型组织提供专属解决方案和支持</p>
+                    <p class="text-3xl font-bold mb-1">定制报价</p>
+                     <p class="text-sm text-gray-400">根据您的需求量身打造</p>
+                </div>
+
+                <ul class="space-y-3 text-sm text-gray-300 flex-grow mb-6">
+                    <li class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-blue-400 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>高级版所有功能</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-blue-400 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>定制资源额度</span>
+                    </li>
+                     <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-blue-400 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>专属客户成功经理</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-blue-400 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>高级安全与合规选项</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-blue-400 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>SLA 服务等级协议</span>
+                    </li>
+                    <li class="flex items-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-blue-400 mr-2 shrink-0"> <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.06 0l4-5.5Z" clip-rule="evenodd" /></svg>
+                        <span>私有化部署选项</span>
+                    </li>
+                </ul>
+
+                 <button class="w-full mt-auto bg-white hover:bg-gray-100 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-150 ease-in-out">
+                    联系销售
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Footer Links (Optional) -->
+        <div class="text-center mt-12 text-sm text-gray-500">
+            <a href="#" class="hover:text-blue-600 underline mr-4">查看详细功能对比</a>
+            <a href="#" class="hover:text-blue-600 underline">常见问题解答</a>
+        </div>
+
+    </div>
+
+    <!-- Basic JS for Toggle (Example - Needs refinement for actual price changing) -->
+    <script>
+        const toggle = document.getElementById('billing-cycle-toggle');
+        // In a real app, this would trigger price updates on the page
+        toggle.addEventListener('change', (event) => {
+            const isAnnual = event.target.checked;
+            console.log('Billing cycle changed:', isAnnual ? 'Annual' : 'Monthly');
+            // Add logic here to update displayed prices and button text/links
+        });
+    </script>
+
+</body>
+</html>

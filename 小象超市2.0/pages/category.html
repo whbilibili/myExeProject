@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分类</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* 使主内容区可滚动 */
+        .category-content {
+            height: calc(100vh - 44px - 83px); /* 减去状态栏和Tab Bar高度 */
+            display: flex;
+        }
+        .sidebar {
+            flex-shrink: 0;
+            width: 90px;
+            overflow-y: auto;
+            background-color: #f7f7f7;
+        }
+        .main-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            background-color: #ffffff;
+            padding: 16px;
+        }
+        .sidebar a {
+            display: block;
+            padding: 14px 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #333;
+            border-left: 3px solid transparent; /* 未选中状态 */
+            border-bottom: 1px solid #e5e5e5;
+        }
+        .sidebar a.active {
+            background-color: #ffffff;
+            color: #4CAF50;
+            font-weight: 600;
+            border-left-color: #4CAF50; /* 选中状态 */
+        }
+        .category-item {
+            text-align: center;
+            font-size: 12px;
+            color: #555;
+        }
+        .category-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body class="m-0 p-0">
+
+    <!-- App Bar -->
+    <header class="sticky top-0 bg-white px-4 py-3 shadow-sm z-10 flex items-center justify-center">
+         <h1 class="text-lg font-semibold">商品分类</h1>
+    </header>
+
+    <!-- Category Content Area -->
+    <div class="category-content">
+        <!-- Left Sidebar -->
+        <nav class="sidebar">
+            <a href="#" class="active">热门推荐</a>
+            <a href="#">新鲜水果</a>
+            <a href="#">时令蔬菜</a>
+            <a href="#">肉禽蛋品</a>
+            <a href="#">海鲜水产</a>
+            <a href="#">乳品烘焙</a>
+            <a href="#">粮油调味</a>
+            <a href="#">休闲零食</a>
+            <a href="#">酒水饮料</a>
+            <a href="#">日用百货</a>
+            <!-- Add more categories -->
+        </nav>
+
+        <!-- Right Main Area -->
+        <main class="main-area">
+            <h2 class="text-base font-semibold mb-4">新鲜水果</h2>
+            <div class="grid grid-cols-3 gap-4">
+                <!-- Category Item -->
+                <a href="#" class="category-item">
+                    <img src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&q=80" alt="苹果">
+                    <span>苹果</span>
+                </a>
+                <a href="#" class="category-item">
+                    <img src="https://images.unsplash.com/photo-1557800636-894a64c1696f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&q=80" alt="香蕉">
+                    <span>香蕉</span>
+                </a>
+                <a href="#" class="category-item">
+                    <img src="https://images.unsplash.com/photo-1553279768-865429fa0078?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&q=80" alt="橙子">
+                    <span>橙子</span>
+                </a>
+                 <a href="#" class="category-item">
+                    <img src="https://images.unsplash.com/photo-1587496679742-96850585bf19?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&q=80" alt="草莓">
+                    <span>草莓</span>
+                </a>
+                 <a href="#" class="category-item">
+                    <img src="https://images.unsplash.com/photo-1528821128474-27f963b062bf?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&q=80" alt="葡萄">
+                    <span>葡萄</span>
+                </a>
+                <a href="#" class="category-item">
+                    <img src="https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&q=80" alt="西瓜">
+                    <span>西瓜</span>
+                </a>
+            </div>
+
+             <h2 class="text-base font-semibold mt-6 mb-4">当季热卖</h2>
+             <div class="grid grid-cols-3 gap-4">
+                <a href="#" class="category-item">
+                    <img src="https://images.unsplash.com/photo-1587393855524-7ab1f96a4180?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&q=80" alt="车厘子">
+                    <span>车厘子</span>
+                </a>
+                <a href="#" class="category-item">
+                    <img src="https://images.unsplash.com/photo-1550989460-0d9b6c23c029?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&q=80" alt="芒果">
+                    <span>芒果</span>
+                </a>
+             </div>
+        </main>
+    </div>
+
+</body>
+</html> 

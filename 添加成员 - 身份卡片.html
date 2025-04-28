@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户搜索身份卡片示例 - 最终修正版</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <style>
+        /* Highlighting style */
+        .search-highlight {
+            color: #4338ca; /* text-indigo-700 */
+            font-weight: 600;
+            background-color: #eef2ff; /* bg-indigo-50 */
+            border-radius: 3px;
+            padding: 0.5px 2px;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-10 flex justify-center">
+
+    <div class="w-full max-w-sm">
+        <label for="user-search" class="block text-sm font-medium text-gray-700 mb-1">添加用户</label>
+        <div class="relative">
+            <input type="text" id="user-search" placeholder="输入手机 / 邮箱 / MIS 搜索" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value="张">
+            <!-- Dropdown / Search Results -->
+            <div id="user-dropdown" class="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200 max-h-80 overflow-y-auto">
+                <ul class="divide-y divide-gray-100">
+                    <!-- 1. Registered Meituan User -->
+                    <li class="px-3 py-2.5 hover:bg-gray-50 cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <img class="h-10 w-10 rounded-full object-cover flex-shrink-0" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="张宏昊头像">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <span class="text-sm font-semibold text-gray-800"><span class="search-highlight">张</span>宏昊</span>
+                                    <span class="text-gray-300">|</span>
+                                    <span class="text-sm text-gray-500 truncate">wb_zhanghonghao</span>
+                                    <span class="ml-auto flex-shrink-0 px-1.5 py-0.5 border border-gray-300 rounded text-xs text-gray-600 bg-white">美团</span>
+                                </div>
+                                <p class="text-xs text-gray-500 truncate leading-tight">
+                                    <span class="text-gray-400 mr-1">邮箱:</span>wb_zhanghonghao@meituan.com
+                                 </p>
+                            </div>
+                        </div>
+                    </li>
+
+                     <!-- 2. Registered External User -->
+                    <li class="px-3 py-2.5 hover:bg-gray-50 cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-purple-100 text-purple-600 flex-shrink-0">
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                </svg>
+                            </span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-gray-800 truncate mb-1">
+                                   宏啊宏
+                                </p>
+                                <p class="text-xs text-gray-500 truncate leading-tight">
+                                     <span class="text-gray-400 mr-1">邮箱:</span>10314951682@qq.com
+                                </p>
+                            </div>
+                        </div>
+                    </li>
+
+                     <!-- 3. Unregistered User (Email) -->
+                    <li class="px-3 py-2.5 hover:bg-gray-50 cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 flex-shrink-0">
+                                <svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                </svg>
+                            </span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate mb-1">
+                                    <span class="search-highlight">zhangsan</span>.external@unknown.com
+                                </p>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="inline-block px-1.5 py-0.5 border border-gray-300 rounded text-xs text-gray-600 bg-gray-100">未注册</span>
+                                    <!-- <span title="选中后，待用户使用此账号注册，添加/指定操作即可生效">
+                                        <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                        </svg>
+                                    </span> -->
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                     <!-- 4. Unregistered User (Phone) -->
+                    <li class="px-3 py-2.5 hover:bg-gray-50 cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 flex-shrink-0">
+                                <svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                </svg>
+                            </span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate mb-1">
+                                    18845862<span class="search-highlight">333</span>3
+                                </p>
+                                 <div class="flex items-center space-x-1.5">
+                                    <span class="inline-block px-1.5 py-0.5 border border-gray-300 rounded text-xs text-gray-600 bg-gray-100">未注册</span>
+                                     <!-- <span title="选中后，待用户使用此账号注册，添加/指定操作即可生效">
+                                        <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                        </svg>
+                                    </span> -->
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                     <!-- 5. Registered Meituan User without Email/Phone -->
+                     <li class="px-3 py-2.5 hover:bg-gray-50 cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <img class="h-10 w-10 rounded-full object-cover flex-shrink-0" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="李四头像">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm font-semibold text-gray-800">李四</span>
+                                    <span class="text-gray-300">|</span>
+                                    <span class="text-sm text-gray-500 truncate">lisi</span>
+                                    <span class="ml-auto flex-shrink-0 px-1.5 py-0.5 border border-gray-300 rounded text-xs text-gray-600 bg-white">美团</span>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+
+                     <!-- 6. No Results Found -->
+                    <li class="px-3 py-4 text-center text-sm text-gray-400">
+                        没有找到匹配的用户
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Basic JS to simulate dropdown visibility
+        const searchInput = document.getElementById('user-search');
+        const dropdown = document.getElementById('user-dropdown');
+
+        searchInput.addEventListener('focus', () => {
+            dropdown.classList.remove('hidden');
+        });
+
+        document.addEventListener('click', (event) => {
+            const isClickInside = searchInput.contains(event.target) || dropdown.contains(event.target);
+            if (!isClickInside) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Keep dropdown open on load for demo
+         dropdown.classList.remove('hidden');
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成员与访问 - Marketing Space</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
+         /* 简单模拟信息图标 */
+        .info-icon::before { content: 'ℹ️'; margin-right: 4px; font-size: 0.9em; cursor: pointer; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+         <header class="mb-8">
+            <div class="flex justify-between items-center">
+                 <div>
+                    <h1 class="text-2xl font-semibold text-gray-900">
+                        成员与访问
+                    </h1>
+                     <p class="mt-1 text-sm text-gray-600">管理谁可以访问 <span class="font-medium text-gray-800">"Marketing Space"</span> 及其内容。</p>
+                </div>
+                <!-- 添加成员按钮 (实际应触发模态框) -->
+                <button class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    添加成员
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                 <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    成员
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    分配的角色
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    分配层级
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    有效权限
+                                </th>
+                                <th scope="col" class="relative px-6 py-3">
+                                    <span class="sr-only">操作</span>
+                                </th>
+                            </tr>
+                        </thead>
+                         <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- 示例成员 1 -->
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <!-- Placeholder for avatar -->
+                                            <span class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium">AA</span>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">Alice Anderson</div>
+                                            <div class="text-sm text-gray-500">alice@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        空间所有者
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    直接分配在此空间
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <!-- 触发有效权限模态框的按钮 -->
+                                    <span class="info-icon text-blue-600 hover:text-blue-800 cursor-pointer" onclick="/* Show Effective Permissions Modal for Alice */">查看</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                                    <a href="#" class="text-blue-600 hover:text-blue-900">更改角色</a>
+                                    <a href="#" class="text-red-600 hover:text-red-900">移除</a>
+                                </td>
+                            </tr>
+                            <!-- 示例成员 2 -->
+                             <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                           <span class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium">BB</span>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">Bob Brown</div>
+                                            <div class="text-sm text-gray-500">bob@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        应用管理员
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                   分配在应用 "Campaign App"
+                                </td>
+                               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <span class="info-icon text-blue-600 hover:text-blue-800 cursor-pointer" onclick="/* Show Effective Permissions Modal for Bob */">查看</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                                    <span class="text-gray-400 italic">在应用层管理</span>
+                                </td>
+                            </tr>
+                             <!-- 示例成员 3 (假设被分配了表格层级角色) -->
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                           <span class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-medium">CC</span>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">Charlie Clark</div>
+                                            <div class="text-sm text-gray-500">charlie@example.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        表格编辑者
+                                    </span>
+                                </td>
+                               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                   分配在表格 "Q3 Leads"
+                                </td>
+                               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                     <span class="info-icon text-blue-600 hover:text-blue-800 cursor-pointer" onclick="/* Show Effective Permissions Modal for Charlie */">查看</span>
+                                </td>
+                               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                                   <span class="text-gray-400 italic">在表格层管理</span>
+                                </td>
+                            </tr>
+                            <!-- More members -->
+                         </tbody>
+                    </table>
+                 </div>
+            </div>
+        </main>
+    </div>
+
+     <!-- 添加成员模态框 (示意) -->
+    <!-- 
+    <div id="add-member-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden">
+         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+            <h2 class="text-xl font-semibold mb-4">添加成员到 "Marketing Space"</h2>
+            <form>
+                 <div class="mb-4">
+                    <label for="member-search" class="block text-sm font-medium text-gray-700">搜索用户或邮箱</label>
+                    <input type="text" id="member-search" placeholder="输入名称或邮箱..." class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <! -- 搜索结果列表 ->
+                 </div>
+                <div class="mb-6">
+                     <label for="member-role" class="block text-sm font-medium text-gray-700">选择角色</label>
+                     <select id="member-role" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                         <option>空间管理员</option>
+                         <option>空间成员 (默认)</option>
+                         <option>空间只读成员</option>
+                         <option>应用管理员 (适用于所有应用)</option> 
+                         <! -- 实际应动态加载适用于该层级的角色 ->
+                     </select>
+                </div>
+                 <div class="flex justify-end space-x-3">
+                    <button type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">取消</button>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+     -->
+
+</body>
+</html>
