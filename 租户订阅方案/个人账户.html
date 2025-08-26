@@ -1,0 +1,84 @@
+<!--
+ * @Author: wanghong52 wanghong52@meituan.com
+ * @Date: 2025-04-30 17:55:34
+ * @LastEditors: wanghong52 wanghong52@meituan.com
+ * @LastEditTime: 2025-04-30 17:55:42
+ * @FilePath: /MyExeProject/租户订阅方案/个人账户.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人账户 - 订阅概览</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 可选：如果需要细微调整或特定字体 */
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- 模拟的 Tab 导航 -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <!-- 其他 Tab 项 -->
+                <a href="#" class="border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" aria-current="page">
+                    个人账户
+                </a>
+                <!-- 其他 Tab 项 -->
+                <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    安全设置
+                </a>
+            </nav>
+        </div>
+
+        <h1 class="text-2xl font-semibold text-gray-900 mb-6">个人账户概览</h1>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden p-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">当前订阅计划</h2>
+
+            <div class="flex items-center justify-between mb-6 pb-6 border-b border-gray-200">
+                <div>
+                    <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        Free (免费版)
+                    </span>
+                    <p class="text-sm text-gray-500 mt-2">基础功能体验，适合个人探索者。</p>
+                </div>
+                <a href="personal_plans.html" class="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    管理订阅计划
+                </a>
+            </div>
+
+            <h3 class="text-md font-medium text-gray-900 mb-3">主要权益概览</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+                <li class="flex items-center">
+                    <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Bots: 3 个机器人, 1,000 API调用/月, 100 MB 知识库
+                </li>
+                <li class="flex items-center">
+                    <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    ABS: 1 个数据库, 1 GB 总存储
+                </li>
+                <li class="flex items-center">
+                    <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    AutoMan: 5 个流程, 200 次执行/月
+                </li>
+            </ul>
+            <p class="text-xs text-gray-400 mt-4">如需更强功能和更高配额，请考虑升级到 Pro 计划。</p>
+        </div>
+
+        <!-- 可以在这里添加支付方式、账单历史等其他个人账户相关模块 -->
+
+    </div>
+
+</body>
+</html>

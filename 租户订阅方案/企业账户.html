@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业账户 - 订阅概览</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- 模拟的 Tab 导航 -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                 <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    企业概览
+                </a>
+                 <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    组织与成员
+                </a>
+                 <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    权限管理
+                </a>
+                <a href="#" class="border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" aria-current="page">
+                    企业账户
+                </a>
+                 <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    安全设置
+                </a>
+            </nav>
+        </div>
+
+        <h1 class="text-2xl font-semibold text-gray-900 mb-6">企业账户概览</h1>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">当前订阅计划</h2>
+                <div class="flex items-center justify-between mb-6 pb-6 border-b border-gray-200">
+                    <div>
+                        <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            Team (团队版)
+                        </span>
+                        <p class="text-sm text-gray-500 mt-2">适用于中小型团队协作，共享资源池。</p>
+                        <p class="text-sm text-gray-500 mt-1">基础价格: ¥999/月 (含10个席位)</p>
+                    </div>
+                    <a href="enterprise_plans.html" class="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        管理订阅计划
+                    </a>
+                </div>
+
+                <h3 class="text-md font-medium text-gray-900 mb-4">资源使用情况</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- 用户席位 -->
+                    <div class="border border-gray-200 rounded-md p-4">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-700">用户席位</span>
+                             <a href="#" class="text-xs font-medium text-blue-600 hover:text-blue-500">管理席位</a>
+                        </div>
+                        <p class="text-2xl font-semibold text-gray-900">8 <span class="text-base font-normal text-gray-500">/ 10</span></p>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                            <div class="bg-blue-600 h-1.5 rounded-full" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <!-- Bots API 调用 -->
+                    <div class="border border-gray-200 rounded-md p-4">
+                         <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-700">Bots API调用/月</span>
+                            <a href="#" class="text-xs font-medium text-blue-600 hover:text-blue-500">购买资源包</a>
+                        </div>
+                        <p class="text-2xl font-semibold text-gray-900">65k <span class="text-base font-normal text-gray-500">/ 100k</span></p>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                            <div class="bg-green-500 h-1.5 rounded-full" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    <!-- ABS 存储 -->
+                     <div class="border border-gray-200 rounded-md p-4">
+                         <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-700">ABS 存储</span>
+                            <a href="#" class="text-xs font-medium text-blue-600 hover:text-blue-500">购买资源包</a>
+                        </div>
+                        <p class="text-2xl font-semibold text-gray-900">78GB <span class="text-base font-normal text-gray-500">/ 100GB</span></p>
+                         <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                            <div class="bg-yellow-500 h-1.5 rounded-full" style="width: 78%"></div>
+                        </div>
+                    </div>
+                     <!-- AutoMan 执行次数 -->
+                     <div class="border border-gray-200 rounded-md p-4">
+                         <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-700">AutoMan 执行/月</span>
+                            <a href="#" class="text-xs font-medium text-blue-600 hover:text-blue-500">购买资源包</a>
+                        </div>
+                        <p class="text-2xl font-semibold text-gray-900">18.5k <span class="text-base font-normal text-gray-500">/ 20k</span></p>
+                         <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                             <!-- 使用接近满额的颜色 -->
+                            <div class="bg-orange-500 h-1.5 rounded-full" style="width: 92.5%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                <!-- 支付方式、账单历史等入口 -->
+                <div class="flex justify-start space-x-4">
+                    <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">管理支付方式</a>
+                    <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">查看账单历史</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

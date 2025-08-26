@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人账户 - 订阅计划</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">选择适合您的个人计划</h1>
+            <p class="text-md text-gray-600">解锁更强大的功能，提升个人生产力。</p>
+            <!-- 可选：月付/年付切换 -->
+            <div class="mt-4">
+                <span class="text-sm font-medium text-gray-500">月付</span>
+                <button type="button" class="mx-2 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-gray-200" role="switch" aria-checked="false">
+                    <span class="sr-only">Use setting</span>
+                    <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 translate-x-0"></span>
+                </button>
+                <span class="text-sm font-medium text-gray-500">年付 (立省 XX%)</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <!-- Free 计划卡片 -->
+            <div class="border-2 border-blue-600 rounded-lg shadow-lg p-6 relative bg-white">
+                <span class="absolute top-0 right-0 mt-4 mr-4 inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    当前计划
+                </span>
+                <h2 class="text-xl font-semibold text-gray-900">Free (免费版)</h2>
+                <p class="text-gray-500 text-sm mt-1 mb-4">基础功能，开始探索。</p>
+                <p class="text-3xl font-bold text-gray-900 mb-6">¥0 <span class="text-base font-normal text-gray-500">/月</span></p>
+
+                <button type="button" class="w-full px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-gray-200 cursor-not-allowed">
+                    当前计划
+                </button>
+
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-900 mb-3">包含权益:</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-start">
+                            <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            <span class="text-gray-700"><strong class="font-medium text-gray-800">Bots:</strong> 3 机器人, 1k API调用/月, 100MB 知识库</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            <span class="text-gray-700"><strong class="font-medium text-gray-800">ABS:</strong> 1 数据库, 1GB 存储</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            <span class="text-gray-700"><strong class="font-medium text-gray-800">AutoMan:</strong> 5 流程, 200 执行/月</span>
+                        </li>
+                         <li class="flex items-start">
+                            <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            <span class="text-gray-700">社区支持</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Pro 计划卡片 -->
+            <div class="border border-gray-300 rounded-lg shadow-md p-6 bg-white">
+                <h2 class="text-xl font-semibold text-gray-900">Pro (专业版)</h2>
+                <p class="text-gray-500 text-sm mt-1 mb-4">增强生产力，解锁更多功能。</p>
+                <p class="text-3xl font-bold text-gray-900 mb-6">¥49 <span class="text-base font-normal text-gray-500">/月</span></p>
+
+                <a href="#" class="w-full block text-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    升级到 Pro
+                </a>
+
+                 <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-900 mb-3">包含权益:</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-start">
+                            <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            <span class="text-gray-700"><strong class="font-medium text-gray-800">Bots:</strong> 15 机器人, 10k API调用/月, 1GB 知识库</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            <span class="text-gray-700"><strong class="font-medium text-gray-800">ABS:</strong> 5 数据库, 10GB 存储</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            <span class="text-gray-700"><strong class="font-medium text-gray-800">AutoMan:</strong> 30 流程, 2,000 执行/月</span>
+                        </li>
+                         <li class="flex items-start">
+                            <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            <span class="text-gray-700">标准功能</span>
+                        </li>
+                         <li class="flex items-start">
+                            <svg class="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            <span class="text-gray-700">邮件支持</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-10">
+             <p class="text-sm text-gray-500">需要团队协作或更高级功能？</p>
+             <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">了解企业版计划</a>
+        </div>
+    </div>
+
+</body>
+</html>
