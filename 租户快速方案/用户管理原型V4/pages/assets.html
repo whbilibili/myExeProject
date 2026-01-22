@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资产明细</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义CSS -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--space-6);
+    }
+
+    .page-header {
+      margin-bottom: var(--space-4);
+    }
+
+    .page-tip {
+      background: var(--bg-primary);
+      border-left: 3px solid var(--primary-color);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: var(--font-size-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .asset-tabs-container {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-base);
+      padding: var(--space-4);
+    }
+
+    .filter-bar-mini {
+      display: flex;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+      flex-wrap: wrap;
+    }
+
+    .filter-bar-mini .el-input { width: 280px; }
+    .filter-bar-mini .el-select { width: 200px; }
+    .filter-bar-mini .el-date-editor { width: 420px; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <div class="page-tip">
+        <el-icon color="var(--primary-color)"><el-icon-info-filled /></el-icon>
+        <span>本页签内所有统计数据（如运行次数、引用数）均遵循父页面的全局"时间范围"和"租户"筛选条件。数据为T+1更新。</span>
+      </div>
+    </div>
+
+    <!-- 资产标签页 -->
+    <div class="asset-tabs-container">
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+        <!-- 智能体 -->
+        <el-tab-pane label="智能体" name="agents">
+          <div class="filter-bar-mini">
+            <el-input
+              v-model="agentFilters.search"
+              placeholder="搜索智能体名称"
+              clearable
+              @input="handleAgentSearch"
+            >
+              <template #prefix>
+                <el-icon><el-icon-search /></el-icon>
+              </template>
+            </el-input>
+
+            <el-select
+              v-model="agentFilters.status"
+              placeholder="状态"
+              clearable
+              @change="loadAgents"
+            >
+              <el-option label="全部" value="全部" />
+              <el-option label="已发布" value="已发布" />
+              <el-option label="已删除" value="已删除" />
+            </el-select>
+
+            <el-date-picker
+              v-model="agentFilters.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="创建开始"
+              end-placeholder="创建结束"
+              clearable
+              @change="loadAgents"
+            />
+          </div>
+
+          <el-table
+            :data="agentData"
+            style="width: 100%"
+            v-loading="agentLoading"
+            @sort-change="handleAgentSort"
+            stripe
+            border
+            table-layout="fixed"
+          >
+            <el-table-column prop="name" label="名称" min-width="200" show-overflow-tooltip />
+            
+            <el-table-column
+              prop="runCount"
+              label="运行次数"
+              width="120"
+              sortable="custom"
+            >
+              <template #header>
+                <span>运行次数</span>
+                <el-tooltip content="指在选定条件下，该资产被成功运行的总次数。">
+                  <span class="tooltip-icon">i</span>
+                </el-tooltip>
+              </template>
+              <template #default="{ row }">
+                {{ Utils.formatNumber(row.runCount) }}
+              </template>
+            </el-table-column>
+
+            <el-table-column
+              prop="userCount"
+              label="用户数"
+              width="100"
+              sortable="custom"
+            >
+              <template #header>
+                <span>用户数</span>
+                <el-tooltip content="指在选定条件下，调用/运行过该资产的去重用户总数。">
+                  <span class="tooltip-icon">i</span>
+                </el-tooltip>
+              </template>
+              <template #default="{ row }">
+                {{ Utils.formatNumber(row.userCount) }}
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="status" label="状态" width="100">
+              <template #default="{ row }">
+                <el-tag
+                  :type="row.status === '已发布' ? 'success' : 'info'"
+                  size="small"
+                >
+                  {{ row.status }}
+                </el-tag>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="creator" label="创建人" width="120" show-overflow-tooltip />
+            
+            <el-table-column
+              prop="updateTime"
+              label="最后更新时间"
+              width="180"
+              sortable="custom"
+            >
+              <template #default="{ row }">
+                {{ Utils.formatDate(row.updateTime) }}
+              </template>
+            </el-table-column>
+
+            <el-table-column
+              prop="lastRunTime"
+              label="最后运行时间"
+              width="180"
+              sortable="custom"
+            >
+              <template #default="{ row }">
+                {{ Utils.formatDate(row.lastRunTime) }}
+              </template>
+            </el-table-column>
+
+            <el-table-column label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" size="small">查看</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div style="padding: var(--space-4) 0; display: flex; justify-content: flex-end;">
+            <el-pagination
+              v-model:current-page="agentPagination.page"
+              v-model:page-size="agentPagination.pageSize"
+              :page-sizes="[10, 20, 50]"
+              :total="agentPagination.total"
+              layout="total, sizes, prev, pager, next"
+              @current-change="loadAgents"
+              @size-change="loadAgents"
+            />
+          </div>
+        </el-tab-pane>
+
+        <!-- 工作流 -->
+        <el-tab-pane label="工作流" name="workflows">
+          <div class="filter-bar-mini">
+            <el-input
+              v-model="workflowFilters.search"
+              placeholder="搜索工作流名称"
+              clearable
+              @input="handleWorkflowSearch"
+            >
+              <template #prefix>
+                <el-icon><el-icon-search /></el-icon>
+              </template>
+            </el-input>
+
+            <el-select
+              v-model="workflowFilters.status"
+              placeholder="状态"
+              clearable
+              @change="loadWorkflows"
+            >
+              <el-option label="全部" value="全部" />
+              <el-option label="已发布" value="已发布" />
+              <el-option label="已删除" value="已删除" />
+            </el-select>
+          </div>
+
+          <el-table
+            :data="workflowData"
+            style="width: 100%"
+            v-loading="workflowLoading"
+            stripe
+            border
+            table-layout="fixed"
+          >
+            <el-table-column prop="name" label="名称" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="runCount" label="运行次数" width="120">
+              <template #default="{ row }">
+                {{ Utils.formatNumber(row.runCount) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="userCount" label="用户数" width="100">
+              <template #default="{ row }">
+                {{ Utils.formatNumber(row.userCount) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" width="100">
+              <template #default="{ row }">
+                <el-tag
+                  :type="row.status === '已发布' ? 'success' : 'info'"
+                  size="small"
+                >
+                  {{ row.status }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="creator" label="创建人" width="120" show-overflow-tooltip />
+            <el-table-column prop="updateTime" label="最后更新时间" width="180">
+              <template #default="{ row }">
+                {{ Utils.formatDate(row.updateTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="lastRunTime" label="最后运行时间" width="180">
+              <template #default="{ row }">
+                {{ Utils.formatDate(row.lastRunTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" size="small">查看</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div style="padding: var(--space-4) 0; display: flex; justify-content: flex-end;">
+            <el-pagination
+              v-model:current-page="workflowPagination.page"
+              v-model:page-size="workflowPagination.pageSize"
+              :page-sizes="[10, 20, 50]"
+              :total="workflowPagination.total"
+              layout="total, sizes, prev, pager, next"
+              @current-change="loadWorkflows"
+              @size-change="loadWorkflows"
+            />
+          </div>
+        </el-tab-pane>
+
+        <!-- 工具 -->
+        <el-tab-pane label="工具" name="tools">
+          <div class="filter-bar-mini">
+            <el-input
+              v-model="toolFilters.search"
+              placeholder="搜索工具名称"
+              clearable
+              @input="handleToolSearch"
+            >
+              <template #prefix>
+                <el-icon><el-icon-search /></el-icon>
+              </template>
+            </el-input>
+
+            <el-select
+              v-model="toolFilters.toolLib"
+              placeholder="所属工具库"
+              clearable
+              @change="loadTools"
+            >
+              <el-option
+                v-for="lib in toolLibOptions"
+                :key="lib.value"
+                :label="lib.label"
+                :value="lib.value"
+              />
+            </el-select>
+          </div>
+
+          <el-table
+            :data="toolData"
+            style="width: 100%"
+            v-loading="toolLoading"
+            stripe
+            border
+            table-layout="fixed"
+          >
+            <el-table-column prop="name" label="名称" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="toolLibName" label="所属工具库" width="150" show-overflow-tooltip />
+            <el-table-column prop="agentRefCount" label="智能体引用数" width="130">
+              <template #header>
+                <span>智能体引用数</span>
+                <el-tooltip content="指工具被智能体调用的总次数。">
+                  <span class="tooltip-icon">i</span>
+                </el-tooltip>
+              </template>
+              <template #default="{ row }">
+                {{ Utils.formatNumber(row.agentRefCount) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="workflowRefCount" label="工作流引用数" width="130">
+              <template #header>
+                <span>工作流引用数</span>
+                <el-tooltip content="指工具被工作流调用的总次数。">
+                  <span class="tooltip-icon">i</span>
+                </el-tooltip>
+              </template>
+              <template #default="{ row }">
+                {{ Utils.formatNumber(row.workflowRefCount) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="创建时间" width="180">
+              <template #default="{ row }">
+                {{ Utils.formatDate(row.createTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="creator" label="创建人" width="120" show-overflow-tooltip />
+            <el-table-column label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" size="small">查看</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div style="padding: var(--space-4) 0; display: flex; justify-content: flex-end;">
+            <el-pagination
+              v-model:current-page="toolPagination.page"
+              v-model:page-size="toolPagination.pageSize"
+              :page-sizes="[10, 20, 50]"
+              :total="toolPagination.total"
+              layout="total, sizes, prev, pager, next"
+              @current-change="loadTools"
+              @size-change="loadTools"
+            />
+          </div>
+        </el-tab-pane>
+
+        <!-- 工具库 -->
+        <el-tab-pane label="工具库" name="toolLibs">
+          <div class="filter-bar-mini">
+            <el-input
+              v-model="toolLibFilters.search"
+              placeholder="搜索工具库名称"
+              clearable
+              @input="handleToolLibSearch"
+            >
+              <template #prefix>
+                <el-icon><el-icon-search /></el-icon>
+              </template>
+            </el-input>
+
+            <el-select
+              v-model="toolLibFilters.type"
+              placeholder="类型"
+              clearable
+              @change="loadToolLibs"
+            >
+              <el-option label="全部" value="全部" />
+              <el-option label="官方" value="官方" />
+              <el-option label="第三方" value="第三方" />
+              <el-option label="自建" value="自建" />
+            </el-select>
+
+            <el-select
+              v-model="toolLibFilters.status"
+              placeholder="状态"
+              clearable
+              @change="loadToolLibs"
+            >
+              <el-option label="全部" value="全部" />
+              <el-option label="启用" value="启用" />
+              <el-option label="未启用" value="未启用" />
+            </el-select>
+          </div>
+
+          <el-table
+            :data="toolLibData"
+            style="width: 100%"
+            v-loading="toolLibLoading"
+            stripe
+            border
+            table-layout="fixed"
+          >
+            <el-table-column prop="name" label="名称" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="status" label="状态" width="100">
+              <template #default="{ row }">
+                <el-tag
+                  :type="row.status === '启用' ? 'success' : 'info'"
+                  size="small"
+                >
+                  {{ row.status }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="type" label="类型" width="100">
+              <template #default="{ row }">
+                <el-tag size="small" type="primary">{{ row.type }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="toolCount" label="工具数" width="100">
+              <template #default="{ row }">
+                {{ row.toolCount }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="创建时间" width="180">
+              <template #default="{ row }">
+                {{ Utils.formatDate(row.createTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="creator" label="创建人" width="120" show-overflow-tooltip />
+            <el-table-column label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" size="small">查看</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div style="padding: var(--space-4) 0; display: flex; justify-content: flex-end;">
+            <el-pagination
+              v-model:current-page="toolLibPagination.page"
+              v-model:page-size="toolLibPagination.pageSize"
+              :page-sizes="[10, 20, 50]"
+              :total="toolLibPagination.total"
+              layout="total, sizes, prev, pager, next"
+              @current-change="loadToolLibs"
+              @size-change="loadToolLibs"
+            />
+          </div>
+        </el-tab-pane>
+
+        <!-- 知识库 -->
+        <el-tab-pane label="知识库" name="knowledgeBases">
+          <div class="filter-bar-mini">
+            <el-input
+              v-model="kbFilters.search"
+              placeholder="搜索知识库名称"
+              clearable
+              @input="handleKBSearch"
+            >
+              <template #prefix>
+                <el-icon><el-icon-search /></el-icon>
+              </template>
+            </el-input>
+
+            <el-select
+              v-model="kbFilters.status"
+              placeholder="状态"
+              clearable
+              @change="loadKnowledgeBases"
+            >
+              <el-option label="全部" value="全部" />
+              <el-option label="启用" value="启用" />
+              <el-option label="未启用" value="未启用" />
+            </el-select>
+          </div>
+
+          <el-table
+            :data="kbData"
+            style="width: 100%"
+            v-loading="kbLoading"
+            stripe
+            border
+            table-layout="fixed"
+          >
+            <el-table-column prop="name" label="名称" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="status" label="状态" width="100">
+              <template #default="{ row }">
+                <el-tag
+                  :type="row.status === '启用' ? 'success' : 'info'"
+                  size="small"
+                >
+                  {{ row.status }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="unitCount" label="知识单元" width="100">
+              <template #default="{ row }">
+                {{ Utils.formatNumber(row.unitCount) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="refCount" label="被引用次数" width="120">
+              <template #header>
+                <span>被引用次数</span>
+                <el-tooltip content="指知识库被其他资源调用的总次数。">
+                  <span class="tooltip-icon">i</span>
+                </el-tooltip>
+              </template>
+              <template #default="{ row }">
+                {{ Utils.formatNumber(row.refCount) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="size" label="占用容量" width="120">
+              <template #default="{ row }">
+                {{ Utils.formatFileSize(row.size) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="创建时间" width="180">
+              <template #default="{ row }">
+                {{ Utils.formatDate(row.createTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="creator" label="创建人" width="120" show-overflow-tooltip />
+            <el-table-column label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" size="small">查看</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div style="padding: var(--space-4) 0; display: flex; justify-content: flex-end;">
+            <el-pagination
+              v-model:current-page="kbPagination.page"
+              v-model:page-size="kbPagination.pageSize"
+              :page-sizes="[10, 20, 50]"
+              :total="kbPagination.total"
+              layout="total, sizes, prev, pager, next"
+              @current-change="loadKnowledgeBases"
+              @size-change="loadKnowledgeBases"
+            />
+          </div>
+        </el-tab-pane>
+
+        <!-- 空间 -->
+        <el-tab-pane label="空间" name="spaces">
+          <div class="filter-bar-mini">
+            <el-input
+              v-model="spaceFilters.search"
+              placeholder="搜索空间名称"
+              clearable
+              @input="handleSpaceSearch"
+            >
+              <template #prefix>
+                <el-icon><el-icon-search /></el-icon>
+              </template>
+            </el-input>
+
+            <el-select
+              v-model="spaceFilters.type"
+              placeholder="类型"
+              clearable
+              @change="loadSpaces"
+            >
+              <el-option label="全部" value="全部" />
+              <el-option label="个人空间" value="个人空间" />
+              <el-option label="团队空间" value="团队空间" />
+              <el-option label="项目空间" value="项目空间" />
+            </el-select>
+          </div>
+
+          <el-table
+            :data="spaceData"
+            style="width: 100%"
+            v-loading="spaceLoading"
+            stripe
+            border
+            table-layout="fixed"
+          >
+            <el-table-column prop="id" label="空间ID" width="130" show-overflow-tooltip />
+            <el-table-column prop="name" label="空间名称" min-width="180" show-overflow-tooltip />
+            <el-table-column prop="type" label="类型" width="120">
+              <template #default="{ row }">
+                <el-tag size="small" type="primary">{{ row.type }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="owner" label="所有者" width="120" show-overflow-tooltip />
+            <el-table-column prop="creator" label="创建人" width="120" show-overflow-tooltip />
+            <el-table-column prop="createTime" label="空间创建时间" width="180">
+              <template #default="{ row }">
+                {{ Utils.formatDate(row.createTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="lastUpdater" label="最近更新人" width="120" show-overflow-tooltip />
+            <el-table-column prop="lastUpdateTime" label="最近更新时间" width="180">
+              <template #default="{ row }">
+                {{ Utils.formatDate(row.lastUpdateTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" size="small">查看</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <div style="padding: var(--space-4) 0; display: flex; justify-content: flex-end;">
+            <el-pagination
+              v-model:current-page="spacePagination.page"
+              v-model:page-size="spacePagination.pageSize"
+              :page-sizes="[10, 20, 50]"
+              :total="spacePagination.total"
+              layout="total, sizes, prev, pager, next"
+              @current-change="loadSpaces"
+              @size-change="loadSpaces"
+            />
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+
+    const app = createApp({
+      setup() {
+        const userId = ref('');
+        const activeTab = ref('agents');
+
+        // 智能体
+        const agentLoading = ref(false);
+        const agentData = ref([]);
+        const agentFilters = ref({ search: '', status: '全部', dateRange: null });
+        const agentPagination = ref({ page: 1, pageSize: 10, total: 0 });
+
+        // 工作流
+        const workflowLoading = ref(false);
+        const workflowData = ref([]);
+        const workflowFilters = ref({ search: '', status: '全部' });
+        const workflowPagination = ref({ page: 1, pageSize: 10, total: 0 });
+
+        // 工具
+        const toolLoading = ref(false);
+        const toolData = ref([]);
+        const toolFilters = ref({ search: '', toolLib: null });
+        const toolPagination = ref({ page: 1, pageSize: 10, total: 0 });
+        const toolLibOptions = ref([]);
+
+        // 工具库
+        const toolLibLoading = ref(false);
+        const toolLibData = ref([]);
+        const toolLibFilters = ref({ search: '', type: '全部', status: '全部' });
+        const toolLibPagination = ref({ page: 1, pageSize: 10, total: 0 });
+
+        // 知识库
+        const kbLoading = ref(false);
+        const kbData = ref([]);
+        const kbFilters = ref({ search: '', status: '全部' });
+        const kbPagination = ref({ page: 1, pageSize: 10, total: 0 });
+
+        // 空间
+        const spaceLoading = ref(false);
+        const spaceData = ref([]);
+        const spaceFilters = ref({ search: '', type: '全部' });
+        const spacePagination = ref({ page: 1, pageSize: 10, total: 0 });
+
+        // 获取用户ID
+        const getUserId = () => {
+          const params = Utils.parseUrlParams();
+          return params.userId || '';
+        };
+
+        // 加载智能体
+        const loadAgents = () => {
+          agentLoading.value = true;
+          const assets = MockData.getUserAssets(userId.value);
+          agentData.value = assets.agents.slice(0, agentPagination.value.pageSize);
+          agentPagination.value.total = assets.agents.length;
+          setTimeout(() => { agentLoading.value = false; }, 300);
+        };
+
+        // 加载工作流
+        const loadWorkflows = () => {
+          workflowLoading.value = true;
+          const assets = MockData.getUserAssets(userId.value);
+          workflowData.value = assets.workflows.slice(0, workflowPagination.value.pageSize);
+          workflowPagination.value.total = assets.workflows.length;
+          setTimeout(() => { workflowLoading.value = false; }, 300);
+        };
+
+        // 加载工具
+        const loadTools = () => {
+          toolLoading.value = true;
+          const assets = MockData.getUserAssets(userId.value);
+          toolData.value = assets.tools.slice(0, toolPagination.value.pageSize);
+          toolPagination.value.total = assets.tools.length;
+          setTimeout(() => { toolLoading.value = false; }, 300);
+        };
+
+        // 加载工具库
+        const loadToolLibs = () => {
+          toolLibLoading.value = true;
+          const assets = MockData.getUserAssets(userId.value);
+          toolLibData.value = assets.toolLibs;
+          toolLibPagination.value.total = assets.toolLibs.length;
+          
+          // 构建工具库选项
+          toolLibOptions.value = assets.toolLibs.map(lib => ({
+            value: lib.id,
+            label: lib.name
+          }));
+          
+          setTimeout(() => { toolLibLoading.value = false; }, 300);
+        };
+
+        // 加载知识库
+        const loadKnowledgeBases = () => {
+          kbLoading.value = true;
+          const assets = MockData.getUserAssets(userId.value);
+          kbData.value = assets.knowledgeBases.slice(0, kbPagination.value.pageSize);
+          kbPagination.value.total = assets.knowledgeBases.length;
+          setTimeout(() => { kbLoading.value = false; }, 300);
+        };
+
+        // 加载空间
+        const loadSpaces = () => {
+          spaceLoading.value = true;
+          const assets = MockData.getUserAssets(userId.value);
+          spaceData.value = assets.spaces.slice(0, spacePagination.value.pageSize);
+          spacePagination.value.total = assets.spaces.length;
+          setTimeout(() => { spaceLoading.value = false; }, 300);
+        };
+
+        // 标签页切换
+        const handleTabChange = (tab) => {
+          switch(tab) {
+            case 'agents':
+              if (agentData.value.length === 0) loadAgents();
+              break;
+            case 'workflows':
+              if (workflowData.value.length === 0) loadWorkflows();
+              break;
+            case 'tools':
+              if (toolData.value.length === 0) loadTools();
+              break;
+            case 'toolLibs':
+              if (toolLibData.value.length === 0) loadToolLibs();
+              break;
+            case 'knowledgeBases':
+              if (kbData.value.length === 0) loadKnowledgeBases();
+              break;
+            case 'spaces':
+              if (spaceData.value.length === 0) loadSpaces();
+              break;
+          }
+        };
+
+        // 搜索处理
+        const handleAgentSearch = Utils.debounce(loadAgents, 500);
+        const handleWorkflowSearch = Utils.debounce(loadWorkflows, 500);
+        const handleToolSearch = Utils.debounce(loadTools, 500);
+        const handleToolLibSearch = Utils.debounce(loadToolLibs, 500);
+        const handleKBSearch = Utils.debounce(loadKnowledgeBases, 500);
+        const handleSpaceSearch = Utils.debounce(loadSpaces, 500);
+
+        // 排序处理
+        const handleAgentSort = ({ prop, order }) => {
+          console.log('排序:', prop, order);
+          loadAgents();
+        };
+
+        // 初始化
+        onMounted(() => {
+          userId.value = getUserId();
+          loadAgents(); // 默认加载第一个标签页
+        });
+
+        return {
+          activeTab,
+          agentLoading,
+          agentData,
+          agentFilters,
+          agentPagination,
+          workflowLoading,
+          workflowData,
+          workflowFilters,
+          workflowPagination,
+          toolLoading,
+          toolData,
+          toolFilters,
+          toolPagination,
+          toolLibOptions,
+          toolLibLoading,
+          toolLibData,
+          toolLibFilters,
+          toolLibPagination,
+          kbLoading,
+          kbData,
+          kbFilters,
+          kbPagination,
+          spaceLoading,
+          spaceData,
+          spaceFilters,
+          spacePagination,
+          handleTabChange,
+          loadAgents,
+          loadWorkflows,
+          loadTools,
+          loadToolLibs,
+          loadKnowledgeBases,
+          loadSpaces,
+          handleAgentSearch,
+          handleWorkflowSearch,
+          handleToolSearch,
+          handleToolLibSearch,
+          handleKBSearch,
+          handleSpaceSearch,
+          handleAgentSort,
+          Utils
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

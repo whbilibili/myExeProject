@@ -1,0 +1,855 @@
+<!--
+ * @Author: wanghong52 wanghong52@meituan.com
+ * @Date: 2025-10-11 22:53:37
+ * @LastEditors: wanghong52 wanghong52@meituan.com
+ * @LastEditTime: 2025-10-16 11:07:17
+ * @FilePath: /租户快速方案/用户管理原型V5/index.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户管理 - 运营后台</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义飞书设计系统 -->
+  <link rel="stylesheet" href="./assets/css/feishu-design.css">
+  
+  <style>
+    /* 页面特定样式 */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    /* 用户头像名称单元格 */
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-in-out);
+      padding: var(--spacing-2) 0;
+    }
+    
+    .user-cell:hover {
+      color: var(--primary-color);
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-large);
+      object-fit: cover;
+      border: 1px solid var(--border-2);
+      flex-shrink: 0;
+    }
+    
+    .user-cell:hover .user-avatar {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px var(--primary-lightest);
+    }
+    
+    .user-name {
+      font-weight: var(--font-weight-medium);
+      color: var(--text-1);
+      transition: color var(--duration-fast);
+    }
+    
+    .user-cell:hover .user-name {
+      color: var(--primary-color);
+    }
+    
+    /* 租户标签单元格 */
+    .tenants-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      flex-wrap: wrap;
+    }
+    
+    /* 联系方式单元格 */
+    .contact-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-13);
+      color: var(--text-2);
+    }
+    
+    .contact-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    /* 余额单元格 */
+    .balance-cell {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-2) var(--spacing-3);
+      border-radius: var(--radius-medium);
+      transition: all var(--duration-fast) var(--ease-in-out);
+      color: var(--primary-color);
+      font-weight: var(--font-weight-semibold);
+    }
+    
+    .balance-cell:hover {
+      background-color: var(--primary-lightest);
+      color: var(--primary-hover);
+    }
+    
+    .balance-amount {
+      font-size: var(--font-size-16);
+    }
+    
+    .balance-unit {
+      font-size: var(--font-size-12);
+      font-weight: var(--font-weight-regular);
+      color: var(--text-3);
+    }
+    
+    /* 状态单元格 */
+    .status-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-circle);
+      flex-shrink: 0;
+    }
+    
+    .status-dot.normal {
+      background-color: var(--success-color);
+    }
+    
+    .status-dot.disabled {
+      background-color: var(--text-4);
+    }
+    
+    /* ID单元格 */
+    .id-cell {
+      font-family: var(--font-family-mono);
+      color: var(--text-3);
+      font-size: var(--font-size-12);
+    }
+    
+    /* 时间单元格 */
+    .time-cell {
+      color: var(--text-3);
+      font-size: var(--font-size-13);
+    }
+    
+    /* 操作按钮组 */
+    .action-buttons {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 1600px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    @media (max-width: 992px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="page-wrapper">
+    <!-- 顶部导航栏 -->
+    <div class="navbar">
+      <div class="navbar-container">
+        <div class="navbar-left">
+          <div class="navbar-title">
+            <el-icon :size="24" color="#3370FF">
+              <el-icon-user-filled />
+            </el-icon>
+            <span>用户管理系统</span>
+          </div>
+        </div>
+        <div class="navbar-right">
+          <el-tag type="info" size="small">运营后台 V1.1</el-tag>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="main-container fade-in">
+      <!-- 仪表盘 -->
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">用户总数</div>
+            <div class="stat-card-icon primary">
+              <el-icon><el-icon-user-filled /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ stats.total }}</div>
+          <div class="stat-card-subtitle">平台注册用户总量</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">正常用户</div>
+            <div class="stat-card-icon success">
+              <el-icon><el-icon-circle-check /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ stats.normal }}</div>
+          <div class="stat-card-subtitle">账号状态正常</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">已禁用用户</div>
+            <div class="stat-card-icon warning">
+              <el-icon><el-icon-circle-close /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ stats.disabled }}</div>
+          <div class="stat-card-subtitle">已被管理员禁用</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">今日新增</div>
+            <div class="stat-card-icon info">
+              <el-icon><el-icon-plus /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ stats.todayNew }}</div>
+          <div class="stat-card-subtitle">当天新增用户</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">活跃用户</div>
+            <div class="stat-card-icon success">
+              <el-icon><el-icon-connection /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ stats.activeUsers }}</div>
+          <div class="stat-card-subtitle">最近7天活跃</div>
+        </div>
+      </div>
+      
+      <!-- 筛选器 -->
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-item" style="flex: 2; min-width: 300px;">
+            <label class="filter-label">搜索</label>
+            <el-input
+              v-model="filters.search"
+              placeholder="搜索用户名称、用户ID、手机号、邮箱号、MIS号"
+              clearable
+              @input="handleSearch"
+            >
+              <template #prefix>
+                <el-icon><el-icon-search /></el-icon>
+              </template>
+            </el-input>
+          </div>
+          
+          <div class="filter-item" style="min-width: 160px;">
+            <label class="filter-label">状态</label>
+            <el-select
+              v-model="filters.status"
+              placeholder="全部"
+              style="width: 100%;"
+              @change="handleFilter"
+            >
+              <el-option label="全部" value="全部" />
+              <el-option label="正常" value="正常" />
+              <el-option label="已禁用" value="已禁用" />
+            </el-select>
+          </div>
+          
+          <div class="filter-item" style="min-width: 200px;">
+            <label class="filter-label">归属租户</label>
+            <el-select
+              v-model="filters.tenants"
+              placeholder="全部租户"
+              multiple
+              filterable
+              clearable
+              collapse-tags
+              collapse-tags-tooltip
+              style="width: 100%;"
+              @change="handleFilter"
+            >
+              <el-option
+                v-for="tenant in allTenants"
+                :key="tenant.value"
+                :label="tenant.label"
+                :value="tenant.value"
+              />
+            </el-select>
+          </div>
+          
+          <div class="filter-item" style="min-width: 280px;">
+            <label class="filter-label">创建时间</label>
+            <el-date-picker
+              v-model="filters.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              clearable
+              style="width: 100%;"
+              @change="handleFilter"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <!-- 数据表格 -->
+      <div class="table-wrapper">
+        <el-table
+          :data="tableData"
+          v-loading="loading"
+          style="width: 100%"
+          stripe
+          @sort-change="handleSortChange"
+          :default-sort="{ prop: 'createTime', order: 'descending' }"
+        >
+          <el-table-column prop="id" label="用户ID" width="140">
+            <template #default="{ row }">
+              <div class="id-cell">{{ row.id }}</div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="用户名称" width="200" fixed="left">
+            <template #default="{ row }">
+              <div class="user-cell" @click="viewUserDetail(row.id)">
+                <img :src="row.avatar" :alt="row.name" class="user-avatar" />
+                <span class="user-name">{{ row.name }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="归属租户" width="240">
+            <template #default="{ row }">
+              <div class="tenants-cell">
+                <el-tag
+                  v-for="(tenant, index) in row.tenants.slice(0, 2)"
+                  :key="tenant.tenantId"
+                  size="small"
+                  effect="plain"
+                >
+                  {{ tenant.tenantName }}
+                </el-tag>
+                <el-tooltip
+                  v-if="row.tenants.length > 2"
+                  :content="row.tenants.slice(2).map(t => t.tenantName).join('、')"
+                  placement="top"
+                >
+                  <el-tag size="small" type="info">
+                    +{{ row.tenants.length - 2 }}
+                  </el-tag>
+                </el-tooltip>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="绑定手机" width="160">
+            <template #default="{ row }">
+              <div class="contact-cell">
+                <span class="contact-text">{{ row.phone }}</span>
+                <el-icon class="copy-btn" @click.stop="copyText(row.phone)">
+                  <el-icon-document-copy />
+                </el-icon>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="绑定邮箱" width="220" show-overflow-tooltip>
+            <template #default="{ row }">
+              <div class="contact-cell">
+                <span class="contact-text">{{ row.email }}</span>
+                <el-icon class="copy-btn" @click.stop="copyText(row.email)">
+                  <el-icon-document-copy />
+                </el-icon>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="绑定MIS" width="140">
+            <template #default="{ row }">
+              <div class="contact-cell" v-if="row.mis">
+                <span class="contact-text">{{ row.mis }}</span>
+                <el-icon class="copy-btn" @click.stop="copyText(row.mis)">
+                  <el-icon-document-copy />
+                </el-icon>
+              </div>
+              <span v-else class="text-4 text-13">未绑定</span>
+            </template>
+          </el-table-column>
+          
+          <el-table-column
+            prop="createTime"
+            label="创建时间"
+            width="170"
+            sortable="custom"
+          >
+            <template #default="{ row }">
+              <div class="time-cell">
+                {{ Utils.formatDate(row.createTime, 'YYYY-MM-DD HH:mm') }}
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column
+            prop="lastLoginTime"
+            label="最后登录"
+            width="170"
+            sortable="custom"
+          >
+            <template #default="{ row }">
+              <div class="time-cell">
+                {{ Utils.formatDate(row.lastLoginTime, 'YYYY-MM-DD HH:mm') }}
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column
+            prop="lastActiveTime"
+            label="最后活跃"
+            width="170"
+            sortable="custom"
+          >
+            <template #default="{ row }">
+              <div class="time-cell">
+                {{ Utils.formatDate(row.lastActiveTime, 'YYYY-MM-DD HH:mm') }}
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="状态" width="100">
+            <template #default="{ row }">
+              <div class="status-cell">
+                <span :class="['status-dot', row.status === '正常' ? 'normal' : 'disabled']"></span>
+                <span class="text-2 text-13">{{ row.status }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="账号金额" width="150">
+            <template #header>
+              <span>账号金额</span>
+              <el-tooltip
+                content="代表该用户个人账号的w币余额。此操作将直接修改用户余额，请谨慎操作。"
+                placement="top"
+              >
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </template>
+            <template #default="{ row }">
+              <div class="balance-cell" @click.stop="editBalance(row)">
+                <span class="balance-amount">{{ Utils.formatNumber(row.balance) }}</span>
+                <span class="balance-unit">w币</span>
+                <el-icon :size="14"><el-icon-edit /></el-icon>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="操作" width="240" fixed="right">
+            <template #default="{ row }">
+              <div class="action-buttons">
+                <el-button link type="primary" size="small" @click="resetPassword(row)">
+                  重置密码
+                </el-button>
+                <el-button
+                  link
+                  :type="row.status === '正常' ? 'warning' : 'success'"
+                  size="small"
+                  @click="toggleStatus(row)"
+                >
+                  {{ row.status === '正常' ? '禁用' : '启用' }}
+                </el-button>
+                <el-button link type="danger" size="small" @click="deleteUser(row)">
+                  注销
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <!-- 分页 -->
+        <div style="padding: var(--spacing-5) var(--spacing-6); display: flex; justify-content: flex-end; background: var(--bg-1);">
+          <el-pagination
+            v-model:current-page="pagination.page"
+            v-model:page-size="pagination.pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="pagination.total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
+          />
+        </div>
+      </div>
+    </div>
+    
+    <!-- 修改账号金额对话框 -->
+    <el-dialog
+      v-model="balanceDialog.visible"
+      title="修改账号金额"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="balanceDialog.form" label-width="120px">
+        <el-form-item label="用户名称">
+          <span class="font-medium text-1">{{ balanceDialog.userName }}</span>
+        </el-form-item>
+        
+        <el-form-item label="当前余额">
+          <span class="text-20 font-semibold text-primary">
+            {{ Utils.formatNumber(balanceDialog.currentBalance) }} w币
+          </span>
+        </el-form-item>
+        
+        <el-form-item label="操作类型">
+          <el-radio-group v-model="balanceDialog.form.type">
+            <el-radio value="add">充值</el-radio>
+            <el-radio value="deduct">扣除</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        
+        <el-form-item label="变动金额">
+          <el-input-number
+            v-model="balanceDialog.form.amount"
+            :min="1"
+            :max="1000000"
+            :step="100"
+            placeholder="请输入金额"
+            style="width: 100%;"
+          />
+        </el-form-item>
+        
+        <el-form-item label="操作原因">
+          <el-input
+            v-model="balanceDialog.form.reason"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入操作原因（必填）"
+            maxlength="200"
+            show-word-limit
+          />
+        </el-form-item>
+        
+        <el-form-item label="操作后余额">
+          <span class="text-18 font-semibold text-success">
+            {{ calculatedBalance }} w币
+          </span>
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="balanceDialog.visible = false">取消</el-button>
+        <el-button
+          type="primary"
+          @click="confirmBalanceChange"
+          :disabled="!balanceDialog.form.reason"
+        >
+          确认修改
+        </el-button>
+      </template>
+    </el-dialog>
+  </div>
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  
+  <!-- 工具函数 -->
+  <script src="./assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="./assets/js/mock-data.js"></script>
+  
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+    
+    const app = createApp({
+      setup() {
+        // 响应式数据
+        const loading = ref(false);
+        const stats = ref({
+          total: 0,
+          normal: 0,
+          disabled: 0,
+          todayNew: 0,
+          activeUsers: 0
+        });
+        const tableData = ref([]);
+        const allTenants = ref([]);
+        
+        const filters = ref({
+          search: '',
+          status: '全部',
+          tenants: [],
+          dateRange: null
+        });
+        
+        const pagination = ref({
+          page: 1,
+          pageSize: 20,
+          total: 0
+        });
+        
+        const balanceDialog = ref({
+          visible: false,
+          userId: null,
+          userName: '',
+          currentBalance: 0,
+          form: {
+            type: 'add',
+            amount: 100,
+            reason: ''
+          }
+        });
+        
+        // 计算属性
+        const calculatedBalance = computed(() => {
+          const current = balanceDialog.value.currentBalance;
+          const amount = balanceDialog.value.form.amount || 0;
+          const type = balanceDialog.value.form.type;
+          
+          const newBalance = type === 'add'
+            ? current + amount
+            : Math.max(0, current - amount);
+          
+          return Utils.formatNumber(newBalance);
+        });
+        
+        // 加载统计数据
+        const loadStats = () => {
+          stats.value = MockData.getUserStats();
+        };
+        
+        // 加载租户列表
+        const loadTenants = () => {
+          allTenants.value = MockData.getAllTenants();
+        };
+        
+        // 加载用户数据
+        const loadData = () => {
+          loading.value = true;
+          
+          const params = {
+            page: pagination.value.page,
+            pageSize: pagination.value.pageSize,
+            search: filters.value.search,
+            status: filters.value.status,
+            tenants: filters.value.tenants
+          };
+          
+          if (filters.value.dateRange) {
+            params.startDate = filters.value.dateRange[0];
+            params.endDate = filters.value.dateRange[1];
+          }
+          
+          setTimeout(() => {
+            const result = MockData.getUsers(params);
+            tableData.value = result.list;
+            pagination.value.total = result.total;
+            loading.value = false;
+          }, 300);
+        };
+        
+        // 防抖搜索
+        const handleSearch = Utils.debounce(() => {
+          pagination.value.page = 1;
+          loadData();
+        }, 500);
+        
+        // 筛选
+        const handleFilter = () => {
+          pagination.value.page = 1;
+          loadData();
+        };
+        
+        // 排序
+        const handleSortChange = ({ prop, order }) => {
+          const params = { sortBy: prop };
+          if (order) {
+            params.sortOrder = order;
+          }
+          loadData();
+        };
+        
+        // 分页
+        const handlePageChange = () => {
+          loadData();
+        };
+        
+        const handleSizeChange = () => {
+          pagination.value.page = 1;
+          loadData();
+        };
+        
+        // 复制文本
+        const copyText = async (text) => {
+          const success = await Utils.copyToClipboard(text);
+          if (success) {
+            ElementPlus.ElMessage.success('复制成功');
+          } else {
+            ElementPlus.ElMessage.error('复制失败');
+          }
+        };
+        
+        // 查看用户详情
+        const viewUserDetail = (userId) => {
+          window.location.href = `user-detail.html?userId=${userId}`;
+        };
+        
+        // 修改余额
+        const editBalance = (row) => {
+          balanceDialog.value.visible = true;
+          balanceDialog.value.userId = row.id;
+          balanceDialog.value.userName = row.name;
+          balanceDialog.value.currentBalance = row.balance;
+          balanceDialog.value.form = {
+            type: 'add',
+            amount: 100,
+            reason: ''
+          };
+        };
+        
+        // 确认余额修改
+        const confirmBalanceChange = () => {
+          const { userId, form } = balanceDialog.value;
+          const amount = form.type === 'add' ? form.amount : -form.amount;
+          
+          MockData.updateUserBalance(userId, amount, form.reason);
+          
+          ElementPlus.ElMessage.success('账号金额修改成功');
+          balanceDialog.value.visible = false;
+          
+          loadData();
+          loadStats();
+        };
+        
+        // 重置密码
+        const resetPassword = (row) => {
+          ElementPlus.ElMessageBox.prompt('请输入新密码', '重置密码', {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            inputType: 'password',
+            inputPattern: /.{6,}/,
+            inputErrorMessage: '密码至少6位',
+            inputPlaceholder: '请输入新密码'
+          }).then(({ value }) => {
+            ElementPlus.ElMessage.success(`用户 ${row.name} 的密码已重置`);
+          }).catch(() => {});
+        };
+        
+        // 切换状态
+        const toggleStatus = (row) => {
+          const action = row.status === '正常' ? '禁用' : '启用';
+          
+          ElementPlus.ElMessageBox.confirm(
+            `确认${action}用户 "${row.name}" 吗？`,
+            `${action}用户`,
+            {
+              confirmButtonText: '确认',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            MockData.toggleUserStatus(row.id);
+            ElementPlus.ElMessage.success(`用户已${action}`);
+            loadData();
+            loadStats();
+          }).catch(() => {});
+        };
+        
+        // 注销用户
+        const deleteUser = (row) => {
+          ElementPlus.ElMessageBox.prompt(
+            `注销用户是终极高危操作，将删除该用户的所有数据。请输入 "确认注销" 以继续`,
+            `注销用户 "${row.name}"`,
+            {
+              confirmButtonText: '确认注销',
+              cancelButtonText: '取消',
+              inputPattern: /^确认注销$/,
+              inputErrorMessage: '请输入"确认注销"',
+              type: 'error'
+            }
+          ).then(() => {
+            ElementPlus.ElMessage.success(`用户 ${row.name} 已注销`);
+            // 实际应用中应该调用API删除
+          }).catch(() => {});
+        };
+        
+        // 初始化
+        onMounted(() => {
+          loadTenants();
+          loadStats();
+          loadData();
+        });
+        
+        return {
+          loading,
+          stats,
+          tableData,
+          allTenants,
+          filters,
+          pagination,
+          balanceDialog,
+          calculatedBalance,
+          handleSearch,
+          handleFilter,
+          handleSortChange,
+          handlePageChange,
+          handleSizeChange,
+          copyText,
+          viewUserDetail,
+          editBalance,
+          confirmBalanceChange,
+          resetPassword,
+          toggleStatus,
+          deleteUser,
+          Utils
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

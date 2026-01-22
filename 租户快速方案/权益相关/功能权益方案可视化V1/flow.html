@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>权限校验流程</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: transparent;
+            color: #333;
+            padding: 2rem;
+        }
+
+        .section {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1e293b;
+            text-align: center;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .flow-diagram {
+            background: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin: 3rem 0;
+            position: relative;
+        }
+
+        .flow-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #4f46e5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .flow-step {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            position: relative;
+            border: 2px solid rgba(226, 232, 240, 0.5);
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .flow-step::after {
+            content: '↓';
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            color: #64748b;
+            background: rgba(255, 255, 255, 0.9);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .flow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .flow-step h4 {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.2rem;
+        }
+
+        .flow-step p {
+            margin-bottom: 0.5rem;
+            color: #64748b;
+        }
+
+        .flow-step.success {
+            border-color: #10b981;
+            background: linear-gradient(135deg, rgba(240, 253, 244, 0.9), rgba(255, 255, 255, 0.9));
+        }
+
+        .flow-step.failure {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, rgba(254, 242, 242, 0.9), rgba(255, 255, 255, 0.9));
+        }
+
+        .failure-scenarios {
+            background: rgba(254, 242, 242, 0.8);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .failure-scenarios h4 {
+            color: #dc2626;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .scenario-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid #ef4444;
+            transition: all 0.3s ease;
+        }
+
+        .scenario-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.2);
+        }
+
+        .scenario-card h5 {
+            color: #dc2626;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .scenario-card p {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h2><i class="fas fa-project-diagram"></i> 三层权限校验决策流程</h2>
+        
+        <div class="flow-diagram">
+            <h3 class="flow-title">
+                <i class="fas fa-play-circle"></i>
+                场景：用户尝试使用"AI分析节点"编排智能体
+            </h3>
+            
+            <div class="flow-step">
+                <h4><i class="fas fa-layer-group" style="color: #dc2626;"></i> 0️⃣ 订阅计划校验</h4>
+                <p><strong>检查：</strong>租户订阅的计划是否包含"AI分析"功能</p>
+                <p><strong>依据：</strong>平台层定义的计划模板与租户选择的订阅级别</p>
+            </div>
+            
+            <div class="flow-step">
+                <h4><i class="fas fa-tools" style="color: #8b5cf6;"></i> 1️⃣ 功能权限校验</h4>
+                <p><strong>检查：</strong>租户管理员是否为该用户分配了"AI分析"功能权限</p>
+                <p><strong>依据：</strong>租户功能分配列表中是否包含该用户</p>
+            </div>
+            
+            <div class="flow-step success">
+                <h4><i class="fas fa-database" style="color: #06b6d4;"></i> 2️⃣ 数据权限校验</h4>
+                <p><strong>检查：</strong>用户对该智能体是否具有"编排"权限</p>
+                <p><strong>依据：</strong>用户在智能体上的角色（所有者/管理员/可编辑 = ✅，可评论/查看 = ❌）</p>
+            </div>
+            
+            <div class="flow-step success">
+                <h4><i class="fas fa-check-circle" style="color: #10b981;"></i> 3️⃣ 最终裁决</h4>
+                <p><strong>结果：</strong>订阅计划 ✅ AND 功能权限 ✅ AND 数据权限 ✅ = 操作允许</p>
+                <p><strong>体验：</strong>用户可以看到并使用AI分析节点</p>
+            </div>
+        </div>
+        
+        <div class="failure-scenarios">
+            <h4><i class="fas fa-exclamation-triangle"></i> 失败场景示例</h4>
+            <div class="scenario-grid">
+                <div class="scenario-card">
+                    <h5><i class="fas fa-ban"></i> 场景A：计划不支持</h5>
+                    <p>租户订阅的是"基础版"，不包含AI功能</p>
+                    <p><strong>结果：</strong>功能完全不可见，提示升级</p>
+                </div>
+                <div class="scenario-card">
+                    <h5><i class="fas fa-user-slash"></i> 场景B：功能权限不足</h5>
+                    <p>订阅支持但租户管理员未为该用户分配</p>
+                    <p><strong>结果：</strong>AI节点置灰，提示联系管理员</p>
+                </div>
+                <div class="scenario-card">
+                    <h5><i class="fas fa-lock"></i> 场景C：数据权限不足</h5>
+                    <p>有AI功能权限但只是智能体的"查看者"</p>
+                    <p><strong>结果：</strong>无法进入编排界面</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

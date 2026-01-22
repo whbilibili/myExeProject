@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>质效技术部 - 租户信息</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h2>质效技术部</h2>
+            <p>正在加载租户信息...</p>
+        </div>
+    </div>
+    
+    <div class="container" id="main-content">
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="ri-information-line"></i> 基本信息</h2>
+                <button class="btn btn-secondary"><i class="ri-edit-line"></i> 编辑信息</button>
+            </div>
+            <div class="card-body basic-info">
+                <div class="tenant-avatar">
+                    <div class="logo">质效<br>技术</div>
+                </div>
+                <div class="tenant-details">
+                    <h1>质效技术部</h1>
+                    <p class="tenant-id">
+                        企业ID: ttDiYHI5EaUxzbq5U <i class="ri-file-copy-line"></i>
+                    </p>
+                    <p class="tenant-description">
+                        用于管理质效技术部在bots平台上的所有空间、资源和成员。
+                    </p>
+                </div>
+                <div class="tenant-meta">
+                    <p>创建人：<img src="https://i.pravatar.cc/24?u=lixintong" alt="李昕彤" class="avatar-small"> 李昕彤</p>
+                    <p>创建时间：2025-06-11 15:06:10</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-overview">
+            <div class="data-card">
+                <div class="data-card-icon" style="background-color: #e9e7fd;">
+                    <i class="ri-group-line" style="color: #7b61ff;"></i>
+                </div>
+                <div>
+                    <div class="data-card-title">组织总人数</div>
+                    <div class="data-card-value">1318 <span class="unit">人</span></div>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="data-card-icon" style="background-color: #e0f2fe;">
+                    <i class="ri-building-4-line" style="color: #0ea5e9;"></i>
+                </div>
+                <div>
+                    <div class="data-card-title">总部门数</div>
+                    <div class="data-card-value">86 <span class="unit">个</span></div>
+                </div>
+            </div>
+            <div class="data-card">
+                <div class="data-card-icon" style="background-color: #fef3c7;">
+                    <i class="ri-user-settings-line" style="color: #f59e0b;"></i>
+                </div>
+                <div>
+                    <div class="data-card-title">管理员数</div>
+                    <div class="data-card-value">8 <span class="unit">人</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="ri-admin-line"></i> 管理员</h2>
+                <button class="btn btn-secondary"><i class="ri-edit-line"></i> 编辑</button>
+            </div>
+            <div class="card-body member-list">
+                <div class="member-item">
+                    <img src="https://i.pravatar.cc/40?u=lixintong" alt="李昕彤" class="avatar-large">
+                    <span>李昕彤</span>
+                </div>
+                <div class="member-item">
+                    <img src="https://i.pravatar.cc/40?u=test" alt="测试" class="avatar-large-color">
+                    <span>测试</span>
+                </div>
+                <div class="member-item">
+                    <img src="https://i.pravatar.cc/40?u=liyaozong" alt="李耀宗" class="avatar-large">
+                    <span>李耀宗</span>
+                </div>
+                <div class="member-item">
+                    <img src="https://i.pravatar.cc/40?u=zhouyi" alt="周义" class="avatar-large">
+                    <span>周义</span>
+                </div>
+                <div class="member-item">
+                    <img src="https://i.pravatar.cc/40?u=wanghong" alt="王宏" class="avatar-large">
+                    <span>王宏</span>
+                </div>
+                <div class="member-item">
+                    <img src="https://i.pravatar.cc/40?u=liyajie" alt="李雅洁" class="avatar-large">
+                    <span>李雅洁</span>
+                </div>
+                <div class="member-item">
+                    <div class="avatar-large-initials">郑</div>
+                    <span>郑丹阳</span>
+                </div>
+                <div class="member-item">
+                    <img src="https://i.pravatar.cc/40?u=liuchuang" alt="刘创" class="avatar-large">
+                    <span>刘创</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="ri-user-settings-line"></i> 空间创建者</h2>
+            </div>
+            <div class="card-body">
+                <div class="display-field-group">
+                    <div class="field-header">
+                        <label>个人</label>
+                        <button id="edit-users-btn" class="btn btn-icon"><i class="ri-edit-line"></i></button>
+                    </div>
+                    <div class="display-field" id="user-display-field">
+                        <!-- 已选用户标签将显示在这里 -->
+                    </div>
+                </div>
+                <div class="display-field-group">
+                    <div class="field-header">
+                        <label>部门</label>
+                        <button id="edit-departments-btn" class="btn btn-icon"><i class="ri-edit-line"></i></button>
+                    </div>
+                    <div class="display-field" id="department-display-field">
+                        <!-- 已选部门标签将显示在这里 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 审批列表卡片 -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="ri-file-list-3-line"></i> 空间创建申请</h2>
+                <div class="header-actions">
+                    <span class="status-badge" id="pending-count">2 个待审批</span>
+                    <div class="filter-controls">
+                        <label class="filter-toggle">
+                            <input type="checkbox" id="show-processed" />
+                            <span class="toggle-text">显示已处理</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <table class="approval-table">
+                    <thead>
+                        <tr>
+                            <th>申请原因</th>
+                            <th>提交信息</th>
+                            <th>审批状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="approval-tbody">
+                        <tr data-status="pending" data-user="冯波" data-mis="fengbo">
+                            <td class="reason">Keeta结算方向需要申请一个空间。</td>
+                            <td>
+                                <div class="user-info">
+                                    <img src="https://i.pravatar.cc/40?u=fengbo" alt="冯波" class="avatar-small">
+                                    <div class="user-details">
+                                        <span>冯波</span>
+                                        <time>2025/06/26 11:05:03</time>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="approval-status">-</td>
+                            <td class="approval-actions">
+                                <a href="#" class="action-approve">通过</a>
+                                <a href="#" class="action-reject">不通过</a>
+                            </td>
+                        </tr>
+                        <tr data-status="pending" data-user="王五" data-mis="wangwu">
+                            <td class="reason">营销素材需要一个归档空间。</td>
+                            <td>
+                                <div class="user-info">
+                                    <img src="https://i.pravatar.cc/40?u=wangwu" alt="王五" class="avatar-small">
+                                    <div class="user-details">
+                                        <span>王五</span>
+                                        <time>2025/06/24 15:30:10</time>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="approval-status">-</td>
+                            <td class="approval-actions">
+                                <a href="#" class="action-approve">通过</a>
+                                <a href="#" class="action-reject">不通过</a>
+                            </td>
+                        </tr>
+                        <tr data-status="approved" data-user="张三" data-mis="zhangsan" style="display: none;">
+                            <td class="reason">需要为新项目创建专用空间。</td>
+                            <td>
+                                <div class="user-info">
+                                    <img src="https://i.pravatar.cc/40?u=zhangsan" alt="张三" class="avatar-small">
+                                    <div class="user-details">
+                                        <span>张三</span>
+                                        <time>2025/06/20 09:15:22</time>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="approval-status"><span class="status-approved">已通过</span></td>
+                            <td class="approval-actions processed">由 李昕彤 审批</td>
+                        </tr>
+                        <tr data-status="rejected" data-user="李四" data-mis="lisi" style="display: none;">
+                            <td class="reason">个人文档整理需求。</td>
+                            <td>
+                                <div class="user-info">
+                                    <img src="https://i.pravatar.cc/40?u=lisi" alt="李四" class="avatar-small">
+                                    <div class="user-details">
+                                        <span>李四</span>
+                                        <time>2025/06/18 14:32:11</time>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="approval-status"><span class="status-rejected">已拒绝</span></td>
+                            <td class="approval-actions processed">由 李昕彤 审批</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 编辑空间创建者弹窗 -->
+    <div id="edit-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑空间创建者</h3>
+                <button id="close-modal-btn" class="close-btn"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="user-form-section" class="form-section">
+                    <div class="section-header">
+                        <i class="ri-user-line"></i>
+                        <span>个人</span>
+                    </div>
+                    <div class="search-dropdown" id="modal-user-dropdown">
+                        <div class="search-input-container">
+                            <input type="text" id="modal-user-search" placeholder="输入mis号搜索用户" class="search-input">
+                            <i class="ri-arrow-down-s-line dropdown-arrow"></i>
+                        </div>
+                        <div class="dropdown-menu" id="modal-user-menu">
+                             <div class="dropdown-item" data-value="张三" data-type="user"><div class="item-avatar user-avatar">张</div><span>张三</span></div>
+                             <div class="dropdown-item" data-value="李四" data-type="user"><div class="item-avatar user-avatar">李</div><span>李四</span></div>
+                             <div class="dropdown-item" data-value="王五" data-type="user"><div class="item-avatar user-avatar">王</div><span>王五</span></div>
+                        </div>
+                    </div>
+                    <div class="selected-tags" id="modal-user-tags"></div>
+                </div>
+                <div id="department-form-section" class="form-section">
+                    <div class="section-header">
+                        <i class="ri-building-line"></i>
+                        <span>部门</span>
+                    </div>
+                    <div class="search-dropdown" id="modal-department-dropdown">
+                        <div class="search-input-container">
+                            <input type="text" id="modal-department-search" placeholder="输入部门名称搜索部门" class="search-input">
+                            <i class="ri-arrow-down-s-line dropdown-arrow"></i>
+                        </div>
+                        <div class="dropdown-menu" id="modal-department-menu">
+                            <div class="dropdown-item" data-value="技术部" data-type="department"><div class="item-avatar department-avatar"><i class="ri-building-line"></i></div><span>技术部</span></div>
+                            <div class="dropdown-item" data-value="产品部" data-type="department"><div class="item-avatar department-avatar"><i class="ri-building-line"></i></div><span>产品部</span></div>
+                            <div class="dropdown-item" data-value="运营部" data-type="department"><div class="item-avatar department-avatar"><i class="ri-building-line"></i></div><span>运营部</span></div>
+                        </div>
+                    </div>
+                    <div class="selected-tags" id="modal-department-tags"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-modal-btn" class="btn btn-secondary">取消</button>
+                <button id="save-modal-btn" class="btn btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

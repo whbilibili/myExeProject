@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的订阅 - 个人免费版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 自定义动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        .pulse-hover:hover {
+            animation: pulse 0.3s ease-in-out;
+        }
+        
+        /* 渐变背景动画 */
+        .gradient-bg {
+            background: linear-gradient(-45deg, #0ea5e9, #06b6d4, #14b8a6, #10b981);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* 改进的 Tooltip 样式 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: max-content;
+            max-width: 300px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+            color: #fff;
+            text-align: center;
+            border-radius: 12px;
+            padding: 12px 16px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.875rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #0ea5e9 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px);
+        }
+        
+        /* 卡片悬停效果 */
+        .feature-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 图标动画 */
+        .icon-bounce:hover {
+            animation: bounce 0.6s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        /* 禁用状态样式 */
+        .disabled-feature {
+            opacity: 0.6;
+            position: relative;
+        }
+        
+        .disabled-feature::after {
+            content: "暂不可用";
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-sky-50 via-cyan-50 to-teal-100 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    
+    <!-- 背景装饰 -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-sky-400 to-cyan-400 rounded-full opacity-20 blur-3xl"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-cyan-400 to-teal-400 rounded-full opacity-20 blur-3xl"></div>
+    </div>
+
+    <div class="relative w-full max-w-4xl mx-auto">
+        <!-- 主卡片 -->
+        <main class="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl overflow-hidden border border-white/20 fade-in-up">
+            <!-- 头部区域 -->
+            <div class="gradient-bg p-8 sm:p-12 text-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-black/10"></div>
+                <div class="relative z-10">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-6 pulse-hover">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 text-white">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                        </svg>
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl font-bold text-white mb-4">
+                        个人免费版
+                    </h1>
+                    <p class="text-lg text-white/90 max-w-2xl mx-auto leading-relaxed">
+                        基础功能体验，有限个人资源 
+                    </p>
+                    <div class="mt-8 inline-flex items-center bg-white/20 rounded-full px-6 py-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-white mr-2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                        </svg>
+                        <span class="text-white font-medium">免费使用中</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 权益内容区域 -->
+            <div class="p-8 sm:p-12">
+                <div class="mb-10 text-center">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-3">免费权益</h2>
+                    <p class="text-slate-600">体验核心功能，探索无限可能</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                    <!-- 权益卡片 -->
+                    <div class="feature-card flex items-start p-6 bg-gradient-to-br from-sky-50 to-cyan-50 rounded-xl shadow-sm border border-sky-100">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-sky-500 to-cyan-600 rounded-lg flex items-center justify-center mr-4 icon-bounce">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-800 mb-2">通讯录用户</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">支持邀请 <span class="font-semibold text-sky-600">10人</span> 加入通讯录</p>
+                            <p class="text-xs text-slate-500 mt-1">个人通讯录允许邀请的用户数量</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card flex items-start p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl shadow-sm border border-emerald-100">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center mr-4 icon-bounce">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-800 mb-2">Bots个人空间</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">拥有 <span class="font-semibold text-emerald-600">1个</span> 专属AI空间</p>
+                            <p class="text-xs text-slate-500 mt-1">个人AI助手配置</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card disabled-feature flex items-start p-6 bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl shadow-sm border border-slate-200">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-slate-400 to-gray-500 rounded-lg flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 7.125A2.25 2.25 0 0 1 4.5 4.875h15A2.25 2.25 0 0 1 21.75 7.125v4.875A2.25 2.25 0 0 1 19.5 14.25H4.5A2.25 2.25 0 0 1 2.25 12V7.125Z M19.5 14.25v.01M19.5 17.25v.01M19.5 20.25v.01M4.5 14.25v.01M4.5 17.25v.01M4.5 20.25v.01M12 14.25v.01M12 17.25v.01M12 20.25v.01" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-600 mb-2">Bots团队空间</h3>
+                            <p class="text-slate-500 text-sm leading-relaxed">暂不支持团队协作功能</p>
+                            <p class="text-xs text-slate-400 mt-1">升级后可享受团队功能</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card flex items-start p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-sm border border-amber-100">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center mr-4 icon-bounce">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-800 mb-2">ABS空间</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">拥有 <span class="font-semibold text-amber-600">1个</span> 数据存储空间</p>
+                            <p class="text-xs text-slate-500 mt-1">基础数据管理功能</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card flex items-start p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-sm border border-purple-100">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center mr-4 icon-bounce">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-800 mb-2">AutoMan</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">标准访问与使用权限</p>
+                            <p class="text-xs text-slate-500 mt-1">积分消耗归于个人租户账号</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-card disabled-feature flex items-start p-6 bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl shadow-sm border border-slate-200">
+                        <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-slate-400 to-gray-500 rounded-lg flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-600 mb-2">成员与组织管理</h3>
+                            <p class="text-slate-500 text-sm leading-relaxed">仅支持个人通讯录功能</p>
+                            <p class="text-xs text-slate-400 mt-1">升级后可享受组织管理</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 计费信息 -->
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 mb-8 border border-green-200">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-white">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 1 0 9.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1 1 14.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-slate-800">计费模式</h3>
+                                <p class="text-sm text-green-600 font-medium">完全免费</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center mr-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-white">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-slate-800">有效期至</h3>
+                                <p class="text-sm text-blue-600 font-medium">永久有效</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="text-center">
+                    <div class="tooltip">
+                        <button 
+                            disabled
+                            class="bg-gradient-to-r from-slate-300 to-gray-300 text-slate-500 font-semibold py-4 px-10 rounded-xl shadow-lg cursor-not-allowed focus:outline-none transition-all duration-300 w-full sm:w-auto text-lg"
+                        >
+                            <span class="flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                                升级订阅方案
+                            </span>
+                        </button>
+                        <span class="tooltiptext">🚀 更多订阅方案即将推出，敬请期待！我们正在为您准备更多精彩功能。</span>
+                    </div>
+                </div>
+
+                <!-- 免责声明 -->
+                <div class="mt-8 p-6 bg-cyan-50 rounded-xl border border-cyan-200">
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-cyan-600 mr-3 mt-0.5 flex-shrink-0">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                        </svg>
+                        <p class="text-sm text-cyan-800 leading-relaxed">
+                            <span class="font-medium">服务说明：</span>为了持续提供优质服务并保障所有用户的公平使用，我们未来可能会对部分资源的使用方式进行优化和调整。您当前所享有的权益已在本页清晰列出，请以此为准。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

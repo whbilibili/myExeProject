@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bots 智能助理平台 - 租户权益管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* 平滑滚动 */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* 自定义滚动条样式 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:active {
+            background: #64748b;
+        }
+        
+        /* 针对全屏模态框的滚动条 */
+        .modal-scrollbar::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        .modal-scrollbar::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 5px;
+        }
+        
+        .modal-scrollbar::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #3b82f6, #1d4ed8);
+            border-radius: 5px;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.1);
+        }
+        
+        .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #2563eb, #1e40af);
+        }
+        
+        /* 表格滚动条 */
+        .table-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        .table-scrollbar::-webkit-scrollbar-track {
+            background: #f9fafb;
+            border-radius: 3px;
+        }
+        
+        .table-scrollbar::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+        
+        .table-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        
+        /* Firefox 滚动条样式 */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        
+        .modal-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #3b82f6 #f8fafc;
+        }
+        
+        .table-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #d1d5db #f9fafb;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .tab-active {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+        
+        .feature-check {
+            color: #10b981;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+        
+        /* 页面整体滚动容器 */
+        .main-scroll-container {
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        /* 确保内容可以滚动 */
+        .scroll-content {
+            min-height: 100%;
+            padding-bottom: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Bots 主平台页面 -->
+    <div id="main-platform" class="min-h-screen main-scroll-container custom-scrollbar">
+        <div class="scroll-content">
+            <!-- 顶部导航栏 -->
+            <nav class="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center h-16">
+                        <!-- 左侧Logo和导航 -->
+                        <div class="flex items-center space-x-8">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-robot text-white text-sm"></i>
+                                </div>
+                                <span class="text-xl font-bold text-gray-900">Bots</span>
+                            </div>
+                            <div class="flex space-x-6">
+                                <a href="#" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">智能体</a>
+                                <a href="#" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">工作流</a>
+                                <a href="#" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">工具库</a>
+                                <a href="#" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">知识库</a>
+                            </div>
+                        </div>
+                        
+                        <!-- 右侧用户区域 -->
+                        <div class="flex items-center space-x-4">
+                            <div class="text-sm text-gray-600">
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">团队版</span>
+                            </div>
+                            <div class="relative">
+                                <!-- 用户头像下拉 -->
+                                <button id="user-menu-btn" class="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <img class="w-8 h-8 rounded-full object-cover" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face" alt="用户头像">
+                                    <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                                </button>
+                                
+                                <!-- 下拉菜单 -->
+                                <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                                    <div class="px-4 py-3 border-b border-gray-100">
+                                        <p class="text-sm font-medium text-gray-900">张三</p>
+                                        <p class="text-xs text-gray-500">zhangsan@example.com</p>
+                                    </div>
+                                    <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        <i class="fas fa-user-circle mr-3 text-gray-400"></i>
+                                        个人设置
+                                    </a>
+                                    <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                        <i class="fas fa-users mr-3 text-gray-400"></i>
+                                        用户中心
+                                    </a>
+                                    <button id="tenant-benefits-btn" class="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none">
+                                        <i class="fas fa-crown mr-3 text-yellow-500"></i>
+                                        租户权益
+                                    </button>
+                                    <div class="border-t border-gray-100 mt-2 pt-2">
+                                        <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                            <i class="fas fa-sign-out-alt mr-3 text-gray-400"></i>
+                                            退出登录
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- 主内容区域 -->
+            <main class="pt-16 pb-8">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <!-- 欢迎区域 -->
+                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 mb-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h1 class="text-3xl font-bold text-gray-900 mb-2">欢迎回来，星辰科技团队！</h1>
+                                <p class="text-gray-600">继续您的智能助理创作之旅</p>
+                            </div>
+                            <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=200&h=150&fit=crop" alt="AI助手" class="w-48 h-32 object-cover rounded-xl">
+                        </div>
+                    </div>
+
+                    <!-- 快速统计 -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">智能体</p>
+                                    <p class="text-2xl font-bold text-gray-900">5/10</p>
+                                </div>
+                                <div class="bg-blue-100 p-3 rounded-lg">
+                                    <i class="fas fa-robot text-blue-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">工作流</p>
+                                    <p class="text-2xl font-bold text-gray-900">3/10</p>
+                                </div>
+                                <div class="bg-green-100 p-3 rounded-lg">
+                                    <i class="fas fa-project-diagram text-green-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">工具库</p>
+                                    <p class="text-2xl font-bold text-gray-900">4/10</p>
+                                </div>
+                                <div class="bg-purple-100 p-3 rounded-lg">
+                                    <i class="fas fa-toolbox text-purple-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">积分余额</p>
+                                    <p class="text-2xl font-bold text-gray-900">5000</p>
+                                </div>
+                                <div class="bg-yellow-100 p-3 rounded-lg">
+                                    <i class="fas fa-coins text-yellow-600"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 最近使用的智能体 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-6 border-b border-gray-100">
+                            <h2 class="text-lg font-semibold text-gray-900">团队智能体</h2>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                                            <i class="fas fa-comments text-blue-600"></i>
+                                        </div>
+                                        <h3 class="font-medium text-gray-900">客服助手</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-3">专业的客户服务智能助手</p>
+                                    <div class="flex items-center text-xs text-gray-500">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span>2小时前使用</span>
+                                    </div>
+                                </div>
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                            <i class="fas fa-pen-fancy text-green-600"></i>
+                                        </div>
+                                        <h3 class="font-medium text-gray-900">文案生成器</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-3">高质量营销文案生成助手</p>
+                                    <div class="flex items-center text-xs text-gray-500">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span>1天前使用</span>
+                                    </div>
+                                </div>
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                                            <i class="fas fa-chart-line text-purple-600"></i>
+                                        </div>
+                                        <h3 class="font-medium text-gray-900">数据分析师</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-3">智能数据分析与报告生成</p>
+                                    <div class="flex items-center text-xs text-gray-500">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span>3小时前使用</span>
+                                    </div>
+                                </div>
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                                            <i class="fas fa-code text-red-600"></i>
+                                        </div>
+                                        <h3 class="font-medium text-gray-900">代码助手</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-3">代码生成与调试助手</p>
+                                    <div class="flex items-center text-xs text-gray-500">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span>5小时前使用</span>
+                                    </div>
+                                </div>
+                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    <div class="flex items-center mb-3">
+                                        <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
+                                            <i class="fas fa-language text-yellow-600"></i>
+                                        </div>
+                                        <h3 class="font-medium text-gray-900">翻译专家</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-3">多语言翻译与本地化</p>
+                                    <div class="flex items-center text-xs text-gray-500">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span>1天前使用</span>
+                                    </div>
+                                </div>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center text-center hover:border-blue-400 transition-colors cursor-pointer">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mb-2">
+                                        <i class="fas fa-plus text-gray-400"></i>
+                                    </div>
+                                    <p class="text-sm text-gray-600">创建新的智能体</p>
+                                    <p class="text-xs text-gray-400 mt-1">还可创建 5 个</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- 租户权益全屏页面 -->
+    <div id="tenant-benefits-modal" class="hidden fixed inset-0 bg-gray-50 z-50">
+        <!-- 顶部导航 -->
+        <div class="bg-white border-b border-gray-200">
+            <div class="max-w-6xl mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button id="close-benefits-btn" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-arrow-left text-gray-600"></i>
+                        </button>
+                        <h1 class="text-xl font-semibold text-gray-900">租户权益管理</h1>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        当前租户：<span class="font-medium text-gray-900" id="current-tenant-name">星辰科技团队</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 导航 -->
+        <div class="bg-white border-b border-gray-200">
+            <div class="max-w-6xl mx-auto px-6">
+                <div class="flex space-x-8">
+                    <button id="current-plan-tab" class="tab-btn tab-active px-4 py-3 text-sm font-medium border-b-2 border-transparent">
+                        当前订阅计划
+                    </button>
+                    <button id="all-plans-tab" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-600 hover:text-gray-900">
+                        升级方案
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 内容 - 添加了滚动容器 -->
+        <div class="flex-1 overflow-y-auto modal-scrollbar" style="height: calc(100vh - 120px);">
+            <!-- 当前订阅计划 Tab -->
+            <div id="current-plan-content" class="tab-content p-6">
+                <div class="max-w-6xl mx-auto">
+                    <!-- 当前计划概览 -->
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 mb-8">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="flex items-center space-x-3 mb-4">
+                                    <div class="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">团队版</div>
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">2025-07-19到期</span>
+                                </div>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-2">小型团队协作，有限资源，有限空间</h2>
+                                <p class="text-gray-600">适合小型团队协作和项目管理</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <div class="text-sm text-gray-600">积分余额</div>
+                                    <button id="billing-rules-btn" class="text-xs text-gray-400 hover:text-blue-600 focus:outline-none">
+                                        <i class="fas fa-info-circle"></i> 计费规则
+                                    </button>
+                                </div>
+                                <div class="text-3xl font-bold text-blue-600 mt-1">5000
+                                    <span class="text-sm text-gray-500 font-normal">/5000</span></div>
+                                <!-- <div class="text-xs text-gray-500 mt-1">每日重置</div> -->
+                                <button id="recharge-btn" class="mt-2 text-blue-600 text-sm font-medium hover:text-blue-700 focus:outline-none">
+                                    <i class="fas fa-coins mr-1"></i>充值积分
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 权益使用情况 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- 资源配额 -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6">资源配额使用情况</h3>
+                            <div class="space-y-6">
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm text-gray-600">智能体数量</span>
+                                        <span class="text-sm font-medium text-gray-900">5/10</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm text-gray-600">工作流数量</span>
+                                        <span class="text-sm font-medium text-gray-900">3/10</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 30%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm text-gray-600">工具库数量</span>
+                                        <span class="text-sm font-medium text-gray-900">4/10</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-yellow-500 h-2 rounded-full" style="width: 40%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm text-gray-600">工具数量</span>
+                                        <span class="text-sm font-medium text-gray-900">6/10</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-purple-500 h-2 rounded-full" style="width: 60%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-sm text-gray-600">协作用户数</span>
+                                        <span class="text-sm font-medium text-gray-900">15/50</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-indigo-500 h-2 rounded-full" style="width: 30%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 订阅详情与管理 (全新复合卡片) -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-6">订阅详情与管理</h3>
+                            
+                            <!-- 当前计划权益 (部分展示) -->
+                            <div class="space-y-4 flex-grow">
+                                <div class="flex items-center"><i class="fas fa-check-circle feature-check mr-3"></i><span class="text-sm text-gray-700">10个智能体配额</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle feature-check mr-3"></i><span class="text-sm text-gray-700">10个工作流配额</span></div>
+                                <div class="flex items-center"><i class="fas fa-check-circle feature-check mr-3"></i><span class="text-sm text-gray-700">50个协作用户</span></div>
+                                <button id="view-all-benefits-btn" class="text-sm text-blue-600 hover:underline font-medium pt-2 text-left w-full">查看全部权益 &raquo;</button>
+                                </div>
+
+                            <!-- 分隔线和账单信息 -->
+                            <div class="mt-6 pt-6 border-t border-gray-100">
+                                <div class="space-y-3 mb-6">
+                                    <div class="flex justify-between items-center"><span class="text-sm text-gray-600">订阅状态</span><span class="text-sm font-medium text-green-600">有效</span></div>
+                                    <div class="flex justify-between items-center"><span class="text-sm text-gray-600">计费周期</span><span class="text-sm font-medium text-gray-800">按月</span></div>
+                                    <div class="flex justify-between items-center"><span class="text-sm text-gray-600">下次续费日期</span><span class="text-sm font-medium text-gray-800">2025-07-19</span></div>
+                            </div>
+                            
+                                <!-- 操作按钮 -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <button id="renew-subscription-btn" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                                        立即续费
+                                    </button>
+                                    <button id="upgrade-from-current" class="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                                        升级企业版
+                                </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 积分收支流水 -->
+                    <div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">积分收支明细</h3>
+                        <div class="overflow-y-auto table-scrollbar" style="max-height: 300px;">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">详情</th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">积分变化</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-500">2024-07-19 14:25:30</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-800 font-medium">积分充值</td>
+                                        <td class="px-4 py-3 text-gray-600">团队套餐充值</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-right font-semibold text-green-500">+ 2000</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-500">2024-07-19 10:32:15</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-800 font-medium">模型调用</td>
+                                        <td class="px-4 py-3 text-gray-600">批量数据分析任务</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-right font-semibold text-red-500">- 150</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-500">2024-07-19 09:15:22</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-800 font-medium">工作流执行</td>
+                                        <td class="px-4 py-3 text-gray-600">自动化报告生成</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-right font-semibold text-red-500">- 25</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-500">2024-07-19 09:00:01</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-800 font-medium">每日签到</td>
+                                        <td class="px-4 py-3 text-gray-600">团队签到奖励</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-right font-semibold text-green-500">+ 5</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-500">2024-07-18 16:45:10</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-800 font-medium">智能体收益</td>
+                                        <td class="px-4 py-3 text-gray-600">团队智能体被外部调用</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-right font-semibold text-green-500">+ 12</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-500">2024-07-18 14:20:35</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-gray-800 font-medium">模型调用</td>
+                                        <td class="px-4 py-3 text-gray-600">多轮对话处理</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-right font-semibold text-red-500">- 80</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 升级方案 Tab -->
+            <div id="all-plans-content" class="tab-content hidden p-6">
+                <div class="max-w-6xl mx-auto">
+                    <!-- 方案对比标题 -->
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">选择适合您的订阅方案</h2>
+                        <p class="text-lg text-gray-600 max-w-2xl mx-auto">从个人体验到企业级解决方案，我们为不同规模的需求提供灵活的订阅计划</p>
+                    </div>
+
+                    <!-- 订阅计划卡片 -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                        <!-- 个人免费版 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 relative">
+                            <div class="text-center mb-6">
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">个人免费版</h3>
+                                <p class="text-gray-600 text-sm mb-4">基础功能体验</p>
+                                <div class="text-4xl font-bold text-gray-900 mb-2">免费</div>
+                                <div class="text-sm text-gray-500">永久有效</div>
+                            </div>
+                            <div class="space-y-3 mb-8">
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>3个智能体</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>3个工作流</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>1个工具库</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>5个协作用户</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>1个Bots空间</span></div>
+                                </div>
+                            <div class="pt-4 mt-4 border-t border-gray-100">
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-coins text-yellow-500 fa-fw mr-3"></i>
+                                    <span class="text-gray-600">积分: <span class="font-semibold text-gray-800">200</span></span>
+                                </div>
+                            </div>
+                            <button disabled class="w-full mt-8 bg-gray-100 text-gray-400 py-3 px-4 rounded-lg font-medium cursor-not-allowed">联系支持</button>
+                        </div>
+
+                        <!-- 团队版 (当前方案) -->
+                        <div class="bg-white rounded-2xl shadow-lg border-2 border-blue-500 p-8 relative">
+                            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                                <span class="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">当前方案</span>
+                            </div>
+                            <div class="text-center mb-6">
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">团队版</h3>
+                                <p class="text-gray-600 text-sm mb-4">小型团队协作</p>
+                                <div class="text-4xl font-bold text-gray-900 mb-2">¥299<span class="text-lg text-gray-500">/月</span></div>
+                                <div class="text-sm text-gray-500">或 ¥2,990/年（8.3折）</div>
+                            </div>
+                            <div class="space-y-3 mb-8">
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>10个智能体</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>10个工作流</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>10个工具库</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>50个协作用户</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>团队协作管理</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>优先技术支持</span></div>
+                            </div>
+                            <div class="pt-4 mt-4 border-t border-gray-100">
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-coins text-yellow-500 fa-fw mr-3"></i>
+                                    <span class="text-gray-600">积分: <span class="font-semibold text-gray-800">5,000</span></span>
+                                </div>
+                            </div>
+                            <button disabled class="w-full mt-8 bg-gray-100 text-gray-400 py-3 px-4 rounded-lg font-medium cursor-not-allowed">当前使用中</button>
+                        </div>
+
+                        <!-- 企业版 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 relative card-hover">
+                            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                                <span class="bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-medium">推荐升级</span>
+                            </div>
+                            <div class="text-center mb-6">
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">企业版</h3>
+                                <p class="text-gray-600 text-sm mb-4">大型组织解决方案</p>
+                                <div class="text-4xl font-bold text-gray-900 mb-2">¥999<span class="text-lg text-gray-500">/月</span></div>
+                                <div class="text-sm text-gray-500">或 ¥9,990/年（8.3折）</div>
+                            </div>
+                            <div class="space-y-3 mb-8">
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>无限制智能体</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>无限制工作流</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>无限制工具库</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>无限制协作用户</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>高级安全管理</span></div>
+                                <div class="flex items-center text-sm"><i class="fas fa-check text-green-500 mr-3"></i><span>专属客户经理</span></div>
+                            </div>
+                            <div class="pt-4 mt-4 border-t border-gray-100">
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-coins text-yellow-500 fa-fw mr-3"></i>
+                                    <span class="text-gray-600">积分: <span class="font-semibold text-gray-800">3,000,000</span></span>
+                                </div>
+                            </div>
+                            <button id="upgrade-to-enterprise" class="w-full mt-8 bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105">
+                                升级到企业版
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 详细功能对比表 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-900">详细功能对比</h3>
+                        </div>
+                        <div class="overflow-x-auto table-scrollbar">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">功能特性</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">个人免费版</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">团队版</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">企业版</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">智能体数量</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">3</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center font-bold text-blue-600">10</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">无限制</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">工作流数量</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">3</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center font-bold text-blue-600">10</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">无限制</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">工具库数量</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">1</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center font-bold text-blue-600">10</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">无限制</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">工具数量</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">1</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center font-bold text-blue-600">10</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">无限制</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">协作用户数</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">5</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center font-bold text-blue-600">50</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">无限制</td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Bots空间</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">1个</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center font-bold text-blue-600">1个</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">无限制</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">成员与组织管理</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center"><i class="fas fa-times text-red-500"></i></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center"><i class="fas fa-check text-green-500"></i></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center"><i class="fas fa-check text-green-500"></i></td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">优先技术支持</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center"><i class="fas fa-times text-red-500"></i></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center"><i class="fas fa-check text-green-500"></i></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center"><i class="fas fa-check text-green-500"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">专属客户经理</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center"><i class="fas fa-times text-red-500"></i></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center"><i class="fas fa-times text-red-500"></i></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center"><i class="fas fa-check text-green-500"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全部权益弹窗 -->
+    <div id="all-benefits-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 transform scale-95 transition-all custom-scrollbar" style="max-height: 90vh; overflow-y: auto;">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-900">团队版全部权益</h3>
+                <button id="close-all-benefits-modal-btn" class="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-full">&times;</button>
+            </div>
+            <div class="space-y-4 text-sm">
+                <div class="flex items-center"><i class="fas fa-check-circle feature-check mr-3"></i><span class="text-gray-700">10个智能体配额</span></div>
+                <div class="flex items-center"><i class="fas fa-check-circle feature-check mr-3"></i><span class="text-gray-700">10个工作流配额</span></div>
+                <div class="flex items-center"><i class="fas fa-check-circle feature-check mr-3"></i><span class="text-gray-700">10个工具库配额</span></div>
+                <div class="flex items-center"><i class="fas fa-check-circle feature-check mr-3"></i><span class="text-gray-700">10个工具配额</span></div>
+                <div class="flex items-center"><i class="fas fa-check-circle feature-check mr-3"></i><span class="text-gray-700">50个协作用户</span></div>
+                <div class="flex items-center"><i class="fas fa-check-circle feature-check mr-3"></i><span class="text-gray-700">1个Bots空间</span></div>
+                <div class="flex items-center"><i class="fas fa-check-circle feature-check mr-3"></i><span class="text-gray-700">成员与组织管理</span></div>
+                <div class="flex items-center"><i class="fas fa-times-circle text-gray-400 mr-3"></i><span class="text-gray-400">无限制团队空间</span></div>
+                <div class="flex items-center"><i class="fas fa-times-circle text-gray-400 mr-3"></i><span class="text-gray-400">高级安全管理</span></div>
+                <div class="flex items-center"><i class="fas fa-times-circle text-gray-400 mr-3"></i><span class="text-gray-400">专属客户经理</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 续费弹窗 -->
+    <div id="renew-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 transform scale-95 transition-all">
+            <div class="text-center mb-6">
+                <h3 class="text-xl font-bold text-slate-900">续费团队版订阅</h3>
+                <p class="text-sm text-slate-500 mt-2">延长您的订阅期限，继续享受团队协作权益。</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">选择续费周期</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="renew-cycle-btn border-2 border-slate-200 text-slate-600 p-3 rounded-xl data-[state=active]:border-primary-500 data-[state=active]:bg-primary-50 data-[state=active]:text-primary-700" data-cycle="monthly" data-price="299">
+                            按月续费
+                            <span class="block text-xs font-bold">¥299</span>
+                        </button>
+                        <button class="renew-cycle-btn border-2 border-slate-200 text-slate-600 p-3 rounded-xl data-[state=active]:border-primary-500 data-[state=active]:bg-primary-50 data-[state=active]:text-primary-700" data-cycle="yearly" data-price="2990" data-state="active">
+                            按年续费
+                            <span class="block text-xs font-bold">¥2,990</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-slate-800">应付金额</span>
+                        <span class="text-2xl font-bold text-blue-600" id="renew-amount">¥2,990</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 flex space-x-4">
+                <button id="cancel-renew" class="flex-1 py-3 border border-slate-300 rounded-lg font-semibold hover:bg-slate-100 transition-colors">取消</button>
+                <button id="confirm-renew" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">确认支付</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==== 新增: 升级到企业版结算弹窗 ==== -->
+    <div id="upgrade-checkout-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 transform scale-95 transition-all">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-rocket text-purple-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900">升级到企业版</h3>
+                <p class="text-sm text-slate-500 mt-2">解锁无限潜能，获取顶级功能与支持</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="bg-slate-50 rounded-lg p-4">
+                     <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm font-medium text-slate-700">计费周期</span>
+                        <select id="upgrade-billing-cycle" class="text-sm border border-gray-300 rounded px-2 py-1">
+                            <option value="monthly" data-price="999">按月付费 (¥999/月)</option>
+                            <option value="yearly" data-price="9990" selected>按年付费 (¥9,990/年)</option>
+                        </select>
+                    </div>
+                    <div class="border-t border-gray-200 mt-4 pt-4 flex justify-between items-center">
+                        <span class="font-medium text-slate-800">支付总额</span>
+                        <span class="text-2xl font-bold text-purple-600" id="upgrade-payment-amount">¥9,990</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 flex space-x-4">
+                <button id="cancel-upgrade-checkout" class="flex-1 py-3 border border-slate-300 rounded-lg font-semibold hover:bg-slate-100 transition-colors">取消</button>
+                <button id="confirm-upgrade-checkout" class="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 transition-all">确认支付</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==== 新增: 支付处理中弹窗 ==== -->
+    <div id="processing-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-8 text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">支付处理中</h3>
+            <p class="text-gray-600">请稍候...</p>
+        </div>
+    </div>
+
+    <!-- ==== 新增: 升级成功弹窗 ==== -->
+    <div id="upgrade-success-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center transform scale-95 transition-all">
+            <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <i class="fas fa-check-double text-white text-3xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-900 mb-3">升级成功!</h3>
+            <p class="text-slate-600 mb-8">您的订阅计划已成功升级为 <span class="font-bold text-purple-600">企业版</span>。</p>
+            <button id="go-to-enterprise-view" class="w-full bg-slate-800 text-white py-3 px-4 rounded-lg font-medium hover:bg-slate-900 transition-colors">
+                好的
+            </button>
+        </div>
+    </div>
+
+    <!-- 积分计费规则弹窗 -->
+    <div id="billing-rules-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 animate-slide-up custom-scrollbar" style="max-height: 90vh; overflow-y: auto;">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900">积分计费规则</h3>
+                <button id="close-rules-modal" class="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-full focus:outline-none">&times;</button>
+            </div>
+
+            <!-- Rules Tabs -->
+            <div class="border-b border-gray-200 mb-4">
+                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                    <button class="rules-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-blue-600 border-blue-600" data-tab="consumption">
+                        消耗规则
+                    </button>
+                    <button class="rules-tab whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300" data-tab="acquisition">
+                        增加规则
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="consumption-rules-content" class="rules-tab-content space-y-4 text-sm">
+                <p class="text-gray-600">积分是平台内用于计量资源消耗的统一单位。当您使用需要计算资源的功能时，系统会自动扣除相应积分。</p>
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">详细计费表示例：</h4>
+                    <div class="overflow-x-auto table-scrollbar rounded-lg border">
+                        <table class="w-full">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">功能/模型</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">计费单位</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-600 uppercase">积分消耗</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr><td class="px-4 py-2 font-medium">GPT-3.5-Turbo</td><td class="px-4 py-2">每 1k tokens</td><td class="px-4 py-2 text-right">5 积分</td></tr>
+                                <tr class="bg-gray-50"><td class="px-4 py-2 font-medium">GPT-4</td><td class="px-4 py-2">每 1k tokens</td><td class="px-4 py-2 text-right">50 积分</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">工作流执行</td><td class="px-4 py-2">每次成功执行</td><td class="px-4 py-2 text-right">1 积分</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-3 text-sm flex items-start">
+                        <i class="fas fa-cogs mr-3 mt-1 text-blue-500"></i>
+                        <div>
+                            <span class="font-semibold">功能开发中:</span>
+                            此处的积分消耗规则为功能示例，详细的自动化计费系统正在开发中，敬请期待！
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="acquisition-rules-content" class="hidden rules-tab-content space-y-4 text-sm">
+                 <p class="text-gray-600">通过参与平台活动、分享您的创作成果，可以获得积分奖励。</p>
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">详细增加规则示例：</h4>
+                    <div class="overflow-x-auto table-scrollbar rounded-lg border">
+                        <table class="w-full">
+                           <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">活动/任务</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">奖励条件</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-600 uppercase">积分奖励</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr><td class="px-4 py-2 font-medium">每日签到</td><td class="px-4 py-2">每日首次登录</td><td class="px-4 py-2 text-right">+ 2 积分</td></tr>
+                                <tr class="bg-gray-50"><td class="px-4 py-2 font-medium">智能体被调用</td><td class="px-4 py-2">每次成功调用</td><td class="px-4 py-2 text-right">+ 1 积分</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">成功邀请新用户</td><td class="px-4 py-2">被邀请人完成首充</td><td class="px-4 py-2 text-right">+ 100 积分</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                     <div class="mt-4 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg p-3 text-sm flex items-start">
+                        <i class="fas fa-cogs mr-3 mt-1 text-blue-500"></i>
+                        <div>
+                            <span class="font-semibold">功能开发中:</span>
+                            此处的积分增加规则为功能示例，自动化的奖励系统正在开发中，敬请期待！
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 积分充值弹窗 -->
+    <div id="recharge-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 animate-slide-up custom-scrollbar" style="max-height: 90vh; overflow-y: auto;">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-gray-900">积分充值</h3>
+                <button id="close-recharge-modal" class="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-full focus:outline-none">&times;</button>
+            </div>
+            <p class="text-sm text-gray-600 mb-6">选择一个充值包，为您的账户补充积分。</p>
+            
+            <div id="recharge-packages" class="grid grid-cols-2 gap-4 mb-6">
+                <div class="recharge-package border-2 border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500" data-points="1000" data-price="10"><div class="text-2xl font-bold text-blue-600">1,000</div><div class="text-sm text-gray-500 mb-2">积分</div><div class="font-semibold">¥ 10</div></div>
+                <div class="recharge-package border-2 border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 relative" data-points="5500" data-price="50"><span class="absolute -top-3 right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full">赠10%</span><div class="text-2xl font-bold text-blue-600">5,500</div><div class="text-sm text-gray-500 mb-2">积分</div><div class="font-semibold">¥ 50</div></div>
+                <div class="recharge-package border-2 border-blue-500 bg-blue-50 rounded-lg p-4 text-center cursor-pointer relative" data-points="12000" data-price="100"><span class="absolute -top-3 right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full">赠20%</span><div class="text-2xl font-bold text-blue-600">12,000</div><div class="text-sm text-gray-500 mb-2">积分</div><div class="font-semibold">¥ 100</div></div>
+                <div class="recharge-package border-2 border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 relative" data-points="65000" data-price="500"><span class="absolute -top-3 right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full">赠30%</span><div class="text-2xl font-bold text-blue-600">65,000</div><div class="text-sm text-gray-500 mb-2">积分</div><div class="font-semibold">¥ 500</div></div>
+            </div>
+
+            <div class="border-t pt-4">
+                 <div class="flex justify-between items-center mb-4">
+                    <span class="text-sm text-gray-600">支付金额</span>
+                    <span id="recharge-amount" class="text-xl font-bold text-red-600">¥ 100</span>
+                </div>
+                <button id="confirm-recharge" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-lg font-medium hover:from-green-600 hover:to-green-700 transition-all">确认支付</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript代码与原版本基本相同，只需要调整初始状态
+        let currentTenant = 'team';
+        let currentPlan = 'team';
+        let selectedUpgradePlan = '';
+        let companyName = '星辰科技团队';
+
+        // DOM 元素
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userDropdown = document.getElementById('user-dropdown');
+        const tenantBenefitsBtn = document.getElementById('tenant-benefits-btn');
+        const tenantBenefitsModal = document.getElementById('tenant-benefits-modal');
+        const closeBenefitsBtn = document.getElementById('close-benefits-btn');
+        
+        // Tab 切换
+        const currentPlanTab = document.getElementById('current-plan-tab');
+        const allPlansTab = document.getElementById('all-plans-tab');
+        const currentPlanContent = document.getElementById('current-plan-content');
+        const allPlansContent = document.getElementById('all-plans-content');
+        
+        // 升级按钮
+        const upgradeFromCurrentBtn = document.getElementById('upgrade-from-current');
+        const upgradeToEnterpriseBtn = document.getElementById('upgrade-to-enterprise');
+        
+        // 弹窗
+        const checkoutModal = document.getElementById('checkout-modal');
+        
+        // 新增续费流程相关元素
+        const renewBtn = document.getElementById('renew-subscription-btn');
+        const renewModal = document.getElementById('renew-modal');
+        const cancelRenewBtn = document.getElementById('cancel-renew');
+        const confirmRenewBtn = document.getElementById('confirm-renew');
+        const renewCycleBtns = document.querySelectorAll('.renew-cycle-btn');
+        const renewAmountEl = document.getElementById('renew-amount');
+
+        // 新增权益弹窗相关元素
+        const viewAllBenefitsBtn = document.getElementById('view-all-benefits-btn');
+        const allBenefitsModal = document.getElementById('all-benefits-modal');
+        const closeAllBenefitsModalBtn = document.getElementById('close-all-benefits-modal-btn');
+
+        // ==== 新增: 升级流程相关元素 ====
+        const upgradeCheckoutModal = document.getElementById('upgrade-checkout-modal');
+        const cancelUpgradeCheckoutBtn = document.getElementById('cancel-upgrade-checkout');
+        const confirmUpgradeCheckoutBtn = document.getElementById('confirm-upgrade-checkout');
+        const upgradeBillingCycleEl = document.getElementById('upgrade-billing-cycle');
+        const upgradePaymentAmountEl = document.getElementById('upgrade-payment-amount');
+        const processingModal = document.getElementById('processing-modal');
+        const upgradeSuccessModal = document.getElementById('upgrade-success-modal');
+        const goToEnterpriseViewBtn = document.getElementById('go-to-enterprise-view');
+
+        // ==== 新增: 积分弹窗相关元素 ====
+        const billingRulesBtn = document.getElementById('billing-rules-btn');
+        const billingRulesModal = document.getElementById('billing-rules-modal');
+        const closeRulesModal = document.getElementById('close-rules-modal');
+        const rechargeBtn = document.getElementById('recharge-btn');
+        const rechargeModal = document.getElementById('recharge-modal');
+        const closeRechargeModal = document.getElementById('close-recharge-modal');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentTenantDisplay();
+            setupEventListeners();
+        });
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 用户下拉菜单
+            userMenuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', function() {
+                userDropdown.classList.add('hidden');
+            });
+
+            // 租户权益按钮
+            tenantBenefitsBtn.addEventListener('click', function() {
+                tenantBenefitsModal.classList.remove('hidden');
+                userDropdown.classList.add('hidden');
+            });
+
+            // 关闭权益页面
+            closeBenefitsBtn.addEventListener('click', function() {
+                tenantBenefitsModal.classList.add('hidden');
+            });
+
+            // Tab 切换
+            currentPlanTab.addEventListener('click', function() {
+                switchTab('current');
+            });
+
+            allPlansTab.addEventListener('click', function() {
+                switchTab('all');
+            });
+
+            // 升级按钮 (团队版页面只有升级到企业版)
+            upgradeFromCurrentBtn.addEventListener('click', function() {
+                openCheckoutModal('enterprise');
+            });
+
+            upgradeToEnterpriseBtn.addEventListener('click', function() {
+                openCheckoutModal('enterprise');
+            });
+
+            // --- 新增：查看全部权益交互 ---
+            const showAllBenefitsModal = () => {
+                allBenefitsModal.classList.remove('hidden');
+                setTimeout(() => allBenefitsModal.querySelector('.transform').classList.remove('scale-95'), 10);
+            };
+
+            const hideAllBenefitsModal = () => {
+                allBenefitsModal.querySelector('.transform').classList.add('scale-95');
+                setTimeout(() => {
+                    allBenefitsModal.classList.add('hidden');
+                }, 200);
+            };
+
+            viewAllBenefitsBtn?.addEventListener('click', showAllBenefitsModal);
+            closeAllBenefitsModalBtn?.addEventListener('click', hideAllBenefitsModal);
+            allBenefitsModal?.addEventListener('click', (e) => {
+                if (e.target === allBenefitsModal) {
+                    hideAllBenefitsModal();
+                }
+            });
+
+            // --- 续费流程交互 ---
+            const showRenewModal = () => {
+                renewModal.classList.remove('hidden');
+                // Animate in
+                setTimeout(() => renewModal.querySelector('.transform').classList.remove('scale-95'), 10);
+            };
+
+            const hideRenewModal = () => {
+                renewModal.querySelector('.transform').classList.add('scale-95')
+                setTimeout(() => {
+                    renewModal.classList.add('hidden');
+                }, 200);
+            };
+
+            renewBtn?.addEventListener('click', showRenewModal);
+            cancelRenewBtn?.addEventListener('click', hideRenewModal);
+            confirmRenewBtn?.addEventListener('click', () => {
+                alert('正在处理续费...');
+                hideRenewModal();
+            });
+
+            renewCycleBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    renewCycleBtns.forEach(b => b.dataset.state = 'inactive');
+                    btn.dataset.state = 'active';
+                    renewAmountEl.textContent = `¥${btn.dataset.price}`;
+                });
+            });
+
+            // ==== 新增: 升级到企业版交互 ====
+            cancelUpgradeCheckoutBtn?.addEventListener('click', () => hideModal(upgradeCheckoutModal));
+
+            upgradeBillingCycleEl?.addEventListener('change', () => {
+                const selectedOption = upgradeBillingCycleEl.options[upgradeBillingCycleEl.selectedIndex];
+                upgradePaymentAmountEl.textContent = `¥${selectedOption.dataset.price}`;
+            });
+
+            confirmUpgradeCheckoutBtn?.addEventListener('click', () => {
+                hideModal(upgradeCheckoutModal);
+                showModal(processingModal);
+                setTimeout(() => {
+                    hideModal(processingModal);
+                    showModal(upgradeSuccessModal);
+                }, 2000);
+            });
+            
+            goToEnterpriseViewBtn?.addEventListener('click', () => {
+                // 实际项目中，这里可能是刷新页面或重新获取状态
+                // 为了演示，我们直接跳转到企业版页面
+                window.location.href = '企业版.html';
+            });
+
+            // ==== 新增: 积分相关弹窗交互 ====
+            billingRulesBtn?.addEventListener('click', () => showModal(billingRulesModal));
+            closeRulesModal?.addEventListener('click', () => hideModal(billingRulesModal));
+            billingRulesModal?.addEventListener('click', e => { if (e.target === billingRulesModal) hideModal(billingRulesModal); });
+
+            const rulesTabs = document.querySelectorAll('.rules-tab');
+            rulesTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    rulesTabs.forEach(t => t.classList.remove('text-blue-600', 'border-blue-600'));
+                    tab.classList.add('text-blue-600', 'border-blue-600');
+                    document.querySelectorAll('.rules-tab-content').forEach(c => c.classList.add('hidden'));
+                    document.getElementById(tab.dataset.tab + '-rules-content').classList.remove('hidden');
+                });
+            });
+
+            rechargeBtn?.addEventListener('click', () => showModal(rechargeModal));
+            closeRechargeModal?.addEventListener('click', () => hideModal(rechargeModal));
+            rechargeModal?.addEventListener('click', e => { if (e.target === rechargeModal) hideModal(rechargeModal); });
+            
+            const rechargePackages = document.querySelectorAll('.recharge-package');
+            rechargePackages.forEach(pkg => {
+                pkg.addEventListener('click', () => {
+                    rechargePackages.forEach(p => p.classList.remove('border-blue-500', 'bg-blue-50'));
+                    pkg.classList.add('border-blue-500', 'bg-blue-50');
+                    document.getElementById('recharge-amount').textContent = `¥ ${pkg.dataset.price}`;
+                });
+            });
+
+            document.getElementById('confirm-recharge')?.addEventListener('click', () => {
+                alert('正在处理充值...');
+                hideModal(rechargeModal);
+            });
+        }
+
+        // 更新当前租户显示
+        function updateCurrentTenantDisplay() {
+            const tenantNameElement = document.getElementById('current-tenant-name');
+            if (tenantNameElement) {
+                 tenantNameElement.textContent = companyName;
+            }
+        }
+
+        // Tab 切换
+        function switchTab(tab) {
+            if (tab === 'current') {
+                currentPlanTab.classList.add('tab-active');
+                allPlansTab.classList.remove('tab-active');
+                currentPlanContent.classList.remove('hidden');
+                allPlansContent.classList.add('hidden');
+            } else {
+                allPlansTab.classList.add('tab-active');
+                currentPlanTab.classList.remove('tab-active');
+                allPlansContent.classList.remove('hidden');
+                currentPlanContent.classList.add('hidden');
+            }
+        }
+
+        // 打开结算弹窗 (只处理企业版升级)
+        function openCheckoutModal(plan) {
+            if (plan !== 'enterprise') return;
+            selectedUpgradePlan = 'enterprise';
+            showModal(upgradeCheckoutModal);
+        }
+
+        // ==== 新增: 通用弹窗显示/隐藏函数 ====
+        function showModal(modal) {
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.querySelector('.transform')?.classList.remove('scale-95'), 10);
+        }
+
+        function hideModal(modal) {
+            if (!modal) return;
+            modal.querySelector('.transform')?.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+        
+        // (其余JS函数如支付处理、弹窗控制等与个人版相同，此处省略)
+    </script>
+</body>
+</html>

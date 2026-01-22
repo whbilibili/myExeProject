@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>权限管理</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 飞书设计系统 -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--spacing-6);
+      background: var(--bg-2);
+    }
+    
+    .page-description {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    /* 权限区域 */
+    .permission-section {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      box-shadow: var(--shadow-1);
+      margin-bottom: var(--spacing-6);
+      overflow: hidden;
+    }
+    
+    .section-header {
+      padding: var(--spacing-5) var(--spacing-6);
+      border-bottom: 1px solid var(--border-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .section-title {
+      font-size: var(--font-size-16);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .section-count {
+      font-size: var(--font-size-14);
+      color: var(--text-3);
+      font-weight: var(--font-weight-regular);
+    }
+    
+    .section-toolbar {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-4) var(--spacing-6);
+      border-bottom: 1px solid var(--border-2);
+      background: var(--fill-1);
+    }
+    
+    .section-content {
+      /* 表格内容 */
+    }
+    
+    /* 用户单元格 */
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    /* 空状态 */
+    .empty-state-container {
+      padding: var(--spacing-16) var(--spacing-6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .empty-illustration {
+      width: 120px;
+      height: 120px;
+      margin-bottom: var(--spacing-5);
+      opacity: 0.6;
+    }
+    
+    .empty-text {
+      font-size: var(--font-size-14);
+      color: var(--text-3);
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <div class="page-description">
+      管理租户的访问权限和成员授权
+    </div>
+    
+    <!-- 个人权限 -->
+    <div class="permission-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span>个人</span>
+          <span class="section-count">({{ permissions.length }})</span>
+        </div>
+      </div>
+      
+      <div class="section-toolbar">
+        <el-select v-model="filters.role" placeholder="全部角色" clearable style="width: 160px;">
+          <el-option label="全部角色" value="" />
+          <el-option label="所有者" value="所有者" />
+          <el-option label="管理员" value="管理员" />
+          <el-option label="空间创建员" value="空间创建员" />
+        </el-select>
+        
+        <el-input
+          v-model="searchKeyword"
+          placeholder="请输入用户名/邮箱/部门名称搜索"
+          clearable
+          style="flex: 1; max-width: 400px;"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        
+        <el-button type="primary" style="margin-left: auto;">
+          <el-icon><Plus /></el-icon>
+          用户
+        </el-button>
+      </div>
+      
+      <div class="section-content">
+        <el-table
+          :data="filteredPermissions"
+          style="width: 100%"
+        >
+          <el-table-column label="名称" min-width="200">
+            <template #default="{ row }">
+              <div class="user-cell">
+                <img :src="row.avatar" :alt="row.name" class="avatar" />
+                <span class="user-name">{{ row.name }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="角色" width="200">
+            <template #default="{ row }">
+              <el-select v-model="row.role" size="small" style="width: 140px;">
+                <el-option label="所有者" value="所有者" :disabled="true" />
+                <el-option label="管理员" value="管理员" />
+                <el-option label="空间创建员" value="空间创建员" />
+              </el-select>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="操作人" min-width="160">
+            <template #default="{ row }">
+              <div class="user-cell">
+                <img :src="row.operatorAvatar" :alt="row.operator" class="avatar avatar-small" />
+                <span>{{ row.operator }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="operateTime" label="操作时间" width="180" />
+          
+          <el-table-column label="操作" width="100" fixed="right">
+            <template #default="{ row }">
+              <el-button
+                link
+                type="danger"
+                size="small"
+                :disabled="row.role === '所有者'"
+                @click="handleRemovePermission(row)"
+              >
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <!-- 分页 -->
+        <div v-if="filteredPermissions.length > 0" style="padding: 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-2);">
+          <span style="color: var(--text-3); font-size: 13px;">
+            共 {{ filteredPermissions.length }} 条
+          </span>
+          <el-pagination
+            v-model:current-page="pagination.page"
+            :total="filteredPermissions.length"
+            :page-size="10"
+            layout="prev, pager, next"
+            small
+          />
+        </div>
+      </div>
+    </div>
+    
+    <!-- 部门权限 -->
+    <div class="permission-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span>部门</span>
+          <span class="section-count">(0)</span>
+        </div>
+      </div>
+      
+      <div class="section-content">
+        <div class="empty-state-container">
+          <!-- SVG 空状态插图 -->
+          <svg class="empty-illustration" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="80" fill="#F2F3F5"/>
+            <rect x="60" y="70" width="80" height="60" rx="4" fill="#E5E6EB"/>
+            <circle cx="100" cy="95" r="15" fill="#C9CDD4"/>
+            <path d="M75 125C75 115 85 115 100 115C115 115 125 115 125 125" stroke="#C9CDD4" stroke-width="3" fill="none"/>
+          </svg>
+          <div class="empty-text">暂无数据</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  
+  <script>
+    const { createApp, ref, computed } = Vue;
+    
+    const app = createApp({
+      setup() {
+        // 数据
+        const permissions = ref(MockData.permissions);
+        const searchKeyword = ref('');
+        const filters = ref({
+          role: '',
+        });
+        
+        // 分页
+        const pagination = ref({
+          page: 1,
+        });
+        
+        // 过滤后的权限
+        const filteredPermissions = computed(() => {
+          let data = [...permissions.value];
+          
+          // 角色筛选
+          if (filters.value.role) {
+            data = data.filter(p => p.role === filters.value.role);
+          }
+          
+          // 搜索
+          if (searchKeyword.value) {
+            const keyword = searchKeyword.value.toLowerCase();
+            data = data.filter(p =>
+              p.name.toLowerCase().includes(keyword)
+            );
+          }
+          
+          return data;
+        });
+        
+        // 方法
+        const handleRemovePermission = async (row) => {
+          if (row.role === '所有者') {
+            Utils.showWarning('无法删除所有者权限');
+            return;
+          }
+          
+          const confirmed = await Utils.confirmAction(
+            `确定要移除"${row.name}"的"${row.role}"权限吗？`,
+            '移除权限'
+          );
+          
+          if (confirmed) {
+            const index = permissions.value.findIndex(p => p.id === row.id);
+            if (index > -1) {
+              permissions.value.splice(index, 1);
+              Utils.showSuccess('权限已移除');
+            }
+          }
+        };
+        
+        return {
+          permissions,
+          searchKeyword,
+          filters,
+          pagination,
+          filteredPermissions,
+          handleRemovePermission,
+        };
+      },
+    });
+    
+    // 注册图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

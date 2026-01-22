@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>积分计费规则弹窗 - 交互示例</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+  <style>
+    /* 弹窗容器的默认状态：隐藏 */
+    #rules-modal-container {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+    }
+    /* 弹窗内容的默认状态：缩小 */
+    #rules-modal-content {
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+    }
+
+    /* 激活状态：显示弹窗 */
+    #rules-modal-container.active {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.3s ease;
+    }
+    /* 激活状态：弹窗内容放大到正常尺寸 */
+    #rules-modal-container.active #rules-modal-content {
+      transform: scale(1);
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+
+  <!-- 1. 触发按钮 -->
+  <button id="open-rules-btn" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:bg-blue-700 transition">
+    查看积分计费规则
+  </button>
+
+  <!-- 2. 弹窗HTML结构 (默认隐藏) -->
+  <div id="rules-modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+
+    <!-- 弹窗主体 -->
+    <div id="rules-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-7xl h-[85vh] flex flex-col">
+      
+      <!-- 弹窗头部 -->
+      <header class="flex items-center justify-between p-6 border-b shrink-0">
+        <h2 class="text-xl font-semibold text-gray-900">积分计费规则</h2>
+        <button id="close-rules-btn" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times fa-lg"></i>
+        </button>
+      </header>
+
+      <!-- 主内容区 -->
+      <main class="flex-1 flex overflow-hidden">
+        <!-- 左侧一级导航 -->
+        <aside class="w-48 border-r p-4 shrink-0">
+          <nav class="flex flex-col gap-2">
+            <a href="#" class="px-4 py-2 rounded-md bg-blue-50 text-blue-600 font-medium">
+              <i class="fas fa-arrow-down-wide-short w-5 mr-2"></i> 消耗规则
+            </a>
+            <a href="#" class="px-4 py-2 rounded-md text-gray-600 hover:bg-gray-50">
+              <i class="fas fa-arrow-up-wide-short w-5 mr-2"></i> 增加规则
+            </a>
+          </nav>
+        </aside>
+
+        <!-- 右侧内容区 (可滚动) -->
+        <div class="flex-1 flex flex-col overflow-y-auto p-8">
+          <!-- ... 此处填充您的内容，例如表格和说明 ... -->
+          <div class="border-b mb-6">
+            <nav class="flex gap-6 -mb-px">
+              <button class="py-3 px-1 border-b-2 border-blue-600 text-blue-600 font-medium">大语言模型</button>
+              <button class="py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">知识库容量</button>
+            </nav>
+          </div>
+          <p class="text-gray-600">这里是计费规则的详细内容...</p>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+
+  <!-- 3. JavaScript 交互逻辑 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const openBtn = document.getElementById('open-rules-btn');
+      const closeBtn = document.getElementById('close-rules-btn');
+      const modalContainer = document.getElementById('rules-modal-container');
+      const modalContent = document.getElementById('rules-modal-content');
+
+      // --- 函数：打开弹窗 ---
+      const openModal = () => {
+        modalContainer.classList.add('active');
+      };
+
+      // --- 函数：关闭弹窗 ---
+      const closeModal = () => {
+        modalContainer.classList.remove('active');
+      };
+
+      // --- 绑定事件 ---
+      // 点击“打开”按钮
+      openBtn.addEventListener('click', openModal);
+
+      // 点击“关闭”按钮
+      closeBtn.addEventListener('click', closeModal);
+
+      // 点击遮罩层关闭
+      modalContainer.addEventListener('click', (event) => {
+        // 确保点击的是遮罩本身，而不是弹窗内容
+        if (event.target === modalContainer) {
+          closeModal();
+        }
+      });
+
+      // 按 Esc 键关闭
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modalContainer.classList.contains('active')) {
+          closeModal();
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

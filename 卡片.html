@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI测试智能体</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    background-color: #f7f8fa; /* 根据图片背景色估算 */
+    margin: 0;
+    padding: 20px;
+    color: #333;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .header h1 {
+    font-size: 28px; /* 根据图片估算 */
+    color: #1f2329;
+    margin-bottom: 20px;
+  }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    border-radius: 25px; /* 根据图片估算 */
+    padding: 8px 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    max-width: 600px; /* 根据图片估算 */
+    margin: 0 auto;
+  }
+
+  .search-bar input[type="text"] {
+    border: none;
+    outline: none;
+    font-size: 15px;
+    color: #888; /* 根据图片估算 */
+    flex-grow: 1;
+    margin-left: 10px;
+    background-color: transparent;
+  }
+
+  .search-bar .search-icon {
+    color: #ccc; /* 根据图片估算 */
+    font-size: 18px;
+  }
+
+  .tabs-and-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e8e8e8; /* 根据图片估算 */
+  }
+
+  .tabs nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+  }
+
+  .tabs nav li {
+    margin-right: 25px; /* 根据图片估算 */
+    font-size: 15px;
+    color: #555;
+    cursor: pointer;
+    padding-bottom: 10px;
+    position: relative;
+  }
+
+  .tabs nav li.active {
+    color: #2d70f6; /* 根据图片估算主题色 */
+    font-weight: bold;
+  }
+
+  .tabs nav li.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; /* 修正，使其在边框之上 */
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #2d70f6;
+  }
+
+
+  .filters {
+    display: flex;
+    align-items: center;
+  }
+
+  .filters .filter-btn {
+    font-size: 14px;
+    color: #555;
+    background-color: #fff; /* 根据图片估算 */
+    border: 1px solid #e0e0e0; /* 根据图片估算 */
+    padding: 6px 12px;
+    border-radius: 15px; /* 根据图片估算 */
+    margin-left: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+
+  .filters .filter-btn .arrow-down {
+    margin-left: 5px;
+    font-size: 12px;
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* 根据图片估算卡片宽度 */
+    gap: 20px;
+  }
+
+  .card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 18px; /* 根据图片估算 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 130px; /* 根据图片估算 */
+  }
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 8px; /* 根据图片估算 */
+  }
+
+  .card-icon {
+    width: 42px; /* 根据图片估算 */
+    height: 42px; /* 根据图片估算 */
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+    font-size: 20px; /* 图标大小 */
+  }
+  /* 根据图片大致颜色 */
+  .card-icon.bg-orange { background-color: #fff0e0; color: #ff9a2e; }
+  .card-icon.bg-blue { background-color: #e6f0ff; color: #3b82f6; }
+  .card-icon.bg-purple { background-color: #f3e8ff; color: #8b5cf6; }
+  .card-icon.bg-green { background-color: #e6f7f0; color: #22c55e; }
+  .card-icon.bg-red { background-color: #fff0f0; color: #ef4444; }
+  .card-icon.bg-teal { background-color: #e0f7fa; color: #14b8a6; }
+
+
+  .card-title-section {
+    flex-grow: 1;
+  }
+
+  .card-title {
+    font-size: 16px; /* 根据图片估算 */
+    font-weight: bold;
+    color: #222;
+    margin: 0 0 3px 0;
+  }
+
+  .card-description {
+    font-size: 13px; /* 根据图片估算 */
+    color: #666;
+    line-height: 1.5;
+    margin: 0;
+    /* 多行文本省略 */
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* 显示两行 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 39px; /* 13px * 1.5 * 2 */
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto; /* 确保页脚在卡片底部 */
+    padding-top: 10px; /* 根据图片估算 */
+  }
+
+  .card-author-info {
+    display: flex;
+    align-items: center;
+  }
+
+  .card-author-avatar {
+    width: 20px; /* 根据图片估算 */
+    height: 20px; /* 根据图片估算 */
+    border-radius: 50%;
+    margin-right: 6px;
+    background-color: #ccc; /* 占位符颜色 */
+  }
+
+  .card-author-name {
+    font-size: 12px; /* 根据图片估算 */
+    color: #888;
+  }
+
+  .card-timestamp {
+    font-size: 12px; /* 根据图片估算 */
+    color: #aaa;
+  }
+
+  /* 简单占位符图标 */
+  .icon-search::before { content: '🔍'; }
+  .icon-pen::before { content: '📝'; }
+  .icon-image::before { content: '🖼️'; }
+  .icon-wand::before { content: '✨'; }
+  .icon-flow::before { content: '📊'; }
+  .icon-python::before { content: '🐍'; }
+  .icon-code::before { content: '</>'; }
+  .icon-dialog::before { content: '💬'; }
+  .icon-service::before { content: '⚙️'; }
+  .icon-arrow-down::before { content: '▼'; }
+
+</style>
+</head>
+<body>
+
+  <div class="container">
+    <header class="header">
+      <h1>发现适合你的AI测试智能体</h1>
+      <div class="search-bar">
+        <span class="search-icon icon-search"></span>
+        <input type="text" placeholder="请输入名称搜索">
+      </div>
+    </header>
+
+    <div class="tabs-and-filters">
+      <div class="tabs">
+        <nav>
+          <ul>
+            <li class="active">精选</li>
+            <li>测试工具</li>
+            <li>研发工具</li>
+            <li>项目管理</li>
+            <li>数据分析</li>
+            <li>问答助手</li>
+            <li>办公效率</li>
+            <li>实用工具</li>
+          </ul>
+        </nav>
+      </div>
+      <div class="filters">
+        <button class="filter-btn">
+          全部 <span class="arrow-down icon-arrow-down"></span>
+        </button>
+        <button class="filter-btn">
+          时间最新 <span class="arrow-down icon-arrow-down"></span>
+        </button>
+      </div>
+    </div>
+
+    <main class="content-grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-orange icon-pen"></div>
+          <div class="card-title-section">
+            <div class="card-title">翻译助理</div>
+            <div class="card-description">可以准确地将内容翻译成不同的目标语言</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJESURBVFiFvddPiM1RGMbxz715G5MkNlYyQkTKwkYSr91VNooFEVEWjUXZWFjYyKJYWCJZJNlkYyNl4TPlmZPFfB4mXvFlLt7nzNz3ndNzT//cn7/Pc/7neR7oA3/iSaM0TmMBNvANH+LqCj2M4XkeIX4HLuMvPMQwvMX5fXAU3+JRHMX5fRzF+XoMxXl9FzSgAUtxHi8xOVuBKYxibAfHSq7r8A5v8Sh24XQWNxN4CVvxEms5EwF0tS6cq2T6Jp6C09jE+HUEhp2cNt+E5/AIp3Ecfk0AupvC+CjexVf1i6LdM8xV0GRyFVe4j9G4iW8Yk67jYR7tBE1H71gB7zLuoL9yWZNS4Mv4HmEcjXcsQRF2YBjq0QWstRPgLP7EkHCLO7iT++CgeD+qQlWMO406YDsEdSlWFbgKk8tYEdYNPEc7MA0xOExhCcDXuAHzsBaL24AONWk2r0K5j8F/p4P8WIdQ3JcG3tVCnC8xNhmDbhA6y1mYk45xGCtxH8dxGCtxbAbB92sEdZm8E+p0LcNt2cBEfwUvceh8FkL1nJ8EeV5QpQJ67sV30JrxwE9t2P0KxPcSxrMzxpq7MboN+4mEesE77F2FqJ7KMMTmAM1jE9r25oI9ANnEy9yDNo/xXv3Mfmwdz55gR7oG7jI9wE8tBN8VvE8VvEV7zJ++ZjAH3xI8zY0xP07xK3QdG4T3oPKe4DvyF60wYcAjXUX0HaWwjA+xfR2/Ee32HAAAAABJRU5ErkJggg==" alt="陶春蕾" class="card-author-avatar">
+            <span class="card-author-name">陶春蕾</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 15:09</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-blue icon-python"></div>
+          <div class="card-title-section">
+            <div class="card-title">Python</div>
+            <div class="card-description">Python及其相关技术的全面专家，擅长编写...</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJESURBVFiFvddPiM1RGMbxz715G5MkNlYyQkTKwkYSr91VNooFEVEWjUXZWFjYyKJYWCJZJNlkYyNl4TPlmZPFfB4mXvFlLt7nzNz3ndNzT//cn7/Pc/7neR7oA3/iSaM0TmMBNvANH+LqCj2M4XkeIX4HLuMvPMQwvMX5fXAU3+JRHMX5fRzF+XoMxXl9FzSgAUtxHi8xOVuBKYxibAfHSq7r8A5v8Sh24XQWNxN4CVvxEms5EwF0tS6cq2T6Jp6C09jE+HUEhp2cNt+E5/AIp3Ecfk0AupvC+CjexVf1i6LdM8xV0GRyFVe4j9G4iW8Yk67jYR7tBE1H71gB7zLuoL9yWZNS4Mv4HmEcjXcsQRF2YBjq0QWstRPgLP7EkHCLO7iT++CgeD+qQlWMO406YDsEdSlWFbgKk8tYEdYNPEc7MA0xOExhCcDXuAHzsBaL24AONWk2r0K5j8F/p4P8WIdQ3JcG3tVCnC8xNhmDbhA6y1mYk45xGCtxH8dxGCtxbAbB92sEdZm8E+p0LcNt2cBEfwUvceh8FkL1nJ8EeV5QpQJ67sV30JrxwE9t2P0KxPcSxrMzxpq7MboN+4mEesE77F2FqJ7KMMTmAM1jE9r25oI9ANnEy9yDNo/xXv3Mfmwdz55gR7oG7jI9wE8tBN8VvE8VvEV7zJ++ZjAH3xI8zY0xP07xK3QdG4T3oPKe4DvyF60wYcAjXUX0HaWwjA+xfR2/Ee32HAAAAABJRU5ErkJggg==" alt="陶春蕾" class="card-author-avatar">
+            <span class="card-author-name">陶春蕾</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 15:08</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-blue icon-dialog"></div> <div class="card-title-section">
+            <div class="card-title">DB信息分析专家</div>
+            <div class="card-description">DB信息分析</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFrSURBVFiFzZVNKwRhFIa/MTOhpJQFoVApIZGUkhI2goWU4pcgISyEkLSVoqCUkY3iJ2DhK1MQKUXi52VmPMt7X+dm19yKDzNz7jnfPfe8zJkJ/mMjQ9hADubAGZgCs3qT8Af0wFuwHrxAVyDytfUAXWAcXAFFIFW4G/ge2AALwF6QKg4DdcATcARcAw8l6G2BNuAOkBJnC9B36H6sE8AfUAXGwB6QDqcm1p5lZwVOgDtwF3gCKoA54BL4Av4CKeBW8q0rDgLOwAsQAXwTglsAR8CpmZw1/wZ+A18BOsbMvIqWzcnAARgA+hCUJflvHRnL2G0VXACbwCtwV04rIHPgLTCzLqj5B/Lp3q+xWEMh8XqM9QWstMMrLRe9jH4Z0G0eZ0LzBwJk+hXgCPgBPDfBPbfAP8LwJbA2LzWc8k2kQqkN7V6wDlQh8uC+0Go+s0s7VdQp1WnLhD6X+0F/jH5AbNGBnEcbPQFAAAAAElFTkSuQmCC" alt="林成林" class="card-author-avatar">
+            <span class="card-author-name">林成林</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 15:07</span>
+        </div>
+      </div>
+
+       <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-blue icon-image"></div>
+          <div class="card-title-section">
+            <div class="card-title">图片理解</div>
+            <div class="card-description">一个能够分析和理解图片内容的智能体，可以识...</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+             <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJESURBVFiFvddPiM1RGMbxz715G5MkNlYyQkTKwkYSr91VNooFEVEWjUXZWFjYyKJYWCJZJNlkYyNl4TPlmZPFfB4mXvFlLt7nzNz3ndNzT//cn7/Pc/7neR7oA3/iSaM0TmMBNvANH+LqCj2M4XkeIX4HLuMvPMQwvMX5fXAU3+JRHMX5fRzF+XoMxXl9FzSgAUtxHi8xOVuBKYxibAfHSq7r8A5v8Sh24XQWNxN4CVvxEms5EwF0tS6cq2T6Jp6C09jE+HUEhp2cNt+E5/AIp3Ecfk0AupvC+CjexVf1i6LdM8xV0GRyFVe4j9G4iW8Yk67jYR7tBE1H71gB7zLuoL9yWZNS4Mv4HmEcjXcsQRF2YBjq0QWstRPgLP7EkHCLO7iT++CgeD+qQlWMO406YDsEdSlWFbgKk8tYEdYNPEc7MA0xOExhCcDXuAHzsBaL24AONWk2r0K5j8F/p4P8WIdQ3JcG3tVCnC8xNhmDbhA6y1mYk45xGCtxH8dxGCtxbAbB92sEdZm8E+p0LcNt2cBEfwUvceh8FkL1nJ8EeV5QpQJ67sV30JrxwE9t2P0KxPcSxrMzxpq7MboN+4mEesE77F2FqJ7KMMTmAM1jE9r25oI9ANnEy9yDNo/xXv3Mfmwdz55gR7oG7jI9wE8tBN8VvE8VvEV7zJ++ZjAH3xI8zY0xP07xK3QdG4T3oPKe4DvyF60wYcAjXUX0HaWwjA+xfR2/Ee32HAAAAABJRU5ErkJggg==" alt="陶春蕾" class="card-author-avatar">
+            <span class="card-author-name">陶春蕾</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 15:07</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-orange icon-wand"></div>
+          <div class="card-title-section">
+            <div class="card-title">需求大师</div>
+            <div class="card-description">一个能高效生成产品经理需求文档的智能体，...</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJESURBVFiFvddPiM1RGMbxz715G5MkNlYyQkTKwkYSr91VNooFEVEWjUXZWFjYyKJYWCJZJNlkYyNl4TPlmZPFfB4mXvFlLt7nzNz3ndNzT//cn7/Pc/7neR7oA3/iSaM0TmMBNvANH+LqCj2M4XkeIX4HLuMvPMQwvMX5fXAU3+JRHMX5fRzF+XoMxXl9FzSgAUtxHi8xOVuBKYxibAfHSq7r8A5v8Sh24XQWNxN4CVvxEms5EwF0tS6cq2T6Jp6C09jE+HUEhp2cNt+E5/AIp3Ecfk0AupvC+CjexVf1i6LdM8xV0GRyFVe4j9G4iW8Yk67jYR7tBE1H71gB7zLuoL9yWZNS4Mv4HmEcjXcsQRF2YBjq0QWstRPgLP7EkHCLO7iT++CgeD+qQlWMO406YDsEdSlWFbgKk8tYEdYNPEc7MA0xOExhCcDXuAHzsBaL24AONWk2r0K5j8F/p4P8WIdQ3JcG3tVCnC8xNhmDbhA6y1mYk45xGCtxH8dxGCtxbAbB92sEdZm8E+p0LcNt2cBEfwUvceh8FkL1nJ8EeV5QpQJ67sV30JrxwE9t2P0KxPcSxrMzxpq7MboN+4mEesE77F2FqJ7KMMTmAM1jE9r25oI9ANnEy9yDNo/xXv3Mfmwdz55gR7oG7jI9wE8tBN8VvE8VvEV7zJ++ZjAH3xI8zY0xP07xK3QdG4T3oPKe4DvyF60wYcAjXUX0HaWwjA+xfR2/Ee32HAAAAABJRU5ErkJggg==" alt="陶春蕾" class="card-author-avatar">
+            <span class="card-author-name">陶春蕾</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 15:04</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-red icon-flow"></div> <div class="card-title-section">
+            <div class="card-title">流程图生成大师</div>
+            <div class="card-description">一个能够根据用户描述生成流程图的智能体</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJESURBVFiFvddPiM1RGMbxz715G5MkNlYyQkTKwkYSr91VNooFEVEWjUXZWFjYyKJYWCJZJNlkYyNl4TPlmZPFfB4mXvFlLt7nzNz3ndNzT//cn7/Pc/7neR7oA3/iSaM0TmMBNvANH+LqCj2M4XkeIX4HLuMvPMQwvMX5fXAU3+JRHMX5fRzF+XoMxXl9FzSgAUtxHi8xOVuBKYxibAfHSq7r8A5v8Sh24XQWNxN4CVvxEms5EwF0tS6cq2T6Jp6C09jE+HUEhp2cNt+E5/AIp3Ecfk0AupvC+CjexVf1i6LdM8xV0GRyFVe4j9G4iW8Yk67jYR7tBE1H71gB7zLuoL9yWZNS4Mv4HmEcjXcsQRF2YBjq0QWstRPgLP7EkHCLO7iT++CgeD+qQlWMO406YDsEdSlWFbgKk8tYEdYNPEc7MA0xOExhCcDXuAHzsBaL24AONWk2r0K5j8F/p4P8WIdQ3JcG3tVCnC8xNhmDbhA6y1mYk45xGCtxH8dxGCtxbAbB92sEdZm8E+p0LcNt2cBEfwUvceh8FkL1nJ8EeV5QpQJ67sV30JrxwE9t2P0KxPcSxrMzxpq7MboN+4mEesE77F2FqJ7KMMTmAM1jE9r25oI9ANnEy9yDNo/xXv3Mfmwdz55gR7oG7jI9wE8tBN8VvE8VvEV7zJ++ZjAH3xI8zY0xP07xK3QdG4T3oPKe4DvyF60wYcAjXUX0HaWwjA+xfR2/Ee32HAAAAABJRU5ErkJggg==" alt="陶春蕾" class="card-author-avatar">
+            <span class="card-author-name">陶春蕾</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 14:55</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-purple icon-python"></div>
+          <div class="card-title-section">
+            <div class="card-title">Python 助手</div>
+            <div class="card-description">Python助手是一款强大的智能工具，能够为用...</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJESURBVFiFvddPiM1RGMbxz715G5MkNlYyQkTKwkYSr91VNooFEVEWjUXZWFjYyKJYWCJZJNlkYyNl4TPlmZPFfB4mXvFlLt7nzNz3ndNzT//cn7/Pc/7neR7oA3/iSaM0TmMBNvANH+LqCj2M4XkeIX4HLuMvPMQwvMX5fXAU3+JRHMX5fRzF+XoMxXl9FzSgAUtxHi8xOVuBKYxibAfHSq7r8A5v8Sh24XQWNxN4CVvxEms5EwF0tS6cq2T6Jp6C09jE+HUEhp2cNt+E5/AIp3Ecfk0AupvC+CjexVf1i6LdM8xV0GRyFVe4j9G4iW8Yk67jYR7tBE1H71gB7zLuoL9yWZNS4Mv4HmEcjXcsQRF2YBjq0QWstRPgLP7EkHCLO7iT++CgeD+qQlWMO406YDsEdSlWFbgKk8tYEdYNPEc7MA0xOExhCcDXuAHzsBaL24AONWk2r0K5j8F/p4P8WIdQ3JcG3tVCnC8xNhmDbhA6y1mYk45xGCtxH8dxGCtxbAbB92sEdZm8E+p0LcNt2cBEfwUvceh8FkL1nJ8EeV5QpQJ67sV30JrxwE9t2P0KxPcSxrMzxpq7MboN+4mEesE77F2FqJ7KMMTmAM1jE9r25oI9ANnEy9yDNo/xXv3Mfmwdz55gR7oG7jI9wE8tBN8VvE8VvEV7zJ++ZjAH3xI8zY0xP07xK3QdG4T3oPKe4DvyF60wYcAjXUX0HaWwjA+xfR2/Ee32HAAAAABJRU5ErkJggg==" alt="陶春蕾" class="card-author-avatar">
+            <span class="card-author-name">陶春蕾</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 14:53</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-green icon-wand"></div> <div class="card-title-section">
+            <div class="card-title">Prompt大师</div>
+            <div class="card-description">欢迎使用Prompt提示词生成助手，我会根据你...</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAIjSURBVFiFzZdtSQLBFMb/O7O7Q9jO7izs7g7SSxEEUfSFl0QCqYAIqSRKCSsEFZFRRBRSFhFRhEhhLCFRpERBFj8GkG90d/+9nZnfZuHEwzsz/3zzTjLzhgH/2LAcF2Ich8AIeAWPQKOq1H4MvAePQNLkSV+A+WdGlEAWPAfLwDtQY7DqjQazcAYM0iJ20A5MCp8fAYfAT5BmrAU/wbXgMVgEVsA7cBJ8Bv6C29bXbE3gJdgF7gBjwBbwCjCrDmwF3gRj0JgH8Lp1A/gS3AePwY/AWPAHRD6dAVsXgZ/AfdAHLDkU/AVeAvs0tzyfn4FPYI5KOJgKScJ6zZoNTCsgX9kXwEtgN+gE24Yfwp/AHTBegzkXATcg0WjYv8qK4DvwJfgMdgL/gDHgDdgAfgBPg2vwPXiBvA7uhw64CDgBlgGvwAswDvwFLDAcgwXwG0JALfBafAnrwBkwBUzQyv5eAP8AvRkugyeB/MAu6AvBwJ5AFrALfAz6gpcJwAPwHLgEHl+AzMAs6BIuX2YO+ImXQBZwzNSfAP8CE3AmTAA+AHdAMfBJHADzhsy7LgT/A4aCWyRqwDPwA4zT+r7/BKaAmdBfB3eAy6A+3C12GkAF+A1OB88A9cBfECh8c+Jd0BKwQkPm18YlsCJ3A36AlGA7kUSyLzr7LdAd3sT63sL7Qct+x5cA7fweOAbOArwGj0A6/AIr8o+94YGyXEAAAAASUVORK5CYII=" alt="李福建" class="card-author-avatar">
+            <span class="card-author-name">李福建</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 14:53</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-green icon-dialog"></div> <div class="card-title-section">
+            <div class="card-title">智能体开发平台问答助手</div>
+            <div class="card-description">智能体开发平台知识问答小助手</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+             <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJESURBVFiFvddPiM1RGMbxz715G5MkNlYyQkTKwkYSr91VNooFEVEWjUXZWFjYyKJYWCJZJNlkYyNl4TPlmZPFfB4mXvFlLt7nzNz3ndNzT//cn7/Pc/7neR7oA3/iSaM0TmMBNvANH+LqCj2M4XkeIX4HLuMvPMQwvMX5fXAU3+JRHMX5fRzF+XoMxXl9FzSgAUtxHi8xOVuBKYxibAfHSq7r8A5v8Sh24XQWNxN4CVvxEms5EwF0tS6cq2T6Jp6C09jE+HUEhp2cNt+E5/AIp3Ecfk0AupvC+CjexVf1i6LdM8xV0GRyFVe4j9G4iW8Yk67jYR7tBE1H71gB7zLuoL9yWZNS4Mv4HmEcjXcsQRF2YBjq0QWstRPgLP7EkHCLO7iT++CgeD+qQlWMO406YDsEdSlWFbgKk8tYEdYNPEc7MA0xOExhCcDXuAHzsBaL24AONWk2r0K5j8F/p4P8WIdQ3JcG3tVCnC8xNhmDbhA6y1mYk45xGCtxH8dxGCtxbAbB92sEdZm8E+p0LcNt2cBEfwUvceh8FkL1nJ8EeV5QpQJ67sV30JrxwE9t2P0KxPcSxrMzxpq7MboN+4mEesE77F2FqJ7KMMTmAM1jE9r25oI9ANnEy9yDNo/xXv3Mfmwdz55gR7oG7jI9wE8tBN8VvE8VvEV7zJ++ZjAH3xI8zY0xP07xK3QdG4T3oPKe4DvyF60wYcAjXUX0HaWwjA+xfR2/Ee32HAAAAABJRU5ErkJggg==" alt="陶春蕾" class="card-author-avatar">
+            <span class="card-author-name">陶春蕾</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 14:52</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-teal icon-code"></div>
+          <div class="card-title-section">
+            <div class="card-title">web 代码专家</div>
+            <div class="card-description">一个精通 web 代码的智能体，能为开发提供...</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+             <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJESURBVFiFvddPiM1RGMbxz715G5MkNlYyQkTKwkYSr91VNooFEVEWjUXZWFjYyKJYWCJZJNlkYyNl4TPlmZPFfB4mXvFlLt7nzNz3ndNzT//cn7/Pc/7neR7oA3/iSaM0TmMBNvANH+LqCj2M4XkeIX4HLuMvPMQwvMX5fXAU3+JRHMX5fRzF+XoMxXl9FzSgAUtxHi8xOVuBKYxibAfHSq7r8A5v8Sh24XQWNxN4CVvxEms5EwF0tS6cq2T6Jp6C09jE+HUEhp2cNt+E5/AIp3Ecfk0AupvC+CjexVf1i6LdM8xV0GRyFVe4j9G4iW8Yk67jYR7tBE1H71gB7zLuoL9yWZNS4Mv4HmEcjXcsQRF2YBjq0QWstRPgLP7EkHCLO7iT++CgeD+qQlWMO406YDsEdSlWFbgKk8tYEdYNPEc7MA0xOExhCcDXuAHzsBaL24AONWk2r0K5j8F/p4P8WIdQ3JcG3tVCnC8xNhmDbhA6y1mYk45xGCtxH8dxGCtxbAbB92sEdZm8E+p0LcNt2cBEfwUvceh8FkL1nJ8EeV5QpQJ67sV30JrxwE9t2P0KxPcSxrMzxpq7MboN+4mEesE77F2FqJ7KMMTmAM1jE9r25oI9ANnEy9yDNo/xXv3Mfmwdz55gR7oG7jI9wE8tBN8VvE8VvEV7zJ++ZjAH3xI8zY0xP07xK3QdG4T3oPKe4DvyF60wYcAjXUX0HaWwjA+xfR2/Ee32HAAAAABJRU5ErkJggg==" alt="陶春蕾" class="card-author-avatar">
+            <span class="card-author-name">陶春蕾</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 14:48</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-blue icon-python"></div>
+          <div class="card-title-section">
+            <div class="card-title">Python</div>
+            <div class="card-description">Python助手是一款强大的智能工具，旨在成为...</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJESURBVFiFvddPiM1RGMbxz715G5MkNlYyQkTKwkYSr91VNooFEVEWjUXZWFjYyKJYWCJZJNlkYyNl4TPlmZPFfB4mXvFlLt7nzNz3ndNzT//cn7/Pc/7neR7oA3/iSaM0TmMBNvANH+LqCj2M4XkeIX4HLuMvPMQwvMX5fXAU3+JRHMX5fRzF+XoMxXl9FzSgAUtxHi8xOVuBKYxibAfHSq7r8A5v8Sh24XQWNxN4CVvxEms5EwF0tS6cq2T6Jp6C09jE+HUEhp2cNt+E5/AIp3Ecfk0AupvC+CjexVf1i6LdM8xV0GRyFVe4j9G4iW8Yk67jYR7tBE1H71gB7zLuoL9yWZNS4Mv4HmEcjXcsQRF2YBjq0QWstRPgLP7EkHCLO7iT++CgeD+qQlWMO406YDsEdSlWFbgKk8tYEdYNPEc7MA0xOExhCcDXuAHzsBaL24AONWk2r0K5j8F/p4P8WIdQ3JcG3tVCnC8xNhmDbhA6y1mYk45xGCtxH8dxGCtxbAbB92sEdZm8E+p0LcNt2cBEfwUvceh8FkL1nJ8EeV5QpQJ67sV30JrxwE9t2P0KxPcSxrMzxpq7MboN+4mEesE77F2FqJ7KMMTmAM1jE9r25oI9ANnEy9yDNo/xXv3Mfmwdz55gR7oG7jI9wE8tBN8VvE8VvEV7zJ++ZjAH3xI8zY0xP07xK3QdG4T3oPKe4DvyF60wYcAjXUX0HaWwjA+xfR2/Ee32HAAAAABJRU5ErkJggg==" alt="陶春蕾" class="card-author-avatar">
+            <span class="card-author-name">陶春蕾</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 14:49</span> </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon bg-teal icon-service"></div> <div class="card-title-section">
+            <div class="card-title">FST平台智能客服</div>
+            <div class="card-description">FST平台智能客服是一款强大的智能工具，能够为F...</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="card-author-info">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAIySURBVFiFzZdtSQLBFMb/O7O7Q9jO7izs7g7SSxEEUfSFl0QCqYAIqSRKCSsEFZFRRBRSFhFRhEhhLCFRpERBFj8GkG90d/+9nZnfZuHEwzsz/3zzTjLzhgH/2LAcF2Ich8AIeAWPQKOq1H4MvAePQNLkSV+A+WdGlEAWPAfLwDtQY7DqjQazcAYM0iJ20A5MCp8fAYfAT5BmrAU/wbXgMVgEVsA7cBJ8Bv6C29bXbE3gJdgF7gBjwBbwCjCrDmwF3gRj0JgH8Lp1A/gS3AePwY/AWPAHRD6dAVsXgZ/AfdAHLDkU/AVeAvs0tzyfn4FPYI5KOJgKScJ6zZoNTCsgX9kXwEtgN+gE24Yfwp/AHTBegzkXATcg0WjYv8qK4DvwJfgMdgL/gDHgDdgAfgBPg2vwPXiBvA7uhw64CDgBlgGvwAswDvwFLDAcgwXwG0JALfBafAnrwBkwBUzQyv5eAP8AvRkugyeB/MAu6AvBwJ5AFrALfAz6gpcJwAPwHLgEHl+AzMAs6BIuX2YO+ImXQBZwzNSfAP8CE3AmTAA+AHdAMfBJHADzhsy7LgT/A4aCWyRqwDPwA4zT+r7/BKaAmdBfB3eAy6A+3C12GkAF+A1OB88A9cBfECh8c+Jd0BKwQkPm18YlsCJ3A36AlGA7kUSyLzr7LdAd3sT63sL7Qct+x5cA7fweOAbOArwGj0A6/AIr8o+94YGyXEAAAAASUVORK5CYII=" alt="tsubo108" class="card-author-avatar"> <span class="card-author-name">tsubo108</span>
+          </div>
+          <span class="card-timestamp">2025.04.18 14:48</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+<script>
+  // 简单的Tab切换效果 (仅演示，无实际内容加载)
+  const tabs = document.querySelectorAll('.tabs nav li');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(item => item.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

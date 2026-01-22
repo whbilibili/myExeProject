@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>额度用量概览 – Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome 用于图标演示 -->
+  <link  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#1C2DCE;
+      --neutral-900:#111827;
+      --neutral-500:#6B7280;
+      --neutral-200:#E5E7EB;
+    }
+    html{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif;}
+
+    /* ——卡片—— */
+    .card{
+      background:#fff;
+      border:1px solid var(--neutral-200);
+      border-radius:12px;
+      box-shadow:0 1px 2px rgba(16,24,40,.05),0 2px 4px rgba(27,39,60,.06);
+    }
+
+    /* ——进度条—— */
+    .progress-wrap{height:8px;border-radius:4px;overflow:hidden;background:#E4E7EC;}
+    .progress-inner{height:100%;}
+
+    /* ——文字层级—— */
+    .label{color:var(--neutral-500);font-size:.875rem;}
+    .num{
+      color:var(--neutral-900);
+      font-size:1.125rem;           /* text-lg */
+      font-weight:600;
+      font-variant-numeric:tabular-nums;
+    }
+
+    /* ——按钮—— */
+    .btn-primary{
+      background:var(--primary);
+      color:#fff;
+      transition:background .2s;
+    }
+    .btn-primary:hover{background:#1627BF;}
+
+    .btn-outline{
+      border:1px solid var(--neutral-200);
+      background:#fff;
+      color:#475467;
+      transition:background .15s;
+    }
+    .btn-outline:hover{background:#F9FAFB;}
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center py-10">
+
+  <!-- 模态 / 页面主体 -->
+  <div class="w-full max-w-none mx-6 md:mx-12 bg-white rounded-2xl shadow-2xl p-8 space-y-8">
+
+    <!-- 顶部 Tabs -->
+    <div class="flex items-center gap-10 border-b pb-4">
+      <button class="text-blue-600 font-medium relative after:absolute after:-bottom-3 after:left-0 after:w-full after:h-[3px] after:bg-blue-600">当前订阅计划</button>
+      <button class="text-gray-500 hover:text-gray-700">升级方案</button>
+    </div>
+
+    <!-- 当前方案卡 + 积分卡 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- 当前方案 -->
+      <div class="card col-span-2 p-6 flex items-center justify-between">
+        <div>
+          <p class="text-lg font-semibold flex items-center gap-2">
+            当前方案：团队版 <i class="fa-solid fa-crown text-blue-500"></i>
+          </p>
+          <p class="text-sm text-gray-500 mt-1">到期时间：2025年8月15日</p>
+        </div>
+        <button class="px-4 py-2 rounded-lg text-sm btn-primary hover:opacity-90">管理订阅</button>
+      </div>
+
+      <!-- 积分卡（按钮区分主次） -->
+      <div class="card p-6 flex items-start justify-between gap-4">
+        <!-- 左侧：积分数值 -->
+        <div>
+          <p class="text-gray-800 font-medium flex items-center gap-2">
+            <i class="fa-solid fa-coins text-amber-500"></i> 积分
+          </p>
+          <p class="text-2xl font-bold text-gray-900">
+            6,500 <span class="text-base font-normal text-gray-500">/ 3,002,000</span>
+          </p>
+        </div>
+
+        <!-- 右侧：按钮组 —— 增加 self-center 让整组垂直居中 -->
+        <div class="flex flex-col sm:flex-row flex-wrap gap-2 shrink-0 self-center">
+          <!-- 次要按钮 -->
+          <button class="btn-outline px-3 py-1 rounded-md text-xs whitespace-nowrap">
+            查看消耗规则
+          </button>
+          <!-- 主按钮 -->
+          <button class="px-3 py-1 rounded-md text-xs whitespace-nowrap btn-primary hover:opacity-90">
+            充值积分
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 标题行 -->
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold">额度用量概览</h2>
+      <a href="#" class="text-sm text-blue-600 hover:underline">查看操作记录</a>
+    </div>
+
+    <!-- 额度卡片网格 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- 1. 新建智能体 -->
+      <div class="card p-6 space-y-4">
+        <!-- 头部 -->
+        <div class="flex items-center gap-2 text-gray-700 font-medium">
+          <i class="fa-solid fa-robot text-blue-500"></i> 新建智能体
+        </div>
+        <!-- 进度条 + 百分比 -->
+        <div class="flex items-center gap-2">
+          <div class="flex-1 progress-wrap">
+            <div class="progress-inner bg-green-500" style="width:30%"></div>
+          </div>
+          <span class="text-xs text-gray-500">30%</span>
+        </div>
+        <!-- 数据行 -->
+        <div class="flex justify-between text-sm">
+          <span class="label">已使用：<b class="num">3059</b> 个</span>
+          <span class="label">总量：<b class="num">9999</b> 个</span>
+        </div>
+      </div>
+
+      <!-- 2. 新建工作流 -->
+      <div class="card p-6 space-y-4">
+        <div class="flex items-center gap-2 text-gray-700 font-medium">
+          <i class="fa-solid fa-cloud text-emerald-500"></i> 新建工作流
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex-1 progress-wrap">
+            <div class="progress-inner bg-rose-500" style="width:80%"></div>
+          </div>
+          <span class="text-xs text-gray-500">80%</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="label">已使用：<b class="num">8059</b> 个</span>
+          <span class="label">总量：<b class="num">9999</b> 个</span>
+        </div>
+      </div>
+
+      <!-- 3. 新建工具 – 超额示例 -->
+      <div class="card relative p-6 space-y-4">
+        <div class="flex items-center gap-2 text-gray-700 font-medium">
+          <i class="fa-solid fa-screwdriver-wrench text-orange-500"></i> 新建工具
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex-1 progress-wrap">
+            <div class="progress-inner bg-red-500" style="width:100%"></div>
+          </div>
+          <span class="text-xs text-red-600 font-medium">100%</span>
+        </div>
+        <!-- 警告提示：右上角固定 -->
+        <div class="absolute top-4 right-6 text-xs text-red-600 font-medium">
+          用量已超限，请增购或调整
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="label">已使用：<b class="num">59994</b> 个</span>
+          <span class="label">总量：<b class="num">9999</b> 个</span>
+        </div>
+      </div>
+
+      <!-- 4. 新建组件库 -->
+      <div class="card p-6 space-y-4">
+        <div class="flex items-center gap-2 text-gray-700 font-medium">
+          <i class="fa-solid fa-layer-group text-purple-600"></i> 新建组件库
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex-1 progress-wrap">
+            <div class="progress-inner bg-amber-400" style="width:70%"></div>
+          </div>
+          <span class="text-xs text-gray-500">70%</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="label">已使用：<b class="num">6959</b> 个</span>
+          <span class="label">总量：<b class="num">9999</b> 个</span>
+        </div>
+      </div>
+
+      <!-- 5. 新建空间 -->
+      <div class="card p-6 space-y-4">
+        <div class="flex items-center gap-2 text-gray-700 font-medium">
+          <i class="fa-solid fa-cube text-fuchsia-500"></i> 新建空间
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex-1 progress-wrap">
+            <div class="progress-inner bg-green-500" style="width:10%"></div>
+          </div>
+          <span class="text-xs text-gray-500">10%</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="label">已使用：<b class="num">1059</b> 个</span>
+          <span class="label">总量：<b class="num">9999</b> 个</span>
+        </div>
+      </div>
+
+      <!-- 6. 云电脑设备使用时长 -->
+      <div class="card p-6 space-y-4">
+        <div class="flex items-center gap-2 text-gray-700 font-medium">
+          <i class="fa-solid fa-desktop text-indigo-500"></i> 云电脑设备使用时长
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex-1 progress-wrap">
+            <div class="progress-inner bg-amber-400" style="width:70%"></div>
+          </div>
+          <span class="text-xs text-gray-500">70%</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="label">已使用：<b class="num">6959</b> 分钟</span>
+          <span class="label">总量：<b class="num">9999</b> 分钟/月</span>
+        </div>
+      </div>
+
+      <!-- ① 知识库容量 · 正常 -->
+<div class="card p-6 space-y-4">
+  <!-- 头部 -->
+  <div class="flex items-center gap-2 text-gray-700 font-medium">
+    <i class="fa-solid fa-book-open text-primary"></i> 知识库容量
+  </div>
+
+  <!-- 进度条 + 百分比 -->
+  <div class="flex items-center gap-2">
+    <div class="flex-1 progress-wrap">
+      <div class="progress-inner bg-green-500" style="width:45%"></div>
+    </div>
+    <span class="label number">45%</span>
+  </div>
+
+  <!-- 数据行 -->
+  <div class="flex justify-between">
+    <span class="label">已用：<b class="num">90&nbsp;GB</b></span>
+    <span class="label">总量：<b class="num">200&nbsp;GB</b></span>
+  </div>
+
+  <!-- 说明文案 -->
+  <p class="label">
+    超过套餐容量的部分按 <b class="text-neutral-900">每天 1 积分 / GB</b> 计费，或删除多余内容以释放容量。
+  </p>
+</div>
+
+<!-- ② 知识库容量 · 超额 -->
+<div class="card relative p-6 space-y-4">
+  <!-- 头部 + 超额提示 -->
+  <div class="flex items-center gap-2 text-gray-700 font-medium">
+    <i class="fa-solid fa-book-open text-primary"></i> 知识库容量
+  </div>
+  <div class="absolute top-4 right-6 text-xs text-orange-600 font-medium flex items-center gap-1">
+    用量已超套餐容量
+    <i class="fa-solid fa-circle-exclamation"></i>
+  </div>
+
+  <!-- 进度条 + 百分比（红色） -->
+  <div class="flex items-center gap-2">
+    <div class="flex-1 progress-wrap">
+      <div class="progress-inner bg-red-500" style="width:115%"></div>
+    </div>
+    <span class="text-xs text-red-600 font-medium number">115%</span>
+  </div>
+
+  <!-- 数据行 -->
+  <div class="flex justify-between">
+    <span class="label">已用：<b class="num">230&nbsp;GB</b></span>
+    <span class="label">总量：<b class="num">200&nbsp;GB</b></span>
+  </div>
+
+  <!-- 说明文案 -->
+  <p class="label">
+    超出部分将按 <b class="text-neutral-900">每天 1 积分 / GB</b> 收费，建议尽快升级套餐或删除多余内容。
+  </p>
+</div>
+
+    </div><!-- /grid -->
+  </div><!-- /modal -->
+</body>
+</html> 

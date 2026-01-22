@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>权限层级架构</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: transparent;
+            color: #333;
+            padding: 2rem;
+        }
+
+        .section {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1e293b;
+            text-align: center;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .hierarchy-diagram {
+            background: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin: 3rem 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .layer {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            border-left: 6px solid var(--layer-color);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .layer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: var(--layer-color);
+            box-shadow: 0 0 20px var(--layer-color);
+        }
+
+        .layer:hover {
+            transform: translateX(10px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        }
+
+        .platform-layer { --layer-color: #dc2626; }
+        .tenant-layer { --layer-color: #8b5cf6; }
+        .space-layer { --layer-color: #06b6d4; }
+
+        .layer-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--layer-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .layer-items {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .layer-item {
+            background: linear-gradient(135deg, rgba(241, 245, 249, 0.8), rgba(255, 255, 255, 0.9));
+            padding: 0.75rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            color: #475569;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .layer-item:hover {
+            background: var(--layer-color);
+            color: white;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .connection-arrow {
+            text-align: center;
+            margin: 1rem 0;
+            font-size: 2rem;
+            color: #64748b;
+            animation: bounce 2s infinite;
+            position: relative;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .info-box {
+            background: rgba(240, 249, 255, 0.8);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(3, 105, 161, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #0369a1, #0284c7);
+        }
+
+        .info-box h4 {
+            color: #0369a1;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-box ul {
+            color: #0c4a6e;
+            padding-left: 1.5rem;
+        }
+
+        .info-box li {
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: rgba(254, 243, 199, 0.8);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .highlight-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .highlight-box h4 {
+            color: #d97706;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .plan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .plan-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid var(--plan-color);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .plan-card.basic { --plan-color: #f59e0b; }
+        .plan-card.pro { --plan-color: #3b82f6; }
+        .plan-card.enterprise { --plan-color: #10b981; }
+
+        .plan-card h5 {
+            color: var(--plan-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .plan-card ul {
+            list-style: none;
+            font-size: 0.9rem;
+        }
+
+        .plan-card li {
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h2><i class="fas fa-layer-group"></i> 三层权限层级架构</h2>
+        
+        <div class="hierarchy-diagram">
+            <div class="layer platform-layer">
+                <div class="layer-title"><i class="fas fa-globe"></i> 平台层 (订阅计划配置中心)</div>
+                <div class="layer-items">
+                    <div class="layer-item">订阅计划设计</div>
+                    <div class="layer-item">功能包定义</div>
+                    <div class="layer-item">配额模板配置</div>
+                    <div class="layer-item">价格策略管理</div>
+                </div>
+                <p style="margin-top: 1rem; color: #dc2626; font-size: 0.9rem;">
+                    <strong>管理员：</strong>平台运营方 | <strong>职责：</strong>定义"有哪些订阅计划可选"、"每个计划包含什么功能和配额"
+                </p>
+            </div>
+            
+            <div class="connection-arrow">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+            
+            <div class="layer tenant-layer">
+                <div class="layer-title"><i class="fas fa-building"></i> 租户层 (商业化与治理中心)</div>
+                <div class="layer-items">
+                    <div class="layer-item">选择订阅计划</div>
+                    <div class="layer-item">功能权限分配</div>
+                    <div class="layer-item">资源配额管理</div>
+                    <div class="layer-item">治理策略配置</div>
+                </div>
+                <p style="margin-top: 1rem; color: #6b21a8; font-size: 0.9rem;">
+                    <strong>管理员：</strong>租户管理员 | <strong>职责：</strong>决定"购买哪个计划"、"谁能用什么高级功能"、"公司总共能用多少资源"
+                </p>
+            </div>
+            
+            <div class="connection-arrow">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+            
+            <div class="layer space-layer">
+                <div class="layer-title"><i class="fas fa-folder-open"></i> 空间与资源层 (数据协作中心)</div>
+                <div class="layer-items">
+                    <div class="layer-item">空间成员管理</div>
+                    <div class="layer-item">智能体协作权限</div>
+                    <div class="layer-item">工作流访问控制</div>
+                    <div class="layer-item">知识库权限分配</div>
+                </div>
+                <p style="margin-top: 1rem; color: #0891b2; font-size: 0.9rem;">
+                    <strong>管理员：</strong>空间所有者/管理员 | <strong>职责：</strong>决定"谁能访问哪个具体资源"、"能做什么操作"
+                </p>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <h4><i class="fas fa-sync-alt"></i> 三层协同机制</h4>
+            <ul>
+                <li><strong>平台层 → 租户层：</strong>平台定义计划模板，租户选择并订阅具体计划</li>
+                <li><strong>租户层 → 空间层：</strong>租户管理员分配功能权限，空间管理员分配数据权限</li>
+                <li><strong>权限校验：</strong>用户操作需要同时满足所选计划的功能范围 + 租户分配的功能权限 + 空间分配的数据权限</li>
+                <li><strong>配额管理：</strong>平台设定总量上限 → 租户订阅具体配额 → 可选择性地分配给空间或部门</li>
+            </ul>
+        </div>
+        
+        <div class="highlight-box">
+            <h4><i class="fas fa-briefcase"></i> 平台层典型配置示例</h4>
+            <div class="plan-grid">
+                <div class="plan-card basic">
+                    <h5><i class="fas fa-medal"></i> 基础版</h5>
+                    <ul>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 10个智能体</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 基础工作流节点</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 5GB存储</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 邮件支持</li>
+                    </ul>
+                </div>
+                <div class="plan-card pro">
+                    <h5><i class="fas fa-trophy"></i> 专业版</h5>
+                    <ul>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 100个智能体</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 高级工作流节点</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> AI分析功能</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 50GB存储</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 优先支持</li>
+                    </ul>
+                </div>
+                <div class="plan-card enterprise">
+                    <h5><i class="fas fa-crown"></i> 企业版</h5>
+                    <ul>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 无限智能体</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 企业级插件开发</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> SSO单点登录</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 200GB存储</li>
+                        <li><i class="fas fa-check-circle" style="color: #10b981;"></i> 专属客服</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

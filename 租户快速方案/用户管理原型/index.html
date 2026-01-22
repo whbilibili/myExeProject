@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户管理系统 - 高保真原型</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .welcome-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: var(--spacing-xl);
+    }
+
+    .welcome-card {
+      background: var(--bg-white);
+      border-radius: var(--radius-xl);
+      padding: var(--spacing-2xl);
+      max-width: 800px;
+      width: 100%;
+      box-shadow: var(--shadow-xl);
+      animation: fadeInUp 0.6s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .welcome-header {
+      text-align: center;
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .welcome-title {
+      font-size: var(--font-size-3xl);
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .welcome-subtitle {
+      font-size: var(--font-size-lg);
+      color: var(--text-secondary);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--spacing-lg);
+      margin: var(--spacing-2xl) 0;
+    }
+
+    .feature-item {
+      text-align: center;
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-md);
+      background: var(--bg-hover);
+      transition: all 0.3s ease;
+    }
+
+    .feature-item:hover {
+      background: var(--primary-light);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      font-size: 48px;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .feature-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .feature-desc {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: var(--spacing-lg);
+      justify-content: center;
+      margin-top: var(--spacing-2xl);
+    }
+
+    .big-btn {
+      padding: var(--spacing-lg) var(--spacing-2xl);
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .btn-primary-big {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .btn-primary-big:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .btn-secondary-big {
+      background: var(--bg-white);
+      color: var(--text-primary);
+      border: 2px solid var(--border-color);
+    }
+
+    .btn-secondary-big:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--spacing-lg);
+      margin: var(--spacing-2xl) 0;
+      padding: var(--spacing-xl);
+      background: var(--bg-hover);
+      border-radius: var(--radius-lg);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: var(--font-size-3xl);
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .stat-label {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+
+      .big-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="welcome-container">
+    <div class="welcome-card">
+      <div class="welcome-header">
+        <h1 class="welcome-title">🎉 用户管理系统</h1>
+        <p class="welcome-subtitle">业界顶级标准 · 高保真原型 · 极致用户体验</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value">2</div>
+          <div class="stat-label">核心页面</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">6</div>
+          <div class="stat-label">功能标签</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">20+</div>
+          <div class="stat-label">数据图表</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">功能完整度</div>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="feature-icon">🎨</div>
+          <div class="feature-title">现代化设计</div>
+          <div class="feature-desc">卡片式布局<br>精致的视觉效果</div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">数据可视化</div>
+          <div class="feature-desc">ECharts图表<br>多维度分析</div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">流畅交互</div>
+          <div class="feature-desc">平滑动画<br>即时反馈</div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-icon">📱</div>
+          <div class="feature-title">响应式</div>
+          <div class="feature-desc">自适应布局<br>跨设备兼容</div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <a href="user-list.html" class="big-btn btn-primary-big">
+          <span>🚀</span>
+          <span>开始体验</span>
+        </a>
+        <a href="user-detail.html" class="big-btn btn-secondary-big">
+          <span>📋</span>
+          <span>用户详情示例</span>
+        </a>
+      </div>
+
+      <div style="margin-top: var(--spacing-2xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--border-color);">
+        <h3 style="font-size: var(--font-size-lg); font-weight: 600; margin-bottom: var(--spacing-lg);">✨ 核心功能</h3>
+        <div style="display: grid; gap: var(--spacing-md);">
+          <div style="display: flex; align-items: start; gap: var(--spacing-md);">
+            <span style="color: var(--success-color); font-size: var(--font-size-xl);">✓</span>
+            <div>
+              <strong>用户列表管理</strong>
+              <p style="color: var(--text-secondary); font-size: var(--font-size-sm); margin-top: var(--spacing-xs);">
+                完整的用户列表展示、多维度搜索筛选、状态管理、批量操作
+              </p>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: start; gap: var(--spacing-md);">
+            <span style="color: var(--success-color); font-size: var(--font-size-xl);">✓</span>
+            <div>
+              <strong>数据总览分析</strong>
+              <p style="color: var(--text-secondary); font-size: var(--font-size-sm); margin-top: var(--spacing-xs);">
+                KPI指标、积分/Token/设备时长三大维度分析、9个专业图表
+              </p>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: start; gap: var(--spacing-md);">
+            <span style="color: var(--success-color); font-size: var(--font-size-xl);">✓</span>
+            <div>
+              <strong>消费分析系统</strong>
+              <p style="color: var(--text-secondary); font-size: var(--font-size-sm); margin-top: var(--spacing-xs);">
+                四大消费分区、详细的流水明细、完整的成本分析
+              </p>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: start; gap: var(--spacing-md);">
+            <span style="color: var(--success-color); font-size: var(--font-size-xl);">✓</span>
+            <div>
+              <strong>使用分析模块</strong>
+              <p style="color: var(--text-secondary); font-size: var(--font-size-sm); margin-top: var(--spacing-xs);">
+                6种资源类型动态切换、创建与调用趋势、资源消耗排行
+              </p>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: start; gap: var(--spacing-md);">
+            <span style="color: var(--success-color); font-size: var(--font-size-xl);">✓</span>
+            <div>
+              <strong>资产与租户管理</strong>
+              <p style="color: var(--text-secondary); font-size: var(--font-size-sm); margin-top: var(--spacing-xs);">
+                6类资产明细展示、租户关系管理、权限控制
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: var(--spacing-2xl); padding: var(--spacing-lg); background: var(--primary-light); border-radius: var(--radius-md); text-align: center;">
+        <p style="color: var(--text-secondary); font-size: var(--font-size-sm);">
+          💡 查看 <a href="README.md" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">README.md</a> 了解更多详细信息
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

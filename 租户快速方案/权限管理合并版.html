@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>权限管理</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- RemixIcon CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        /* 自定义样式补充 */
+        .tab-active {
+            color: #1f2937;
+            border-bottom: 2px solid #1f2937;
+        }
+        
+        .dropdown-icon {
+            transition: transform 0.2s;
+        }
+        
+        .dropdown-expanded .dropdown-icon {
+            transform: rotate(180deg);
+        }
+        
+        /* 下拉菜单样式 */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
+        
+        /* 隐藏类 */
+        .hidden {
+            display: none;
+        }
+        
+        /* 用户多选框样式 */
+        .user-checkbox {
+            cursor: pointer;
+        }
+        
+        .user-checkbox:hover {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 主容器 -->
+    <div class="min-h-screen">
+        <!-- 顶部标题栏 -->
+        <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <h1 class="text-xl font-semibold text-gray-900">权限管理</h1>
+            <button class="text-gray-400 hover:text-gray-600 transition-colors" onclick="window.close()">
+                <i class="ri-close-line text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- 标签导航 -->
+        <div class="bg-white border-b border-gray-200 px-6">
+            <div class="flex space-x-8">
+                <button 
+                    id="tab-members" 
+                    class="tab-active py-4 px-1 font-medium text-sm transition-colors"
+                    onclick="switchTab('members')">
+                    成员与角色
+                </button>
+                <button 
+                    id="tab-config" 
+                    class="py-4 px-1 font-medium text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    onclick="switchTab('config')">
+                    角色配置
+                </button>
+            </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="mx-auto max-w-5xl p-6">
+            
+            <!-- 成员与角色页面 -->
+            <div id="content-members" class="space-y-4">
+                <!-- 搜索和添加区域 -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between gap-4">
+                        <div class="flex-1 relative">
+                            <input 
+                                type="text" 
+                                placeholder="请输入部门、个人、群组、邮件组"
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                aria-label="搜索成员"
+                            />
+                        </div>
+                        <button 
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                            onclick="showAddMemberModal()">
+                            <i class="ri-add-line"></i>
+                            新增权限
+                        </button>
+                    </div>
+                    
+                    <!-- 当前权限统计 -->
+                    <div class="mt-4 text-sm text-gray-600">
+                        <span class="font-medium">当前权限：</span>
+                        <span class="text-gray-900 font-semibold">部门 0</span>
+                        <span class="mx-2">|</span>
+                        <span class="text-gray-900 font-semibold">个人 2</span>
+                    </div>
+                </div>
+
+                <!-- 部门列表 -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-gray-200 px-5 py-3.5 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-gray-800">部门</span>
+                            <span class="text-sm font-semibold text-gray-900">0</span>
+                            <button class="ml-2 text-gray-400 hover:text-gray-600">
+                                <i class="ri-add-circle-line text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="px-5 py-12 text-center text-gray-400">
+                        <i class="ri-folder-3-line text-4xl mb-2"></i>
+                        <p class="text-sm">暂无部门权限</p>
+                    </div>
+                </div>
+
+                <!-- 个人列表 -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-gray-200 px-5 py-3.5 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-gray-800">个人</span>
+                            <span class="text-sm font-semibold text-gray-900">2</span>
+                            <button class="ml-2 text-gray-400 hover:text-gray-600">
+                                <i class="ri-add-circle-line text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 成员列表项 -->
+                    <div class="divide-y divide-gray-100">
+                        <!-- 成员 1: 王宏 - 所有者 -->
+                        <div class="px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center gap-3 flex-1">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect fill='%233b82f6' width='40' height='40' rx='20'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.35em' fill='white' font-size='16' font-family='sans-serif'%3E王%3C/text%3E%3C/svg%3E" alt="王宏" class="rounded-full" />
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-medium text-gray-900 text-sm">王宏</div>
+                                    <div class="text-xs text-gray-500 mt-0.5">个人</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-medium text-gray-700">所有者</span>
+                                <div class="text-gray-300">
+                                    <i class="ri-lock-line"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 成员 2: 周丽娜 - 可编辑 -->
+                        <div class="px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center gap-3 flex-1">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect fill='%2310b981' width='40' height='40' rx='20'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.35em' fill='white' font-size='16' font-family='sans-serif'%3E周%3C/text%3E%3C/svg%3E" alt="周丽娜" class="rounded-full" />
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-medium text-gray-900 text-sm">周丽娜</div>
+                                    <div class="text-xs text-gray-500 mt-0.5">个人</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <select 
+                                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                                    aria-label="选择角色">
+                                    <option value="editor">可编辑</option>
+                                    <option value="viewer">可查看</option>
+                                    <option value="commenter">可评论</option>
+                                </select>
+                                <button class="text-gray-400 hover:text-red-500 transition-colors">
+                                    <i class="ri-close-line text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 高级设置链接 -->
+                <div class="text-center py-4">
+                    <button 
+                        class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                        onclick="switchTab('config')">
+                        高级设置：配置详细权限 →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 角色配置页面 -->
+            <div id="content-config" class="space-y-6 hidden">
+                
+                <!-- 表格权限部分 -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                        <h2 class="text-base font-semibold text-gray-900">表格权限</h2>
+                        <button class="text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1">
+                            <i class="ri-restart-line"></i>
+                            <span>重置权限</span>
+                        </button>
+                    </div>
+                    
+                    <div class="divide-y divide-gray-100">
+                        <!-- Who can create records -->
+                        <div class="px-6 py-4 flex items-center justify-between">
+                            <div class="flex-1">
+                                <label class="text-sm text-gray-900" for="create-permission">Who can create records</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 text-green-600">
+                                    <i class="ri-edit-line text-base"></i>
+                                    <select 
+                                        id="create-permission"
+                                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent min-w-[180px]"
+                                        aria-label="创建记录权限">
+                                        <option value="editors-up">Editors & up</option>
+                                        <option value="creators-up">Creators & up</option>
+                                        <option value="commenters-up">Commenters & up</option>
+                                        <option value="viewers-up">Viewers & up</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Who can delete records -->
+                        <div class="px-6 py-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <label class="text-sm text-gray-900" for="delete-permission">Who can delete records</label>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2 text-green-600">
+                                        <i class="ri-edit-line text-base"></i>
+                                        <select 
+                                            id="delete-permission"
+                                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent min-w-[180px]"
+                                            aria-label="删除记录权限"
+                                            onchange="handleDeletePermissionChange(this)">
+                                            <option value="editors-up">Editors & up</option>
+                                            <option value="creators-up">Creators & up</option>
+                                            <option value="specific-users">Specific users</option>
+                                            <option value="no-one">No one</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Specific users 选择框 (默认隐藏) -->
+                            <div id="specific-users-section" class="mt-4 hidden">
+                                <div class="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                                    <div class="text-sm font-medium text-gray-700 mb-3">选择特定用户</div>
+                                    <div class="space-y-2 max-h-48 overflow-y-auto">
+                                        <!-- 用户选项 -->
+                                        <label class="user-checkbox flex items-center gap-3 p-2 rounded-lg">
+                                            <input type="checkbox" class="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium text-blue-700">王</div>
+                                                <span class="text-sm text-gray-900">王宏</span>
+                                            </div>
+                                        </label>
+                                        <label class="user-checkbox flex items-center gap-3 p-2 rounded-lg">
+                                            <input type="checkbox" class="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-xs font-medium text-green-700">周</div>
+                                                <span class="text-sm text-gray-900">周丽娜</span>
+                                            </div>
+                                        </label>
+                                        <label class="user-checkbox flex items-center gap-3 p-2 rounded-lg">
+                                            <input type="checkbox" class="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900">
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-xs font-medium text-purple-700">李</div>
+                                                <span class="text-sm text-gray-900">李明</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 列权限部分 -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-base font-semibold text-gray-900">列权限</h2>
+                            <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">1/3 fields have custom permissions</span>
+                        </div>
+                        <button class="text-sm text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1">
+                            <i class="ri-restart-line"></i>
+                            <span>重置权限</span>
+                        </button>
+                    </div>
+                    
+                    <!-- 表头 -->
+                    <div class="bg-gray-50 border-b border-gray-200 px-6 py-3">
+                        <div class="flex items-center">
+                            <div class="flex-1 text-xs font-semibold text-gray-600 uppercase tracking-wider">Field Name</div>
+                            <div class="w-64 text-xs font-semibold text-gray-600 uppercase tracking-wider">Edit</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 字段列表 -->
+                    <div class="divide-y divide-gray-100">
+                        <!-- Title 字段 -->
+                        <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center gap-3 flex-1">
+                                <i class="ri-text text-gray-400"></i>
+                                <span class="text-sm text-gray-900">Title</span>
+                            </div>
+                            <div class="flex items-center gap-2 w-64">
+                                <div class="flex items-center gap-2 text-green-600">
+                                    <i class="ri-edit-line text-base"></i>
+                                    <select 
+                                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-full"
+                                        aria-label="Title字段编辑权限">
+                                        <option value="editors-up">Editors & up</option>
+                                        <option value="creators-up">Creators & up</option>
+                                        <option value="commenters-up">Commenters & up</option>
+                                        <option value="viewers-up">Viewers & up</option>
+                                    </select>
+                                </div>
+                                <button class="dropdown-icon text-gray-400 hover:text-gray-600 transition-all">
+                                    <i class="ri-arrow-down-s-line text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Description 字段 -->
+                        <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center gap-3 flex-1">
+                                <i class="ri-align-left text-gray-400"></i>
+                                <span class="text-sm text-gray-900">Description</span>
+                            </div>
+                            <div class="flex items-center gap-2 w-64">
+                                <div class="flex items-center gap-2 text-green-600">
+                                    <i class="ri-edit-line text-base"></i>
+                                    <select 
+                                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-full"
+                                        aria-label="Description字段编辑权限">
+                                        <option value="editors-up">Editors & up</option>
+                                        <option value="creators-up">Creators & up</option>
+                                        <option value="commenters-up">Commenters & up</option>
+                                        <option value="viewers-up">Viewers & up</option>
+                                    </select>
+                                </div>
+                                <button class="dropdown-icon text-gray-400 hover:text-gray-600 transition-all">
+                                    <i class="ri-arrow-down-s-line text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Category 字段 -->
+                        <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center gap-3 flex-1">
+                                <i class="ri-checkbox-circle-line text-gray-400"></i>
+                                <span class="text-sm text-gray-900">Category</span>
+                            </div>
+                            <div class="flex items-center gap-2 w-64">
+                                <div class="flex items-center gap-2 text-green-600">
+                                    <i class="ri-edit-line text-base"></i>
+                                    <select 
+                                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent w-full"
+                                        aria-label="Category字段编辑权限">
+                                        <option value="editors-up">Editors & up</option>
+                                        <option value="creators-up">Creators & up</option>
+                                        <option value="commenters-up">Commenters & up</option>
+                                        <option value="viewers-up">Viewers & up</option>
+                                    </select>
+                                </div>
+                                <button class="dropdown-icon text-gray-400 hover:text-gray-600 transition-all">
+                                    <i class="ri-arrow-down-s-line text-xl"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 返回链接 -->
+                <div class="text-center py-4">
+                    <button 
+                        class="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                        onclick="switchTab('members')">
+                        ← 返回成员与角色
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 标签切换功能
+        function switchTab(tabName) {
+            // 更新标签样式
+            const tabs = ['members', 'config'];
+            tabs.forEach(tab => {
+                const tabBtn = document.getElementById(`tab-${tab}`);
+                const content = document.getElementById(`content-${tab}`);
+                
+                if (tab === tabName) {
+                    tabBtn.classList.add('tab-active');
+                    tabBtn.classList.remove('text-gray-500', 'hover:text-gray-700');
+                    content.classList.remove('hidden');
+                } else {
+                    tabBtn.classList.remove('tab-active');
+                    tabBtn.classList.add('text-gray-500', 'hover:text-gray-700');
+                    content.classList.add('hidden');
+                }
+            });
+            
+            // 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 处理删除权限下拉变化
+        function handleDeletePermissionChange(select) {
+            const specificUsersSection = document.getElementById('specific-users-section');
+            if (select.value === 'specific-users') {
+                specificUsersSection.classList.remove('hidden');
+            } else {
+                specificUsersSection.classList.add('hidden');
+            }
+        }
+
+        // 显示添加成员弹窗（占位函数）
+        function showAddMemberModal() {
+            alert('打开添加成员弹窗\n\n这里可以集成实际的成员选择器组件');
+        }
+
+        // 初始化：确保默认显示成员与角色页面
+        document.addEventListener('DOMContentLoaded', function() {
+            switchTab('members');
+            
+            // 添加键盘导航支持
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === '1') {
+                        e.preventDefault();
+                        switchTab('members');
+                    } else if (e.key === '2') {
+                        e.preventDefault();
+                        switchTab('config');
+                    }
+                }
+            });
+        });
+
+        // 数据对接占位说明
+        console.log(`
+            📋 数据对接指南
+            
+            1. 成员列表数据结构示例：
+            {
+                departments: [],
+                members: [
+                    { id: 1, name: '王宏', role: 'owner', avatar: '...', type: 'individual' },
+                    { id: 2, name: '周丽娜', role: 'editor', avatar: '...', type: 'individual' }
+                ]
+            }
+            
+            2. 权限配置数据结构示例：
+            {
+                tablePermissions: {
+                    canCreate: 'editors-up',
+                    canDelete: 'editors-up',
+                    specificUsers: []
+                },
+                fieldPermissions: [
+                    { field: 'Title', edit: 'editors-up' },
+                    { field: 'Description', edit: 'editors-up' },
+                    { field: 'Category', edit: 'editors-up' }
+                ]
+            }
+            
+            3. 关键API端点（待实现）：
+            - GET  /api/permissions/members      - 获取成员列表
+            - POST /api/permissions/members      - 添加成员权限
+            - PUT  /api/permissions/members/:id  - 更新成员权限
+            - DEL  /api/permissions/members/:id  - 移除成员权限
+            - GET  /api/permissions/config       - 获取权限配置
+            - PUT  /api/permissions/config       - 更新权限配置
+        `);
+    </script>
+</body>
+</html>
+

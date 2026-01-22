@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型定价管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .tooltip-container {
+            position: relative;
+            display: inline-flex;
+            vertical-align: middle; 
+        }
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2d3748;
+            color: #fff;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            z-index: 9999;
+            width: max-content;
+            max-width: 300px;
+            font-size: 12px;
+            font-weight: normal;
+            white-space: nowrap;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #2d3748 transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .table-header-bg {
+             background-color: #f1f5f9;
+        }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="bg-white rounded-lg shadow-sm">
+        <!-- 页面标题和提示 -->
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-semibold text-gray-800">模型定价管理</h1>
+                <p class="mt-1 text-sm text-gray-500">在这里集中配置、审查和调整所有大模型的商业定价策略。</p>
+            </div>
+            <div>
+                <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=U" class="rounded-full" alt="用户头像">
+            </div>
+        </div>
+
+        <!-- 搜索和筛选 -->
+        <div class="p-6">
+            <div class="bg-sky-100 border border-sky-300 text-sky-800 px-4 py-3 rounded-lg relative mb-6" role="alert">
+                <div class="flex items-start">
+                    <div class="py-1">
+                        <svg class="h-5 w-5 text-sky-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                         <p class="text-sm">所有模型均以<strong class="font-semibold">「千Tokens」</strong>为单位，对输入和输出分别计费，并统一使用租户账户的<strong class="font-semibold">「积分」</strong>进行结算。</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <input type="text" placeholder="Q 搜索模型" class="w-64 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select class="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">请选择厂商</option>
+                    <option>Doubao</option>
+                    <option>LongCat</option>
+                    <option>MiniCPM</option>
+                </select>
+                <select class="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">请选择定级</option>
+                     <option>旗舰型</option>
+                     <option>高级型</option>
+                     <option>标准型</option>
+                     <option>经济型</option>
+                </select>
+                <button class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">搜索</button>
+                <button class="px-5 py-2 text-sm font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">重置</button>
+                <div class="flex-grow"></div>
+                <p class="text-sm text-gray-500">已选择 <span class="font-semibold text-blue-600">0</span> 项</p>
+            </div>
+        </div>
+
+        <!-- 模型列表 -->
+        <div class="px-6 pb-6">
+            <div class="overflow-x-auto border border-gray-200 rounded-md" style="overflow-y: visible;">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="table-header-bg">
+                        <tr>
+                            <th scope="col" class="p-4"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">模型厂商</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">模型名称</th>
+                            <th scope="col" class="px-6 py-3 text-left text-sm font-medium text-gray-600 tracking-wider">
+                                <div class="flex items-center">
+                                    <span>千Tokens输入</span>
+                                    <div class="tooltip-container ml-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <div class="tooltip">此价格代表每处理1k输入tokens所需消耗的租户积分。</div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-sm font-medium text-gray-600 tracking-wider">
+                                 <div class="flex items-center">
+                                    <span>千Tokens输出</span>
+                                     <div class="tooltip-container ml-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <div class="tooltip">此价格代表每生成1k输出tokens所需消耗的租户积分。</div>
+                                    </div>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">定级</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">模型描述</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- 模拟数据行 -->
+                        <tr>
+                            <td class="p-4"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">Doubao</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Doubao-pro-128k</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-center">2 积分</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-center">3 积分</td>
+                            <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-0.5 text-xs font-medium rounded-full text-red-700 bg-red-100">旗舰型</span></td>
+                            <td class="px-6 py-4 whitespace-normal text-sm text-gray-500 max-w-xs truncate">豆包大模型，适合处理复杂任务，在...</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"><a href="#" class="text-blue-600 hover:text-blue-800">编辑</a></td>
+                        </tr>
+                         <tr>
+                            <td class="p-4"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">Doubao</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Doubao-pro-32k-0528</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-center">2 积分</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-center">4 积分</td>
+                            <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-0.5 text-xs font-medium rounded-full text-green-700 bg-green-100">经济型</span></td>
+                            <td class="px-6 py-4 whitespace-normal text-sm text-gray-500 max-w-xs truncate">豆包大模型，适合处理复杂任务，在...</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"><a href="#" class="text-blue-600 hover:text-blue-800">编辑</a></td>
+                        </tr>
+                         <tr>
+                            <td class="p-4"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">LongCat</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LongCat-Vi-Mini</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-center">2 积分</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-center">5 积分</td>
+                            <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-0.5 text-xs font-medium rounded-full text-yellow-700 bg-yellow-100">高级型</span></td>
+                            <td class="px-6 py-4 whitespace-normal text-sm text-gray-500 max-w-xs truncate">美团自研大模型，支持8k上下文。</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"><a href="#" class="text-blue-600 hover:text-blue-800">编辑</a></td>
+                        </tr>
+                         <tr>
+                            <td class="p-4"><input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">LongCat</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">LongCat-Vi-Medium</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-center">1 积分</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 text-center">2 积分</td>
+                            <td class="px-6 py-4 whitespace-nowrap"><span class="px-2.5 py-0.5 text-xs font-medium rounded-full text-blue-700 bg-blue-100">标准型</span></td>
+                            <td class="px-6 py-4 whitespace-normal text-sm text-gray-500 max-w-xs truncate">美团自研大模型，支持8k上下文。</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium"><a href="#" class="text-blue-600 hover:text-blue-800">编辑</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 分页 -->
+            <div class="flex items-center justify-between mt-4">
+                <p class="text-sm text-gray-600">共 67 条</p>
+                <div class="flex items-center">
+                    <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                        <a href="#" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"><span class="sr-only">Previous</span>&lt;</a>
+                        <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-blue-600 px-4 py-2 text-sm font-semibold text-white">1</a>
+                        <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">2</a>
+                        <a href="#" class="relative hidden items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 md:inline-flex">3</a>
+                        <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300">...</span>
+                        <a href="#" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"><span class="sr-only">Next</span>&gt;</a>
+                    </nav>
+                    <select class="ml-4 px-2 py-2 text-sm border border-gray-300 rounded-md">
+                        <option>10 条/页</option>
+                        <option>20 条/页</option>
+                        <option>50 条/页</option>
+                    </select>
+                    <span class="ml-4 text-sm text-gray-600">跳至</span>
+                    <input type="text" class="w-12 ml-2 px-2 py-2 text-sm text-center border border-gray-300 rounded-md">
+                    <span class="ml-2 text-sm text-gray-600">页</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据测试页面</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #333;
+      border-bottom: 2px solid #1890ff;
+      padding-bottom: 10px;
+    }
+    .avatar-test {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .avatar-test img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid #ddd;
+    }
+    .data-item {
+      padding: 10px;
+      background: #f9f9f9;
+      margin: 5px 0;
+      border-left: 3px solid #1890ff;
+    }
+    .error {
+      color: #ff4d4f;
+      background: #fff2f0;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #ffccc7;
+    }
+    .success {
+      color: #52c41a;
+      background: #f6ffed;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #b7eb8f;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      max-height: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 数据诊断测试页面</h1>
+  
+  <div class="section">
+    <h2>1. 头像加载测试</h2>
+    <p>测试Pravatar头像服务是否可用：</p>
+    <div class="avatar-test" id="avatarTest"></div>
+    <div id="avatarStatus"></div>
+  </div>
+
+  <div class="section">
+    <h2>2. MockData数据生成测试</h2>
+    <div id="mockDataStatus"></div>
+    <div id="mockDataDetails"></div>
+  </div>
+
+  <div class="section">
+    <h2>3. 用户数据测试</h2>
+    <div id="userDataStatus"></div>
+    <div id="userDataDetails"></div>
+  </div>
+
+  <div class="section">
+    <h2>4. 消费记录测试</h2>
+    <div id="consumptionStatus"></div>
+    <div id="consumptionDetails"></div>
+  </div>
+
+  <div class="section">
+    <h2>5. 第一个用户详细信息</h2>
+    <div id="firstUserDetails"></div>
+  </div>
+
+  <!-- 加载JS -->
+  <script src="./assets/js/utils.js"></script>
+  <script src="./assets/js/mock-data.js"></script>
+
+  <script>
+    // 1. 测试头像加载
+    function testAvatars() {
+      const container = document.getElementById('avatarTest');
+      const statusDiv = document.getElementById('avatarStatus');
+      
+      let loadedCount = 0;
+      let errorCount = 0;
+      
+      for (let i = 1; i <= 10; i++) {
+        const img = document.createElement('img');
+        const url = `https://i.pravatar.cc/150?img=${i}`;
+        img.src = url;
+        img.alt = `Avatar ${i}`;
+        img.title = url;
+        
+        img.onload = () => {
+          loadedCount++;
+          updateAvatarStatus();
+        };
+        
+        img.onerror = () => {
+          errorCount++;
+          img.style.border = '2px solid red';
+          updateAvatarStatus();
+        };
+        
+        container.appendChild(img);
+      }
+      
+      function updateAvatarStatus() {
+        if (loadedCount + errorCount === 10) {
+          if (errorCount === 0) {
+            statusDiv.innerHTML = `<div class="success">✅ 头像加载成功！所有10个测试头像都正常显示。</div>`;
+          } else {
+            statusDiv.innerHTML = `<div class="error">❌ 头像加载失败！${errorCount}个头像无法加载。可能是网络问题或CORS限制。</div>`;
+          }
+        }
+      }
+    }
+
+    // 2. 测试MockData
+    function testMockData() {
+      const statusDiv = document.getElementById('mockDataStatus');
+      const detailsDiv = document.getElementById('mockDataDetails');
+      
+      if (typeof MockData === 'undefined') {
+        statusDiv.innerHTML = `<div class="error">❌ MockData未定义！mock-data.js可能没有正确加载。</div>`;
+        return;
+      }
+      
+      statusDiv.innerHTML = `<div class="success">✅ MockData已加载！</div>`;
+      
+      detailsDiv.innerHTML = `
+        <div class="data-item">
+          <strong>📊 数据统计：</strong><br>
+          - 用户数：${MockData.users?.length || 0}<br>
+          - 租户数：${MockData.tenants?.length || 0}<br>
+          - 智能体数：${MockData.assets?.bots?.length || 0}<br>
+          - 工作流数：${MockData.assets?.workflows?.length || 0}<br>
+          - 工具数：${MockData.assets?.tools?.length || 0}<br>
+          - 知识库数：${MockData.assets?.knowledgeBases?.length || 0}<br>
+          - 消费记录数：${MockData.consumptions?.length || 0}
+        </div>
+      `;
+    }
+
+    // 3. 测试用户数据
+    function testUserData() {
+      const statusDiv = document.getElementById('userDataStatus');
+      const detailsDiv = document.getElementById('userDataDetails');
+      
+      if (!MockData.users || MockData.users.length === 0) {
+        statusDiv.innerHTML = `<div class="error">❌ 没有用户数据！</div>`;
+        return;
+      }
+      
+      statusDiv.innerHTML = `<div class="success">✅ 用户数据正常！共${MockData.users.length}个用户。</div>`;
+      
+      const first3Users = MockData.users.slice(0, 3);
+      let html = '<h3>前3个用户：</h3>';
+      
+      first3Users.forEach(user => {
+        html += `
+          <div class="data-item">
+            <strong>ID:</strong> ${user.id}<br>
+            <strong>姓名:</strong> ${user.name}<br>
+            <strong>头像:</strong> ${user.avatar}<br>
+            <strong>状态:</strong> ${user.status}<br>
+            <strong>租户数:</strong> ${user.tenants?.length || 0}
+          </div>
+        `;
+      });
+      
+      detailsDiv.innerHTML = html;
+    }
+
+    // 4. 测试消费记录
+    function testConsumptions() {
+      const statusDiv = document.getElementById('consumptionStatus');
+      const detailsDiv = document.getElementById('consumptionDetails');
+      
+      if (!MockData.consumptions || MockData.consumptions.length === 0) {
+        statusDiv.innerHTML = `<div class="error">❌ 没有消费记录数据！</div>`;
+        return;
+      }
+      
+      statusDiv.innerHTML = `<div class="success">✅ 消费记录数据正常！共${MockData.consumptions.length}条记录。</div>`;
+      
+      // 统计每个用户的消费记录数
+      const userConsumptionCount = {};
+      MockData.consumptions.forEach(c => {
+        userConsumptionCount[c.userId] = (userConsumptionCount[c.userId] || 0) + 1;
+      });
+      
+      const first5Users = Object.entries(userConsumptionCount).slice(0, 5);
+      
+      let html = '<h3>前5个用户的消费记录数：</h3>';
+      first5Users.forEach(([userId, count]) => {
+        const user = MockData.users.find(u => u.id === userId);
+        html += `
+          <div class="data-item">
+            <strong>用户ID:</strong> ${userId}<br>
+            <strong>用户名:</strong> ${user?.name || '未找到'}<br>
+            <strong>记录数:</strong> ${count}
+          </div>
+        `;
+      });
+      
+      detailsDiv.innerHTML = html;
+      
+      // 显示第一条消费记录
+      const firstRecord = MockData.consumptions[0];
+      html += `
+        <h3>第一条消费记录示例：</h3>
+        <pre>${JSON.stringify(firstRecord, null, 2)}</pre>
+      `;
+      
+      detailsDiv.innerHTML = html;
+    }
+
+    // 5. 显示第一个用户的完整信息
+    function showFirstUser() {
+      const detailsDiv = document.getElementById('firstUserDetails');
+      
+      if (!MockData.users || MockData.users.length === 0) {
+        detailsDiv.innerHTML = `<div class="error">❌ 没有用户数据！</div>`;
+        return;
+      }
+      
+      const firstUser = MockData.users[0];
+      const userConsumptions = MockData.consumptions.filter(c => c.userId === firstUser.id);
+      const userBots = MockData.assets.bots.filter(b => b.userId === firstUser.id);
+      const userWorkflows = MockData.assets.workflows.filter(w => w.userId === firstUser.id);
+      
+      detailsDiv.innerHTML = `
+        <h3>用户基本信息：</h3>
+        <pre>${JSON.stringify(firstUser, null, 2)}</pre>
+        
+        <h3>该用户的资产：</h3>
+        <div class="data-item">
+          - 智能体数：${userBots.length}<br>
+          - 工作流数：${userWorkflows.length}
+        </div>
+        
+        <h3>该用户的消费记录：</h3>
+        <div class="data-item">
+          - 消费记录数：${userConsumptions.length}
+        </div>
+        
+        ${userConsumptions.length > 0 ? `
+          <h3>第一条消费记录：</h3>
+          <pre>${JSON.stringify(userConsumptions[0], null, 2)}</pre>
+        ` : '<div class="error">该用户没有消费记录！</div>'}
+      `;
+    }
+
+    // 执行所有测试
+    window.onload = () => {
+      console.log('开始测试...');
+      testAvatars();
+      testMockData();
+      testUserData();
+      testConsumptions();
+      showFirstUser();
+    };
+  </script>
+</body>
+</html>
+

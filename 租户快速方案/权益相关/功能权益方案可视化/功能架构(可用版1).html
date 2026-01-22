@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bots平台权限体系 - 架构图与思维导图</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            font-size: 1.8em;
+            margin: 40px 0 20px 0;
+            color: #34495e;
+        }
+        .diagram-container {
+            margin: 30px 0;
+            text-align: center;
+            background: #fafbfc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e1e5e9;
+        }
+        .description {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+        .description h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .key-points {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #27ae60;
+        }
+        .key-points ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .key-points li {
+            margin: 8px 0;
+        }
+        .mermaid {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏗️ Bots平台权限体系架构设计</h1>
+        
+        <div class="description">
+            <h3>🎯 核心设计理念</h3>
+            <p>采用<strong>"三位一体"权限模型</strong>，将复杂的权限管理问题分解为三个清晰、正交且协同工作的独立支柱，确保权限体系的清晰性、可管理性和可扩展性。</p>
+        </div>
+
+        <h2>📊 整体架构思维导图</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+mindmap
+  root((Bots平台权限体系))
+    第一支柱
+      租户订阅计划
+        资源配额
+          协作者席位
+          空间数量
+          智能体数量
+          API调用次数
+          积分额度
+        可用功能
+          高级调试器
+          企业插件市场
+          API编程访问
+          SSO单点登录
+          审计日志
+    第二支柱
+      租户级功能权限
+        管理者
+          租户管理员
+        分配对象
+          个人用户
+          用户组/部门
+        工作机制
+          两级开关
+          全局生效
+          跨空间有效
+    第三支柱
+      空间层数据权限
+        角色体系
+          所有者
+          管理员
+          可编辑
+          可评论
+          查看与使用
+        继承机制
+          父子继承
+          显式覆盖
+          冲突解决
+            </div>
+        </div>
+
+        <div class="key-points">
+            <h3>🔑 关键要点</h3>
+            <ul>
+                <li><strong>三个支柱相互独立</strong>：每个支柱都有清晰的管理者、管理对象和决策逻辑</li>
+                <li><strong>权限交集原则</strong>：最终操作权限 = 三个支柱的权限交集（逻辑AND）</li>
+                <li><strong>职责分离</strong>：避免不同层级的管理员职责混淆和权限冲突</li>
+                <li><strong>商业价值体现</strong>：通过功能权限分配，清晰体现订阅计划的商业价值</li>
+            </ul>
+        </div>
+
+        <h2>🏛️ 权限校验流程架构图</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+flowchart TD
+    A[用户发起操作请求] --> B{检查租户订阅计划}
+    B -->|资源配额不足| C[拒绝操作<br/>提示资源限制]
+    B -->|配额充足| D{检查功能权限}
+    D -->|未授权该功能| E[拒绝操作<br/>提示联系租户管理员]
+    D -->|已授权| F{检查数据权限}
+    F -->|无访问权限| G[拒绝操作<br/>提示权限不足]
+    F -->|有权限| H[允许操作]
+    
+    style A fill:#e1f5fe
+    style H fill:#e8f5e8
+    style C fill:#ffebee
+    style E fill:#ffebee
+    style G fill:#ffebee
+    style B fill:#fff3e0
+    style D fill:#f3e5f5
+    style F fill:#e0f2f1
+            </div>
+        </div>
+
+        <div class="description">
+            <h3>🔄 权限校验流程说明</h3>
+            <p>当用户尝试执行任何操作时，系统必须按照固定顺序进行三层校验，只有全部通过才能执行操作。这种设计确保了：</p>
+            <div class="key-points">
+                <ul>
+                    <li><strong>商业合规性</strong>：不会超出订阅计划的资源限制</li>
+                    <li><strong>功能许可性</strong>：只有被授权的用户才能使用高级功能</li>
+                    <li><strong>数据安全性</strong>：确保对具体数据的访问控制</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>🏢 租户管理架构图</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+graph TB
+    subgraph "租户层面 (Tenant Level)"
+        TM[租户管理员<br/>Tenant Admin]
+        SP[订阅计划<br/>Subscription Plan]
+        FP[功能权限分配<br/>Feature Permissions]
+        OM[组织架构管理<br/>Organization Management]
+    end
+    
+    subgraph "空间层面 (Workspace Level)"
+        WO[空间所有者<br/>Workspace Owner]
+        WA[空间管理员<br/>Workspace Admin]
+        WM[空间成员<br/>Workspace Members]
+    end
+    
+    subgraph "资源层面 (Resource Level)"
+        BOT[智能体<br/>Bots]
+        WF[工作流<br/>Workflows]
+        TOOL[工具库<br/>Tools]
+        KB[知识库<br/>Knowledge Base]
+    end
+    
+    TM --> SP
+    TM --> FP
+    TM --> OM
+    SP --> |定义资源配额| WO
+    FP --> |授权功能使用| WM
+    WO --> WA
+    WA --> WM
+    WM --> BOT
+    WM --> WF
+    WM --> TOOL
+    WM --> KB
+    
+    style TM fill:#ff9999
+    style SP fill:#99ccff
+    style FP fill:#99ff99
+    style WO fill:#ffcc99
+    style BOT fill:#ffff99
+    style WF fill:#ffff99
+    style TOOL fill:#ffff99
+    style KB fill:#ffff99
+            </div>
+        </div>
+
+        <h2>🔐 权限矩阵架构图</h2>
+        <div class="diagram-container">
+            <div class="mermaid">
+graph LR
+    subgraph "功能权限 (Feature Permissions)"
+        F1[高级调试器]
+        F2[API访问]
+        F3[企业插件]
+        F4[审计日志]
+    end
+    
+    subgraph "用户身份 (User Identity)"
+        U1[张三<br/>产品经理]
+        U2[李四<br/>技术架构师]
+        U3[王五<br/>普通开发]
+    end
+    
+    subgraph "数据权限 (Data Permissions)"
+        D1[核心研发空间<br/>所有者]
+        D2[市场空间<br/>管理员]
+        D3[测试空间<br/>可编辑]
+    end
+    
+    subgraph "最终权限 (Final Permissions)"
+        R1[可在核心研发空间<br/>使用高级调试器开发工作流]
+        R2[可通过API<br/>管理市场空间的智能体]
+        R3[可在测试空间<br/>编辑工作流但无法调试]
+    end
+    
+    F1 --> U2
+    F2 --> U2
+    F3 --> U1
+    
+    U1 --> D2
+    U2 --> D1
+    U3 --> D3
+    
+    U2 --> R1
+    U2 --> R2
+    U3 --> R3
+    
+    style F1 fill:#e1f5fe
+    style F2 fill:#e1f5fe
+    style F3 fill:#e1f5fe
+    style F4 fill:#e1f5fe
+    style R1 fill:#e8f5e8
+    style R2 fill:#e8f5e8
+    style R3 fill:#fff3e0
+            </div>
+        </div>
+
+        <div class="description">
+            <h3>💡 设计原则总结</h3>
+            <div class="key-points">
+                <ul>
+                    <li><strong>分层而治</strong>：租户层管商业与能力，空间层管协作与数据</li>
+                    <li><strong>权责清晰</strong>：每个层级的管理员都有明确的管理范畴</li>
+                    <li><strong>灵活可控</strong>：支持从简单的统一权限到复杂的精细化分配</li>
+                    <li><strong>用户友好</strong>：通过继承和默认规则，减少重复配置工作</li>
+                    <li><strong>商业导向</strong>：权限体系服务于商业模式，促进用户升级和付费</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            },
+            mindmap: {
+                useMaxWidth: true
+            }
+        });
+    </script>
+</body>
+</html>

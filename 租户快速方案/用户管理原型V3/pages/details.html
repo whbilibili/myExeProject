@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>消费明细</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- Custom CSS - 飞书风格 -->
+  <link rel="stylesheet" href="../assets/css/feishu-style.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg-gray-1);
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 高级筛选器 -->
+    <div class="search-bar" style="margin-bottom: 24px; padding: 20px; background: var(--bg-white); border-radius: var(--radius-md); border: 1px solid var(--border-1);">
+      <el-form :model="searchForm" label-width="80px">
+        <!-- 第一行：资源类型、归属租户、时间范围 -->
+        <el-row :gutter="16" style="margin-bottom: 12px;">
+          <el-col :span="6">
+            <el-form-item label="资源类型">
+              <el-select 
+                v-model="searchForm.resourceTypes" 
+                multiple
+                collapse-tags
+                collapse-tags-tooltip
+                placeholder="全部类型"
+                clearable
+                style="width: 100%"
+                @change="handleSearch"
+              >
+                <el-option 
+                  v-for="type in resourceTypeOptions" 
+                  :key="type" 
+                  :label="type" 
+                  :value="type"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="归属租户">
+              <el-select 
+                v-model="searchForm.tenants" 
+                multiple
+                collapse-tags
+                collapse-tags-tooltip
+                placeholder="全部租户"
+                clearable
+                style="width: 100%"
+                @change="handleSearch"
+              >
+                <el-option 
+                  v-for="tenant in tenantOptions" 
+                  :key="tenant" 
+                  :label="tenant" 
+                  :value="tenant"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="时间范围">
+              <el-date-picker
+                v-model="searchForm.dateRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                value-format="YYYY-MM-DD"
+                @change="handleSearch"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="4" style="text-align: right;">
+            <el-form-item label=" " label-width="0">
+              <el-button @click="resetSearch">重置</el-button>
+              <el-button type="primary" @click="exportCSV">
+                <el-icon><Download /></el-icon>
+                导出
+              </el-button>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <!-- 第二行：行为、变动类型 -->
+        <el-row :gutter="16">
+          <el-col :span="6">
+            <el-form-item label="行为">
+              <el-input 
+                v-model="searchForm.behavior" 
+                placeholder="搜索行为"
+                clearable
+                style="width: 100%"
+                @input="handleSearch"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
+            <el-form-item label="变动类型">
+              <el-select 
+                v-model="searchForm.changeType" 
+                placeholder="全部"
+                clearable
+                style="width: 100%"
+                @change="handleSearch"
+              >
+                <el-option label="全部" value=""></el-option>
+                <el-option label="消耗" value="消耗"></el-option>
+                <el-option label="返还" value="返还"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+    </div>
+
+    <!-- 数据表格 -->
+    <div class="data-table">
+      <el-table 
+        :data="paginatedData" 
+        style="width: 100%"
+        :default-sort="{ prop: 'date', order: 'descending' }"
+      >
+        <el-table-column prop="date" label="日期" width="180" sortable>
+          <template #default="scope">
+            {{ Utils.formatDate(scope.row.date) }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="resourceType" label="资源类型" width="150" sortable></el-table-column>
+
+        <el-table-column prop="behavior" label="行为" width="200"></el-table-column>
+
+        <el-table-column prop="changeType" label="变动类型" width="100">
+          <template #default="scope">
+            <el-tag :type="scope.row.changeType === '消耗' ? 'warning' : 'success'" size="small">
+              {{ scope.row.changeType }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="usage" label="用量" width="250"></el-table-column>
+
+        <el-table-column prop="pointsUsed" label="消耗积分" width="120" sortable>
+          <template #default="scope">
+            <span :style="{ color: scope.row.pointsUsed < 0 ? '#67c23a' : '#e6a23c' }">
+              {{ scope.row.pointsUsed >= 0 ? '+' : '' }}{{ Utils.formatNumber(scope.row.pointsUsed, 2) }}
+            </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="tenantName" label="计费租户" width="200"></el-table-column>
+
+        <el-table-column prop="assetName" label="关联资产" width="200">
+          <template #default="scope">
+            <span v-if="scope.row.assetName">{{ scope.row.assetName }}</span>
+            <span v-else style="color: #c0c4cc">-</span>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页器 -->
+      <el-pagination
+        v-model:current-page="pagination.currentPage"
+        v-model:page-size="pagination.pageSize"
+        :page-sizes="[20, 50, 100, 200]"
+        :total="filteredData.length"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        style="margin-top: 24px; justify-content: center;"
+      />
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  
+  <!-- Element Plus 图标 -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- 自定义JS -->
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/data/static-data.js"></script>
+
+  <script>
+    const { createApp, ref, computed, reactive } = Vue;
+    const { ElMessage } = ElementPlus;
+
+    const app = createApp({
+      setup() {
+        const userId = ref(Utils.getQueryParam('userId'));
+        
+        const searchForm = reactive({
+          resourceTypes: [],
+          behavior: '',
+          changeType: '',
+          tenants: [],
+          dateRange: null
+        });
+
+        const pagination = reactive({
+          currentPage: 1,
+          pageSize: 20
+        });
+
+        const allData = computed(() => {
+          return MockData.consumptions.filter(c => c.userId === userId.value);
+        });
+
+        const resourceTypeOptions = computed(() => {
+          return [...new Set(allData.value.map(d => d.resourceType))];
+        });
+
+        const tenantOptions = computed(() => {
+          return [...new Set(allData.value.map(d => d.tenantName))].sort();
+        });
+
+        const filteredData = computed(() => {
+          let result = allData.value;
+
+          // 资源类型筛选
+          if (searchForm.resourceTypes.length > 0) {
+            result = result.filter(d => searchForm.resourceTypes.includes(d.resourceType));
+          }
+
+          // 行为搜索
+          if (searchForm.behavior) {
+            result = result.filter(d => 
+              d.behavior.toLowerCase().includes(searchForm.behavior.toLowerCase())
+            );
+          }
+
+          // 变动类型筛选
+          if (searchForm.changeType) {
+            result = result.filter(d => d.changeType === searchForm.changeType);
+          }
+
+          // 租户筛选
+          if (searchForm.tenants.length > 0) {
+            result = result.filter(d => searchForm.tenants.includes(d.tenantName));
+          }
+
+          // 日期范围筛选
+          if (searchForm.dateRange && searchForm.dateRange.length === 2) {
+            const [start, end] = searchForm.dateRange;
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            endDate.setHours(23, 59, 59, 999);
+            
+            result = result.filter(d => {
+              const date = new Date(d.date);
+              return date >= startDate && date <= endDate;
+            });
+          }
+
+          return result;
+        });
+
+        const paginatedData = computed(() => {
+          const start = (pagination.currentPage - 1) * pagination.pageSize;
+          const end = start + pagination.pageSize;
+          return filteredData.value.slice(start, end);
+        });
+
+        const handleSearch = () => {
+          pagination.currentPage = 1;
+        };
+
+        const resetSearch = () => {
+          searchForm.resourceTypes = [];
+          searchForm.behavior = '';
+          searchForm.changeType = '';
+          searchForm.tenants = [];
+          searchForm.dateRange = null;
+          handleSearch();
+        };
+
+        const handleSizeChange = (size) => {
+          pagination.pageSize = size;
+          pagination.currentPage = 1;
+        };
+
+        const handleCurrentChange = (page) => {
+          pagination.currentPage = page;
+        };
+
+        const exportCSV = () => {
+          const columns = [
+            { prop: 'date', label: '日期', formatter: (row) => Utils.formatDate(row.date) },
+            { prop: 'resourceType', label: '资源类型' },
+            { prop: 'behavior', label: '行为' },
+            { prop: 'changeType', label: '变动类型' },
+            { prop: 'usage', label: '用量' },
+            { prop: 'pointsUsed', label: '消耗积分' },
+            { prop: 'tenantName', label: '计费租户' },
+            { prop: 'assetName', label: '关联资产' }
+          ];
+          
+          Utils.exportToCSV(filteredData.value, columns, `消费明细_${userId.value}_${Utils.formatDate(new Date(), 'YYYY-MM-DD')}.csv`);
+          ElMessage.success('导出成功');
+        };
+
+        return {
+          searchForm,
+          pagination,
+          resourceTypeOptions,
+          tenantOptions,
+          filteredData,
+          paginatedData,
+          handleSearch,
+          resetSearch,
+          handleSizeChange,
+          handleCurrentChange,
+          exportCSV,
+          Utils
+        };
+      }
+    });
+
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

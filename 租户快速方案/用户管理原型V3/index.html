@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户管理系统 - 高保真原型 V3</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- Custom CSS - 飞书风格 -->
+  <link rel="stylesheet" href="./assets/css/feishu-style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 导航栏 -->
+    <div class="navbar">
+      <div class="navbar-content">
+        <div class="navbar-title">
+          <i class="el-icon-user-solid"></i>
+          <span>用户管理系统</span>
+        </div>
+        <div>
+          <el-button type="primary" @click="showAbout">
+            <el-icon><InfoFilled /></el-icon>
+            <span>关于系统</span>
+          </el-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 用户列表页 -->
+      <div v-if="currentView === 'list'">
+        <user-list @view-detail="viewUserDetail"></user-list>
+      </div>
+
+      <!-- 用户详情页 -->
+      <div v-if="currentView === 'detail'">
+        <user-detail 
+          :user-id="currentUserId"
+          @back="backToList"
+        ></user-detail>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  
+  <!-- Element Plus 图标 -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- ECharts -->
+  <script src="https://unpkg.com/echarts@5.4.3/dist/echarts.min.js"></script>
+  
+  <!-- Day.js -->
+  <script src="https://unpkg.com/dayjs@1.11.10/dayjs.min.js"></script>
+  
+  <!-- 自定义JS -->
+  <script src="./assets/js/utils.js"></script>
+  <script src="./assets/data/static-data.js"></script>
+  <script src="./assets/js/charts.js"></script>
+
+  <script>
+    const { createApp, ref, computed, reactive, onMounted, watch, nextTick } = Vue;
+    const { ElMessage, ElMessageBox, ElLoading } = ElementPlus;
+
+    // ==================== 用户列表组件 ====================
+    const UserList = {
+      name: 'UserList',
+      template: `
+        <div class="user-list-page">
+          <!-- KPI卡片 -->
+          <div class="kpi-cards">
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <span class="kpi-card-title">用户总数</span>
+                <div class="kpi-card-icon">
+                  <el-icon><User /></el-icon>
+                </div>
+              </div>
+              <div class="kpi-card-value">{{ totalUsers }}</div>
+              <div class="kpi-card-subtitle">平台注册用户总数</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <span class="kpi-card-title">正常用户</span>
+                <div class="kpi-card-icon success">
+                  <el-icon><CircleCheck /></el-icon>
+                </div>
+              </div>
+              <div class="kpi-card-value">{{ activeUsers }}</div>
+              <div class="kpi-card-subtitle">状态正常的用户</div>
+              <div class="kpi-card-trend up">
+                <el-icon><CaretTop /></el-icon>
+                <span>{{ activeRate }}%</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <span class="kpi-card-title">已禁用用户</span>
+                <div class="kpi-card-icon danger">
+                  <el-icon><CircleClose /></el-icon>
+                </div>
+              </div>
+              <div class="kpi-card-value">{{ disabledUsers }}</div>
+              <div class="kpi-card-subtitle">已被禁用的用户</div>
+            </div>
+          </div>
+
+          <!-- 搜索栏 -->
+          <div class="search-bar">
+            <el-form :inline="true" :model="searchForm">
+              <el-form-item>
+                <el-input 
+                  v-model="searchForm.keyword" 
+                  placeholder="筛选用户名称、ID、手机号、邮箱号、MIS号"
+                  clearable
+                  style="width: 400px"
+                  @input="handleSearch"
+                >
+                  <template #prefix>
+                    <el-icon><Search /></el-icon>
+                  </template>
+                </el-input>
+              </el-form-item>
+
+              <el-form-item label="状态">
+                <el-select 
+                  v-model="searchForm.status" 
+                  placeholder="全部" 
+                  clearable
+                  style="width: 120px"
+                  @change="handleSearch"
+                >
+                  <el-option label="全部" value=""></el-option>
+                  <el-option label="正常" value="正常"></el-option>
+                  <el-option label="已禁用" value="已禁用"></el-option>
+                </el-select>
+              </el-form-item>
+
+              <el-form-item label="归属租户">
+                <el-select 
+                  v-model="searchForm.tenants" 
+                  placeholder="全部租户" 
+                  multiple
+                  collapse-tags
+                  filterable
+                  clearable
+                  style="width: 240px"
+                  @change="handleSearch"
+                >
+                  <el-option 
+                    v-for="tenant in allTenants" 
+                    :key="tenant.id" 
+                    :label="tenant.name" 
+                    :value="tenant.id"
+                  ></el-option>
+                </el-select>
+              </el-form-item>
+
+              <el-form-item label="创建时间">
+                <el-date-picker
+                  v-model="searchForm.dateRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  value-format="YYYY-MM-DD"
+                  @change="handleSearch"
+                  style="width: 260px"
+                />
+              </el-form-item>
+
+              <el-form-item>
+                <el-button @click="resetSearch">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+
+          <!-- 数据表格 -->
+          <div class="data-table">
+            <el-table 
+              :data="paginatedUsers" 
+              style="width: 100%"
+              :header-cell-style="{ background: '#f8f9fa' }"
+            >
+              <el-table-column prop="id" label="用户ID" width="140">
+                <template #default="scope">
+                  <span>{{ scope.row.id }}</span>
+                  <i class="el-icon-document-copy copy-btn" @click="copyText(scope.row.id)"></i>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="用户名称" width="200">
+                <template #default="scope">
+                  <div class="user-cell">
+                    <img :src="scope.row.avatar" class="user-avatar" />
+                    <div class="user-info">
+                      <div class="user-name" @click="$emit('view-detail', scope.row.id)">
+                        {{ scope.row.name }}
+                      </div>
+                      <div class="user-id">{{ scope.row.id }}</div>
+                    </div>
+                  </div>
+                </template>
+              </el-table-column>
+
+              <el-table-column label="归属租户" width="280">
+                <template #default="scope">
+                  <div class="tenant-tags">
+                    <el-tooltip 
+                      v-if="scope.row.tenants.length > 2"
+                      placement="top"
+                      effect="light"
+                    >
+                      <template #content>
+                        <div v-for="tenant in scope.row.tenants" :key="tenant.tenantId">
+                          {{ tenant.tenantName }} 
+                          <el-tag v-if="tenant.isOwner" size="small" type="warning">所有者</el-tag>
+                        </div>
+                      </template>
+                      <span class="tenant-tag">{{ scope.row.tenants[0].tenantName }}</span>
+                    </el-tooltip>
+                    <template v-else>
+                      <span 
+                        v-for="tenant in scope.row.tenants" 
+                        :key="tenant.tenantId"
+                        class="tenant-tag"
+                      >
+                        {{ tenant.tenantName }}
+                        <el-tag v-if="tenant.isOwner" size="small" type="warning" style="margin-left: 4px">所有者</el-tag>
+                      </span>
+                    </template>
+                    <span v-if="scope.row.tenants.length > 2" style="color: #909399; font-size: 12px">
+                      +{{ scope.row.tenants.length - 1 }}
+                    </span>
+                  </div>
+                </template>
+              </el-table-column>
+
+              <el-table-column prop="phone" label="绑定手机" width="140">
+                <template #default="scope">
+                  <span>{{ scope.row.phone }}</span>
+                  <i class="el-icon-document-copy copy-btn" @click="copyText(scope.row.phone)"></i>
+                </template>
+              </el-table-column>
+
+              <el-table-column prop="email" label="绑定邮箱" width="220">
+                <template #default="scope">
+                  <span>{{ scope.row.email }}</span>
+                  <i class="el-icon-document-copy copy-btn" @click="copyText(scope.row.email)"></i>
+                </template>
+              </el-table-column>
+
+              <el-table-column prop="mis" label="绑定MIS" width="140">
+                <template #default="scope">
+                  <span v-if="scope.row.mis">
+                    {{ scope.row.mis }}
+                    <i class="el-icon-document-copy copy-btn" @click="copyText(scope.row.mis)"></i>
+                  </span>
+                  <span v-else style="color: #c0c4cc">-</span>
+                </template>
+              </el-table-column>
+
+              <el-table-column prop="createdAt" label="创建时间" width="180" sortable>
+                <template #default="scope">
+                  {{ Utils.formatDate(scope.row.createdAt) }}
+                </template>
+              </el-table-column>
+
+              <el-table-column prop="lastLoginAt" label="最后登录时间" width="180" sortable>
+                <template #default="scope">
+                  {{ Utils.formatDate(scope.row.lastLoginAt) }}
+                </template>
+              </el-table-column>
+
+              <el-table-column prop="status" label="状态" width="100">
+                <template #default="scope">
+                  <el-tag 
+                    :type="scope.row.status === '正常' ? 'success' : 'danger'"
+                    size="small"
+                  >
+                    {{ scope.row.status }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+
+              <el-table-column prop="balance" label="账号金额" width="120">
+                <template #default="scope">
+                  ¥{{ Utils.formatNumber(scope.row.balance, 2) }}
+                </template>
+              </el-table-column>
+
+              <el-table-column label="操作" width="240" fixed="right">
+                <template #default="scope">
+                  <el-button 
+                    size="small" 
+                    @click="handleResetPassword(scope.row)"
+                  >
+                    重置密码
+                  </el-button>
+                  <el-button 
+                    size="small" 
+                    :type="scope.row.status === '正常' ? 'warning' : 'success'"
+                    @click="handleToggleStatus(scope.row)"
+                  >
+                    {{ scope.row.status === '正常' ? '禁用' : '启用' }}
+                  </el-button>
+                  <el-button 
+                    size="small" 
+                    type="danger"
+                    @click="handleDeleteUser(scope.row)"
+                  >
+                    注销
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <!-- 分页器 -->
+            <el-pagination
+              v-model:current-page="pagination.currentPage"
+              v-model:page-size="pagination.pageSize"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="filteredUsers.length"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+            />
+          </div>
+        </div>
+      `,
+      emits: ['view-detail'],
+      setup(props, { emit }) {
+        const searchForm = reactive({
+          keyword: '',
+          status: '',
+          tenants: [],
+          dateRange: null
+        });
+
+        const pagination = reactive({
+          currentPage: 1,
+          pageSize: 20
+        });
+
+        const allUsers = ref(MockData.users);
+        const allTenants = ref(MockData.tenants);
+
+        // 计算属性
+        const totalUsers = computed(() => allUsers.value.length);
+        const activeUsers = computed(() => 
+          allUsers.value.filter(u => u.status === '正常').length
+        );
+        const disabledUsers = computed(() => 
+          allUsers.value.filter(u => u.status === '已禁用').length
+        );
+        const activeRate = computed(() => 
+          totalUsers.value > 0 ? ((activeUsers.value / totalUsers.value) * 100).toFixed(1) : 0
+        );
+
+        // 筛选用户
+        const filteredUsers = computed(() => {
+          let result = allUsers.value;
+
+          // 关键词搜索
+          if (searchForm.keyword) {
+            const keyword = searchForm.keyword.toLowerCase();
+            result = result.filter(user => 
+              user.name.toLowerCase().includes(keyword) ||
+              user.id.toLowerCase().includes(keyword) ||
+              user.phone.includes(keyword) ||
+              user.email.toLowerCase().includes(keyword) ||
+              (user.mis && user.mis.toLowerCase().includes(keyword))
+            );
+          }
+
+          // 状态筛选
+          if (searchForm.status) {
+            result = result.filter(user => user.status === searchForm.status);
+          }
+
+          // 租户筛选
+          if (searchForm.tenants.length > 0) {
+            result = result.filter(user => 
+              user.tenants.some(t => searchForm.tenants.includes(t.tenantId))
+            );
+          }
+
+          // 日期范围筛选
+          if (searchForm.dateRange && searchForm.dateRange.length === 2) {
+            const [start, end] = searchForm.dateRange;
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            endDate.setHours(23, 59, 59, 999);
+            
+            result = result.filter(user => {
+              const userDate = new Date(user.createdAt);
+              return userDate >= startDate && userDate <= endDate;
+            });
+          }
+
+          return result;
+        });
+
+        // 分页后的用户
+        const paginatedUsers = computed(() => {
+          const start = (pagination.currentPage - 1) * pagination.pageSize;
+          const end = start + pagination.pageSize;
+          return filteredUsers.value.slice(start, end);
+        });
+
+        // 方法
+        const handleSearch = () => {
+          pagination.currentPage = 1;
+        };
+
+        const resetSearch = () => {
+          searchForm.keyword = '';
+          searchForm.status = '';
+          searchForm.tenants = [];
+          searchForm.dateRange = null;
+          handleSearch();
+        };
+
+        const handleSizeChange = (size) => {
+          pagination.pageSize = size;
+          pagination.currentPage = 1;
+        };
+
+        const handleCurrentChange = (page) => {
+          pagination.currentPage = page;
+        };
+
+        const copyText = async (text) => {
+          const success = await Utils.copyToClipboard(text);
+          if (success) {
+            ElMessage.success('复制成功');
+          } else {
+            ElMessage.error('复制失败');
+          }
+        };
+
+        const handleResetPassword = (user) => {
+          ElMessageBox.prompt('请输入新密码', '重置密码', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            inputType: 'password',
+            inputPattern: /^.{6,}$/,
+            inputErrorMessage: '密码至少6位'
+          }).then(({ value }) => {
+            ElMessage.success(`用户 ${user.name} 的密码已重置`);
+          }).catch(() => {});
+        };
+
+        const handleToggleStatus = (user) => {
+          const action = user.status === '正常' ? '禁用' : '启用';
+          ElMessageBox.confirm(
+            `确定要${action}用户 ${user.name} 吗？`,
+            '确认操作',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            user.status = user.status === '正常' ? '已禁用' : '正常';
+            ElMessage.success(`用户${action}成功`);
+          }).catch(() => {});
+        };
+
+        const handleDeleteUser = (user) => {
+          ElMessageBox.prompt(
+            `注销用户是不可逆操作，请输入"确认注销"以继续`,
+            '注销用户',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              inputPattern: /^确认注销$/,
+              inputErrorMessage: '请输入"确认注销"'
+            }
+          ).then(() => {
+            ElMessage.success(`用户 ${user.name} 已注销`);
+            // 这里可以实际删除用户
+          }).catch(() => {});
+        };
+
+        return {
+          searchForm,
+          pagination,
+          allTenants,
+          totalUsers,
+          activeUsers,
+          disabledUsers,
+          activeRate,
+          filteredUsers,
+          paginatedUsers,
+          handleSearch,
+          resetSearch,
+          handleSizeChange,
+          handleCurrentChange,
+          copyText,
+          handleResetPassword,
+          handleToggleStatus,
+          handleDeleteUser,
+          Utils
+        };
+      }
+    };
+
+    // ==================== 用户详情组件 ====================
+    const UserDetail = {
+      name: 'UserDetail',
+      template: `
+        <div class="user-detail-page">
+          <!-- 页面头部 -->
+          <div class="page-header">
+            <div class="page-header-top">
+              <div class="page-header-title">
+                <el-button @click="$emit('back')">
+                  <el-icon><ArrowLeft /></el-icon>
+                  <span>返回列表</span>
+                </el-button>
+                <h2>{{ currentUser?.name || '用户详情' }}</h2>
+              </div>
+              <div class="page-header-actions">
+                <el-button type="primary">编辑</el-button>
+                <el-button :type="currentUser?.status === '正常' ? 'warning' : 'success'">
+                  {{ currentUser?.status === '正常' ? '禁用' : '启用' }}
+                </el-button>
+                <el-button type="danger">注销</el-button>
+              </div>
+            </div>
+
+            <!-- 用户基本信息 -->
+            <div class="user-detail-header">
+              <div class="user-detail-info">
+                <img :src="currentUser?.avatar" class="user-detail-avatar" />
+                <div class="user-detail-main">
+                  <div class="user-detail-name">{{ currentUser?.name }}</div>
+                  <div class="user-detail-meta">
+                    <div class="user-detail-meta-item">
+                      <span class="user-detail-meta-label">用户ID:</span>
+                      <span class="user-detail-meta-value">{{ currentUser?.id }}</span>
+                    </div>
+                    <div class="user-detail-meta-item">
+                      <span class="user-detail-meta-label">手机:</span>
+                      <span class="user-detail-meta-value">{{ currentUser?.phone }}</span>
+                    </div>
+                    <div class="user-detail-meta-item">
+                      <span class="user-detail-meta-label">邮箱:</span>
+                      <span class="user-detail-meta-value">{{ currentUser?.email }}</span>
+                    </div>
+                    <div class="user-detail-meta-item" v-if="currentUser?.mis">
+                      <span class="user-detail-meta-label">MIS:</span>
+                      <span class="user-detail-meta-value">{{ currentUser?.mis }}</span>
+                    </div>
+                    <div class="user-detail-meta-item">
+                      <span class="user-detail-meta-label">状态:</span>
+                      <el-tag 
+                        :type="currentUser?.status === '正常' ? 'success' : 'danger'"
+                        size="small"
+                      >
+                        {{ currentUser?.status }}
+                      </el-tag>
+                    </div>
+                    <div class="user-detail-meta-item">
+                      <span class="user-detail-meta-label">创建时间:</span>
+                      <span class="user-detail-meta-value">{{ Utils.formatDate(currentUser?.createdAt) }}</span>
+                    </div>
+                    <div class="user-detail-meta-item">
+                      <span class="user-detail-meta-label">最后登录:</span>
+                      <span class="user-detail-meta-value">{{ Utils.formatDate(currentUser?.lastLoginAt) }}</span>
+                    </div>
+                    <div class="user-detail-meta-item">
+                      <span class="user-detail-meta-label">账号余额:</span>
+                      <span class="user-detail-meta-value">¥{{ Utils.formatNumber(currentUser?.balance || 0, 2) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 标签页 -->
+          <el-tabs v-model="activeTab" type="card">
+            <el-tab-pane label="数据总览" name="overview">
+              <iframe 
+                :src="'./pages/overview.html?userId=' + userId"
+                class="iframe-container"
+                style="height: 1400px; min-height: 1400px;"
+                frameborder="0"
+              ></iframe>
+            </el-tab-pane>
+            <el-tab-pane label="消费分析" name="consumption">
+              <iframe 
+                :src="'./pages/consumption.html?userId=' + userId"
+                class="iframe-container"
+                style="height: 2800px; min-height: 2800px;"
+                frameborder="0"
+              ></iframe>
+            </el-tab-pane>
+            <el-tab-pane label="资产与使用分析" name="assets">
+              <iframe 
+                :src="'./pages/assets.html?userId=' + userId"
+                class="iframe-container"
+                style="height: 1800px; min-height: 1800px;"
+                frameborder="0"
+              ></iframe>
+            </el-tab-pane>
+            <el-tab-pane label="消费明细" name="details">
+              <iframe 
+                :src="'./pages/details.html?userId=' + userId"
+                class="iframe-container"
+                style="height: 1000px; min-height: 1000px;"
+                frameborder="0"
+              ></iframe>
+            </el-tab-pane>
+            <el-tab-pane label="加入的租户" name="tenants">
+              <iframe 
+                :src="'./pages/tenants.html?userId=' + userId"
+                class="iframe-container"
+                style="height: 900px; min-height: 900px;"
+                frameborder="0"
+              ></iframe>
+            </el-tab-pane>
+          </el-tabs>
+        </div>
+      `,
+      props: {
+        userId: {
+          type: String,
+          required: true
+        }
+      },
+      emits: ['back'],
+      setup(props) {
+        const activeTab = ref('overview');
+        
+        const currentUser = computed(() => {
+          return MockData.users.find(u => u.id === props.userId);
+        });
+
+        return {
+          activeTab,
+          currentUser,
+          Utils
+        };
+      }
+    };
+
+    // ==================== 主应用 ====================
+    const app = createApp({
+      components: {
+        UserList,
+        UserDetail
+      },
+      setup() {
+        const currentView = ref('list');
+        const currentUserId = ref(null);
+
+        const viewUserDetail = (userId) => {
+          currentUserId.value = userId;
+          currentView.value = 'detail';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const backToList = () => {
+          currentView.value = 'list';
+          currentUserId.value = null;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const showAbout = () => {
+          ElMessageBox.alert(
+            '这是一个基于 Vue 3 + Element Plus + ECharts 构建的企业级用户管理系统高保真原型。' +
+            '包含用户列表、用户详情（5个标签页）、完整的数据可视化和交互功能。',
+            '关于系统',
+            {
+              confirmButtonText: '确定',
+              type: 'info'
+            }
+          );
+        };
+
+        return {
+          currentView,
+          currentUserId,
+          viewUserDetail,
+          backToList,
+          showAbout
+        };
+      }
+    });
+
+    // 使用Element Plus
+    app.use(ElementPlus);
+
+    // 注册所有Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+
+    // 挂载应用
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

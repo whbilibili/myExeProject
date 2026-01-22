@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>账单详情</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 飞书设计系统 -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--spacing-6);
+      background: var(--bg-2);
+    }
+    
+    /* 筛选器 */
+    .filter-section {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      margin-bottom: var(--spacing-4);
+      box-shadow: var(--shadow-1);
+    }
+    
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-4);
+      flex-wrap: wrap;
+    }
+    
+    .filter-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .filter-label {
+      font-size: var(--font-size-13);
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+    
+    /* 表格容器 */
+    .table-section {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      box-shadow: var(--shadow-1);
+      overflow: hidden;
+    }
+    
+    .table-header {
+      padding: var(--spacing-5) var(--spacing-6);
+      border-bottom: 1px solid var(--border-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .table-title {
+      font-size: var(--font-size-16);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+    }
+    
+    /* 变动类型标签 */
+    .change-type-tag {
+      font-size: var(--font-size-13);
+    }
+    
+    /* 用量单元格 */
+    .usage-cell {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-13);
+      color: var(--text-2);
+    }
+    
+    /* 积分单元格 */
+    .credits-cell {
+      font-weight: var(--font-weight-semibold);
+      color: var(--primary-color);
+    }
+    
+    .credits-cell.refund {
+      color: var(--success-color);
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <!-- 高级筛选器 -->
+    <div class="filter-section">
+      <div class="filter-row">
+        <div class="filter-item">
+          <span class="filter-label">时间:</span>
+          <el-date-picker
+            v-model="filters.dateRange"
+            type="daterange"
+            range-separator="-"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            style="width: 260px;"
+          />
+        </div>
+        
+        <div class="filter-item">
+          <span class="filter-label">资源类型:</span>
+          <el-select
+            v-model="filters.resourceType"
+            placeholder="全部类型"
+            clearable
+            multiple
+            collapse-tags
+            style="width: 200px;"
+          >
+            <el-option label="Token" value="Token" />
+            <el-option label="云电脑设备时长" value="云电脑设备时长" />
+            <el-option label="云手机设备时长" value="云手机设备时长" />
+            <el-option label="存储空间" value="存储空间" />
+          </el-select>
+        </div>
+        
+        <div class="filter-item">
+          <span class="filter-label">行为:</span>
+          <el-input
+            v-model="filters.behavior"
+            placeholder="搜索行为"
+            clearable
+            style="width: 180px;"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+        </div>
+        
+        <div class="filter-item">
+          <span class="filter-label">变动类型:</span>
+          <el-select v-model="filters.changeType" placeholder="全部" clearable style="width: 120px;">
+            <el-option label="全部" value="" />
+            <el-option label="消耗" value="消耗" />
+            <el-option label="返还" value="返还" />
+          </el-select>
+        </div>
+        
+        <div class="filter-item">
+          <span class="filter-label">
+            是否消耗积分:
+            <el-tooltip content="用于筛选该条记录是否产生了实际的积分变动" placement="top">
+              <el-icon class="tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </span>
+          <el-select v-model="filters.hasCreditsChange" placeholder="全部" clearable style="width: 100px;">
+            <el-option label="全部" value="" />
+            <el-option label="是" :value="true" />
+            <el-option label="否" :value="false" />
+          </el-select>
+        </div>
+        
+        <el-button @click="resetFilters">重置</el-button>
+      </div>
+    </div>
+    
+    <!-- 消费明细流水表格 -->
+    <div class="table-section">
+      <div class="table-header">
+        <span class="table-title">消费明细流水</span>
+        <el-button @click="handleExport">
+          <el-icon><Download /></el-icon>
+          导出CSV
+        </el-button>
+      </div>
+      
+      <el-table
+        :data="paginatedData"
+        style="width: 100%"
+        :default-sort="{ prop: 'date', order: 'descending' }"
+        @sort-change="handleSortChange"
+      >
+        <el-table-column prop="date" label="日期" width="180" sortable="custom">
+          <template #default="{ row }">
+            {{ formatDateTime(row.date) }}
+          </template>
+        </el-table-column>
+        
+        <el-table-column prop="resourceType" label="资源类型" width="140" sortable="custom">
+          <template #default="{ row }">
+            <el-tag size="small" type="info">{{ row.resourceType }}</el-tag>
+          </template>
+        </el-table-column>
+        
+        <el-table-column prop="behavior" label="行为" min-width="180" sortable="custom">
+          <template #default="{ row }">
+            {{ row.behavior }}
+          </template>
+        </el-table-column>
+        
+        <el-table-column prop="changeType" label="变动类型" width="100" sortable="custom">
+          <template #default="{ row }">
+            <el-tag
+              :type="row.changeType === '消耗' ? 'danger' : 'success'"
+              size="small"
+              class="change-type-tag"
+            >
+              {{ row.changeType }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        
+        <el-table-column prop="usage" label="用量" min-width="200">
+          <template #default="{ row }">
+            <span class="usage-cell">{{ row.usage }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column prop="credits" label="消耗积分" width="120" align="right" sortable="custom">
+          <template #default="{ row }">
+            <span :class="['credits-cell', row.changeType === '返还' ? 'refund' : '']">
+              {{ row.changeType === '返还' ? '+' : '' }}{{ formatNumber(row.credits) }} 点
+            </span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column prop="tenant" label="计费租户" width="140">
+          <template #default="{ row }">
+            当前租户
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <!-- 分页 -->
+      <div style="padding: 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-2);">
+        <span style="color: var(--text-3); font-size: 13px;">
+          共 {{ filteredData.length }} 条
+        </span>
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :page-sizes="[20, 50, 100, 200]"
+          :total="filteredData.length"
+          layout="sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  
+  <script>
+    const { createApp, ref, computed } = Vue;
+    
+    const app = createApp({
+      setup() {
+        // 数据
+        const billingRecords = ref(MockData.billingRecords);
+        
+        // 筛选
+        const filters = ref({
+          dateRange: null,
+          resourceType: [],
+          behavior: '',
+          changeType: '',
+          hasCreditsChange: '',
+        });
+        
+        // 排序
+        const sortProp = ref('date');
+        const sortOrder = ref('descending');
+        
+        // 分页
+        const pagination = ref({
+          page: 1,
+          pageSize: 20,
+        });
+        
+        // 过滤后的数据
+        const filteredData = computed(() => {
+          let data = [...billingRecords.value];
+          
+          // 时间筛选
+          if (filters.value.dateRange && filters.value.dateRange.length === 2) {
+            const [start, end] = filters.value.dateRange;
+            data = data.filter(r => {
+              const recordDate = new Date(r.date);
+              return recordDate >= start && recordDate <= end;
+            });
+          }
+          
+          // 资源类型筛选
+          if (filters.value.resourceType && filters.value.resourceType.length > 0) {
+            data = data.filter(r => filters.value.resourceType.includes(r.resourceType));
+          }
+          
+          // 行为搜索
+          if (filters.value.behavior) {
+            const keyword = filters.value.behavior.toLowerCase();
+            data = data.filter(r => r.behavior.toLowerCase().includes(keyword));
+          }
+          
+          // 变动类型筛选
+          if (filters.value.changeType) {
+            data = data.filter(r => r.changeType === filters.value.changeType);
+          }
+          
+          // 是否消耗积分筛选
+          if (filters.value.hasCreditsChange !== '') {
+            data = data.filter(r => r.hasCreditsChange === filters.value.hasCreditsChange);
+          }
+          
+          // 排序
+          if (sortProp.value) {
+            data.sort((a, b) => {
+              const aVal = a[sortProp.value];
+              const bVal = b[sortProp.value];
+              
+              if (sortProp.value === 'date') {
+                const aTime = new Date(aVal).getTime();
+                const bTime = new Date(bVal).getTime();
+                return sortOrder.value === 'ascending' ? aTime - bTime : bTime - aTime;
+              }
+              
+              if (typeof aVal === 'number' && typeof bVal === 'number') {
+                return sortOrder.value === 'ascending' ? aVal - bVal : bVal - aVal;
+              }
+              
+              if (typeof aVal === 'string' && typeof bVal === 'string') {
+                return sortOrder.value === 'ascending'
+                  ? aVal.localeCompare(bVal, 'zh-CN')
+                  : bVal.localeCompare(aVal, 'zh-CN');
+              }
+              
+              return 0;
+            });
+          }
+          
+          return data;
+        });
+        
+        // 分页后的数据
+        const paginatedData = computed(() => {
+          const start = (pagination.value.page - 1) * pagination.value.pageSize;
+          const end = start + pagination.value.pageSize;
+          return filteredData.value.slice(start, end);
+        });
+        
+        // 方法
+        const formatNumber = (num) => Utils.formatNumber(num);
+        const formatDateTime = (date) => Utils.formatDateTime(date);
+        
+        const handleSortChange = ({ prop, order }) => {
+          sortProp.value = prop;
+          sortOrder.value = order;
+        };
+        
+        const handlePageChange = (page) => {
+          pagination.value.page = page;
+        };
+        
+        const handleSizeChange = (size) => {
+          pagination.value.pageSize = size;
+          pagination.value.page = 1;
+        };
+        
+        const resetFilters = () => {
+          filters.value = {
+            dateRange: null,
+            resourceType: [],
+            behavior: '',
+            changeType: '',
+            hasCreditsChange: '',
+          };
+          pagination.value.page = 1;
+        };
+        
+        const handleExport = () => {
+          const columns = [
+            { label: '日期', prop: 'date' },
+            { label: '资源类型', prop: 'resourceType' },
+            { label: '行为', prop: 'behavior' },
+            { label: '变动类型', prop: 'changeType' },
+            { label: '用量', prop: 'usage' },
+            { label: '消耗积分', prop: 'credits' },
+          ];
+          
+          const filename = `账单明细_${new Date().toISOString().slice(0, 10)}.csv`;
+          Utils.exportToCSV(filteredData.value, filename, columns);
+        };
+        
+        return {
+          billingRecords,
+          filters,
+          pagination,
+          filteredData,
+          paginatedData,
+          formatNumber,
+          formatDateTime,
+          handleSortChange,
+          handlePageChange,
+          handleSizeChange,
+          resetFilters,
+          handleExport,
+        };
+      },
+    });
+    
+    // 注册图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

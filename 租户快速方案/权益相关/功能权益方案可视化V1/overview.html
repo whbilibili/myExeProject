@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>整体架构概览</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: transparent;
+            color: #333;
+            padding: 2rem;
+        }
+
+        .section {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1e293b;
+            text-align: center;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .intro-text {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        .four-pillars {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .pillar {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .pillar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--gradient);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .pillar::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, var(--color-alpha), transparent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.6s ease;
+            z-index: -1;
+        }
+
+        .pillar:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .pillar:hover {
+            transform: translateY(-15px) rotateY(5deg);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+            border-color: var(--color);
+        }
+
+        .pillar.feature { 
+            --color: #10b981; 
+            --color-alpha: rgba(16, 185, 129, 0.1);
+            --gradient: linear-gradient(135deg, #10b981, #059669);
+        }
+        .pillar.data { 
+            --color: #3b82f6; 
+            --color-alpha: rgba(59, 130, 246, 0.1);
+            --gradient: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+        .pillar.quota { 
+            --color: #f59e0b; 
+            --color-alpha: rgba(245, 158, 11, 0.1);
+            --gradient: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        .pillar.governance { 
+            --color: #ef4444; 
+            --color-alpha: rgba(239, 68, 68, 0.1);
+            --gradient: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .pillar-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 8px 25px var(--color-alpha);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .pillar-icon::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: conic-gradient(var(--color), transparent, var(--color));
+            border-radius: 50%;
+            z-index: -1;
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .pillar:hover .pillar-icon {
+            transform: scale(1.1) rotateY(180deg);
+            box-shadow: 0 15px 40px var(--color-alpha);
+        }
+
+        .pillar h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        .pillar p {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .highlight-box {
+            background: rgba(254, 243, 199, 0.8);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .highlight-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .highlight-box h4 {
+            color: #d97706;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .highlight-box ul {
+            color: #92400e;
+            padding-left: 1.5rem;
+        }
+
+        .highlight-box li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h2><i class="fas fa-sitemap"></i> 核心设计：四权分立</h2>
+        <p class="intro-text">
+            将传统的"权限"概念精确拆分为四个独立维度，每个维度职责清晰、互不干扰
+        </p>
+        
+        <div class="four-pillars">
+            <div class="pillar feature">
+                <div class="pillar-icon"><i class="fas fa-tools"></i></div>
+                <h3>功能权限</h3>
+                <p><strong>回答：</strong>用户能使用什么高级工具？</p>
+                <p><strong>管理者：</strong>租户管理员</p>
+                <p><strong>示例：</strong>AI分析节点、企业级插件开发</p>
+                <p><strong>来源：</strong>平台订阅计划定义 → 租户选择订阅 → 租户内部分配</p>
+            </div>
+            
+            <div class="pillar data">
+                <div class="pillar-icon"><i class="fas fa-database"></i></div>
+                <h3>数据权限</h3>
+                <p><strong>回答：</strong>用户能对哪个资源做什么操作？</p>
+                <p><strong>管理者：</strong>空间管理员</p>
+                <p><strong>示例：</strong>编辑智能体、查看工作流</p>
+                <p><strong>特点：</strong>独立于功能权限，专注协作关系</p>
+            </div>
+            
+            <div class="pillar quota">
+                <div class="pillar-icon"><i class="fas fa-chart-pie"></i></div>
+                <h3>资源配额</h3>
+                <p><strong>回答：</strong>租户总共能创建多少资源？</p>
+                <p><strong>管理者：</strong>租户管理员</p>
+                <p><strong>示例：</strong>100个智能体、50GB存储</p>
+                <p><strong>来源：</strong>平台计划模板 → 租户订阅具体配额</p>
+            </div>
+            
+            <div class="pillar governance">
+                <div class="pillar-icon"><i class="fas fa-balance-scale"></i></div>
+                <h3>治理权限</h3>
+                <p><strong>回答：</strong>谁有资格创建空间？</p>
+                <p><strong>管理者：</strong>租户管理员</p>
+                <p><strong>示例：</strong>创建空间、管理组织架构</p>
+                <p><strong>特点：</strong>控制租户内部的结构性操作</p>
+            </div>
+        </div>
+        
+        <div class="highlight-box">
+            <h4><i class="fas fa-lightbulb"></i> 三层协同优势</h4>
+            <ul>
+                <li><strong>平台层标准化：</strong>运营方统一定义订阅计划，确保产品一致性和商业策略</li>
+                <li><strong>租户层个性化：</strong>企业客户可以根据自身需求选择计划并灵活分配给员工</li>
+                <li><strong>空间层协作化：</strong>项目团队专注于数据协作，不被复杂的功能权限管理干扰</li>
+                <li><strong>权限精确化：</strong>避免了传统权限系统的混乱，每一层都有明确的职责边界</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>成员管理 - 租户后台</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义飞书设计系统 -->
+  <link rel="stylesheet" href="./assets/css/feishu-design.css">
+  
+  <style>
+    /* 页面特定样式 */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    /* 成员头像名称单元格 */
+    .member-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-in-out);
+      padding: var(--spacing-2) 0;
+    }
+    
+    .member-cell:hover {
+      color: var(--primary-color);
+    }
+    
+    .member-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-large);
+      object-fit: cover;
+      border: 1px solid var(--border-2);
+      flex-shrink: 0;
+    }
+    
+    .member-cell:hover .member-avatar {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px var(--primary-lightest);
+    }
+    
+    .member-name {
+      font-weight: var(--font-weight-medium);
+      color: var(--text-1);
+      transition: color var(--duration-fast);
+    }
+    
+    .member-cell:hover .member-name {
+      color: var(--primary-color);
+    }
+    
+    /* 角色标签 */
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 10px;
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-12);
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .role-badge.owner {
+      background-color: var(--warning-lightest);
+      color: var(--warning-color);
+    }
+    
+    .role-badge.admin {
+      background-color: var(--primary-lightest);
+      color: var(--primary-color);
+    }
+    
+    .role-badge.member {
+      background-color: var(--fill-2);
+      color: var(--text-2);
+    }
+    
+    .role-badge.space-creator {
+      background-color: var(--success-lightest);
+      color: var(--success-color);
+    }
+    
+    /* ID单元格 */
+    .id-cell {
+      font-family: var(--font-family-mono);
+      color: var(--text-3);
+      font-size: var(--font-size-12);
+    }
+    
+    /* 抽屉样式 */
+    .member-drawer .el-drawer__body {
+      padding: 0;
+    }
+    
+    .member-info-card {
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border-2);
+      padding: var(--spacing-6);
+      position: relative;
+    }
+    
+    .member-header {
+      display: flex;
+      gap: var(--spacing-6);
+      align-items: flex-start;
+    }
+    
+    .member-avatar-section {
+      flex-shrink: 0;
+    }
+    
+    .member-avatar-large {
+      width: 100px;
+      height: 100px;
+      border-radius: var(--radius-large);
+      object-fit: cover;
+      border: 2px solid var(--border-2);
+    }
+    
+    .member-info-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
+    }
+    
+    .member-name-row {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+    
+    .member-name-large {
+      font-size: var(--font-size-24);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-4);
+    }
+    
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .info-label {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+      min-width: 90px;
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .info-value {
+      font-size: var(--font-size-14);
+      color: var(--text-1);
+      font-family: var(--font-family-mono);
+    }
+    
+    .member-actions {
+      display: flex;
+      flex-direction: row;
+      gap: var(--spacing-3);
+      flex-shrink: 0;
+    }
+    
+    /* 标签页容器 */
+    .tabs-wrapper {
+      background: var(--bg-2);
+      padding: var(--spacing-4);
+    }
+    
+    .tab-content-iframe {
+      width: 100%;
+      min-height: 800px;
+      border: none;
+      display: block;
+      background: var(--bg-2);
+      border-radius: var(--radius-large);
+    }
+    
+    /* 编辑对话框样式 */
+    .edit-dialog-wrapper {
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .edit-dialog-basic-info {
+      background: var(--bg-2);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      margin-bottom: var(--spacing-6);
+      border: 1px solid var(--border-2);
+    }
+    
+    .edit-dialog-basic-info-title {
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-4);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .edit-dialog-basic-info-title::before {
+      content: '';
+      width: 3px;
+      height: 14px;
+      background: var(--primary-color);
+      border-radius: var(--radius-small);
+    }
+    
+    .edit-dialog-basic-info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-4);
+    }
+    
+    .edit-dialog-basic-info-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-3);
+    }
+    
+    .edit-dialog-basic-info-label {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+      min-width: 80px;
+      flex-shrink: 0;
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .edit-dialog-basic-info-value {
+      font-size: var(--font-size-14);
+      color: var(--text-1);
+      flex: 1;
+      word-break: break-all;
+    }
+    
+    .edit-dialog-basic-info-value.mono {
+      font-family: var(--font-family-mono);
+    }
+    
+    .edit-dialog-basic-info-avatar {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      grid-column: 1 / -1;
+      padding-bottom: var(--spacing-4);
+      border-bottom: 1px solid var(--border-2);
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .edit-dialog-avatar-img {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-large);
+      object-fit: cover;
+      border: 2px solid var(--border-2);
+    }
+    
+    .edit-dialog-avatar-info {
+      flex: 1;
+    }
+    
+    .edit-dialog-avatar-name {
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-1);
+    }
+    
+    .edit-dialog-form-section {
+      margin-bottom: var(--spacing-5);
+    }
+    
+    .edit-dialog-form-section-title {
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-4);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .edit-dialog-form-section-title::before {
+      content: '';
+      width: 3px;
+      height: 14px;
+      background: var(--primary-color);
+      border-radius: var(--radius-small);
+    }
+    
+    .edit-dialog-role-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+    
+    .edit-dialog-role-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-2);
+      padding: var(--spacing-3);
+      border-radius: var(--radius-medium);
+      border: 1px solid var(--border-2);
+      transition: all var(--duration-fast);
+      cursor: pointer;
+    }
+    
+    .edit-dialog-role-item:hover {
+      border-color: var(--primary-color);
+      background: var(--primary-lightest);
+    }
+    
+    .edit-dialog-role-item.selected {
+      border-color: var(--primary-color);
+      background: var(--primary-lightest);
+    }
+    
+    .edit-dialog-role-item.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    
+    .edit-dialog-role-item .el-radio {
+      margin-right: 0;
+      margin-top: 2px;
+    }
+    
+    .edit-dialog-form .el-form-item {
+      margin-bottom: 0;
+    }
+    
+    .edit-dialog-role-content {
+      flex: 1;
+    }
+    
+    .edit-dialog-role-name {
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-1);
+    }
+    
+    .edit-dialog-role-desc {
+      font-size: var(--font-size-12);
+      color: var(--text-3);
+      line-height: 1.5;
+    }
+    
+    .edit-dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-3);
+      padding-top: var(--spacing-4);
+      border-top: 1px solid var(--border-2);
+      margin-top: var(--spacing-4);
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 1600px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 992px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .edit-dialog-basic-info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="page-wrapper">
+    <!-- 顶部导航栏 -->
+    <div class="navbar">
+      <div class="navbar-container">
+        <div class="navbar-left">
+          <div class="navbar-title">
+            <el-icon :size="24" color="#3370FF">
+              <el-icon-office-building />
+            </el-icon>
+            <span>{{ tenantInfo.name }} - 成员管理</span>
+          </div>
+        </div>
+        <div class="navbar-right">
+          <el-tag type="info" size="small">租户后台</el-tag>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="main-container fade-in">
+      <!-- 统计仪表盘 -->
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">成员总数</div>
+            <div class="stat-card-icon primary">
+              <el-icon><el-icon-user /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ stats.total }}</div>
+          <div class="stat-card-subtitle">租户内所有成员</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">管理员</div>
+            <div class="stat-card-icon primary">
+              <el-icon><el-icon-user-filled /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ stats.admins }}</div>
+          <div class="stat-card-subtitle">拥有管理权限</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">空间创建员</div>
+            <div class="stat-card-icon success">
+              <el-icon><el-icon-plus /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ stats.spaceCreators }}</div>
+          <div class="stat-card-subtitle">可创建空间</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">部门数量</div>
+            <div class="stat-card-icon info">
+              <el-icon><el-icon-office-building /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ stats.departments }}</div>
+          <div class="stat-card-subtitle">组织架构</div>
+        </div>
+      </div>
+      
+      <!-- 筛选器 -->
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="filter-item" style="flex: 2; min-width: 300px;">
+            <label class="filter-label">搜索</label>
+            <el-input
+              v-model="filters.search"
+              placeholder="搜索成员名称、用户ID、手机号、邮箱、部门"
+              clearable
+              @input="handleSearch"
+            >
+              <template #prefix>
+                <el-icon><el-icon-search /></el-icon>
+              </template>
+            </el-input>
+          </div>
+          
+          <div class="filter-item" style="min-width: 200px;">
+            <label class="filter-label">部门</label>
+            <el-select
+              v-model="filters.departments"
+              placeholder="全部部门"
+              multiple
+              filterable
+              clearable
+              collapse-tags
+              collapse-tags-tooltip
+              style="width: 100%;"
+              @change="handleFilter"
+            >
+              <el-option
+                v-for="dept in allDepartments"
+                :key="dept.id"
+                :label="dept.name"
+                :value="dept.id"
+              />
+            </el-select>
+          </div>
+          
+          <div class="filter-item" style="min-width: 180px;">
+            <label class="filter-label">权限</label>
+            <el-select
+              v-model="filters.roles"
+              placeholder="全部权限"
+              multiple
+              clearable
+              collapse-tags
+              style="width: 100%;"
+              @change="handleFilter"
+            >
+              <el-option label="所有者" value="所有者" />
+              <el-option label="管理员" value="管理员" />
+              <el-option label="成员" value="成员" />
+              <el-option label="空间创建员" value="空间创建员" />
+            </el-select>
+          </div>
+          
+          <div class="filter-item" style="min-width: 150px;">
+            <label class="filter-label">状态</label>
+            <el-select
+              v-model="filters.status"
+              placeholder="全部"
+              style="width: 100%;"
+              @change="handleFilter"
+            >
+              <el-option label="全部" value="全部" />
+              <el-option label="正常" value="正常" />
+              <el-option label="已禁用" value="已禁用" />
+            </el-select>
+          </div>
+          
+          <div class="filter-item" style="min-width: 280px;">
+            <label class="filter-label">加入时间</label>
+            <el-date-picker
+              v-model="filters.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              clearable
+              style="width: 100%;"
+              @change="handleFilter"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <!-- 成员列表表格 -->
+      <div class="table-wrapper">
+        <el-table
+          :data="tableData"
+          v-loading="loading"
+          style="width: 100%"
+          stripe
+          @sort-change="handleSortChange"
+          @row-click="viewMemberDetail"
+          :row-style="{ cursor: 'pointer' }"
+        >
+          <el-table-column label="成员" width="220" fixed="left">
+            <template #default="{ row }">
+              <div class="member-cell">
+                <img :src="row.avatar" :alt="row.name" class="member-avatar" />
+                <span class="member-name">{{ row.name }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="id" label="用户ID" width="140">
+            <template #default="{ row }">
+              <div class="id-cell">{{ row.id }}</div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="归属部门" width="180" show-overflow-tooltip>
+            <template #default="{ row }">
+              <span class="text-14 text-2">{{ row.departmentName }}</span>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="直属上级" width="120" show-overflow-tooltip>
+            <template #default="{ row }">
+              <span class="text-14 text-2">{{ row.supervisorName || '-' }}</span>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="权限" width="120">
+            <template #default="{ row }">
+              <span :class="['role-badge', getRoleClass(row.role)]">
+                {{ row.role }}
+              </span>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="绑定手机" width="140">
+            <template #default="{ row }">
+              <span class="text-13" style="font-family: var(--font-family-mono);">{{ row.phone }}</span>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="绑定邮箱" width="220" show-overflow-tooltip>
+            <template #default="{ row }">
+              <span class="text-13" style="font-family: var(--font-family-mono);">{{ row.email }}</span>
+            </template>
+          </el-table-column>
+          
+          <el-table-column
+            prop="joinTime"
+            label="加入时间"
+            width="170"
+            sortable="custom"
+          >
+            <template #default="{ row }">
+              <span class="text-13 text-3">{{ Utils.formatDate(row.joinTime, 'YYYY-MM-DD HH:mm') }}</span>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="状态" width="100">
+            <template #default="{ row }">
+              <el-tag :type="row.status === '正常' ? 'success' : 'info'" size="small">
+                {{ row.status }}
+              </el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <!-- 分页 -->
+        <div style="padding: var(--spacing-5) var(--spacing-6); display: flex; justify-content: flex-end; background: var(--bg-1);">
+          <el-pagination
+            v-model:current-page="pagination.page"
+            v-model:page-size="pagination.pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="pagination.total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
+          />
+        </div>
+      </div>
+    </div>
+    
+    <!-- 成员详情抽屉 -->
+    <el-drawer
+      v-model="memberDrawer.visible"
+      title="成员详情"
+      direction="rtl"
+      size="1200px"
+      :before-close="handleDrawerClose"
+      class="member-drawer"
+    >
+      <!-- 基本信息卡片 -->
+      <div class="member-info-card">
+        <div class="member-header">
+          <div class="member-avatar-section">
+            <img :src="memberInfo.avatar" :alt="memberInfo.name" class="member-avatar-large" />
+          </div>
+          
+          <div class="member-info-section">
+            <div class="member-name-row">
+              <h2 class="member-name-large">{{ memberInfo.name }}</h2>
+              <span :class="['role-badge', getRoleClass(memberInfo.role)]">
+                {{ memberInfo.role }}
+              </span>
+            </div>
+            
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">用户ID:</span>
+                <span class="info-value">{{ memberInfo.id }}</span>
+                <el-icon class="copy-btn" @click.stop="copyText(memberInfo.id)">
+                  <el-icon-document-copy />
+                </el-icon>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">绑定手机:</span>
+                <span class="info-value">{{ memberInfo.phone }}</span>
+                <el-icon class="copy-btn" @click.stop="copyText(memberInfo.phone)">
+                  <el-icon-document-copy />
+                </el-icon>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">绑定邮箱:</span>
+                <span class="info-value">{{ memberInfo.email }}</span>
+                <el-icon class="copy-btn" @click.stop="copyText(memberInfo.email)">
+                  <el-icon-document-copy />
+                </el-icon>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">归属部门:</span>
+                <span class="info-value text-2">{{ memberInfo.departmentName }}</span>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">直属上级:</span>
+                <span class="info-value text-2">{{ memberInfo.supervisorName || '无' }}</span>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">加入时间:</span>
+                <span class="info-value">{{ Utils.formatDate(memberInfo.joinTime) }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="member-actions">
+            <el-button 
+              type="primary"
+              @click="editMemberInfo"
+              :disabled="memberInfo.role === '所有者'"
+            >
+              <el-icon><el-icon-edit /></el-icon>
+              编辑
+            </el-button>
+            <el-button 
+              type="danger"
+              @click="removeMember"
+              :disabled="memberInfo.role === '所有者'"
+            >
+              <el-icon><el-icon-delete /></el-icon>
+              从租户中移除
+            </el-button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 标签页区域 -->
+      <div class="tabs-wrapper">
+        <el-tabs v-model="activeTab" type="card">
+          <el-tab-pane label="数据总览" name="overview">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-data-analysis /></el-icon>
+                数据总览
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'overview' && memberDrawer.visible"
+              :src="`pages/overview.html?userId=${memberInfo.id}&tenantId=${tenantInfo.id}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+          
+          <el-tab-pane label="资源消耗账单" name="consumption">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-coin /></el-icon>
+                资源消耗账单
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'consumption' && memberDrawer.visible"
+              :src="`pages/consumption.html?userId=${memberInfo.id}&tenantId=${tenantInfo.id}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+          
+          <el-tab-pane label="资产明细" name="assets">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-box /></el-icon>
+                资产明细
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'assets' && memberDrawer.visible"
+              :src="`pages/assets.html?userId=${memberInfo.id}&tenantId=${tenantInfo.id}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </el-drawer>
+    
+    <!-- 编辑成员信息对话框 -->
+    <el-dialog
+      v-model="editDialog.visible"
+      title="编辑成员信息"
+      width="720px"
+      :close-on-click-modal="false"
+      class="edit-member-dialog"
+    >
+      <div class="edit-dialog-wrapper">
+        <!-- 区域一：基本信息（只读） -->
+        <div class="edit-dialog-basic-info">
+          <div class="edit-dialog-basic-info-title">基本信息</div>
+          <div class="edit-dialog-basic-info-grid">
+            <!-- 头像和名称 -->
+            <div class="edit-dialog-basic-info-avatar">
+              <img :src="memberInfo.avatar" :alt="memberInfo.name" class="edit-dialog-avatar-img" />
+              <div class="edit-dialog-avatar-info">
+                <div class="edit-dialog-avatar-name">{{ memberInfo.name }}</div>
+                <span :class="['role-badge', getRoleClass(memberInfo.role)]">
+                  {{ memberInfo.role }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- 用户ID -->
+            <div class="edit-dialog-basic-info-item">
+              <span class="edit-dialog-basic-info-label">用户ID</span>
+              <span class="edit-dialog-basic-info-value mono">{{ memberInfo.id }}</span>
+            </div>
+            
+            <!-- 绑定手机 -->
+            <div class="edit-dialog-basic-info-item">
+              <span class="edit-dialog-basic-info-label">绑定手机</span>
+              <span class="edit-dialog-basic-info-value mono">{{ memberInfo.phone }}</span>
+            </div>
+            
+            <!-- 绑定邮箱 -->
+            <div class="edit-dialog-basic-info-item">
+              <span class="edit-dialog-basic-info-label">绑定邮箱</span>
+              <span class="edit-dialog-basic-info-value mono">{{ memberInfo.email }}</span>
+            </div>
+            
+            <!-- 归属部门 -->
+            <div class="edit-dialog-basic-info-item">
+              <span class="edit-dialog-basic-info-label">归属部门</span>
+              <span class="edit-dialog-basic-info-value">{{ memberInfo.departmentName || '-' }}</span>
+            </div>
+            
+            <!-- 直属上级 -->
+            <div class="edit-dialog-basic-info-item">
+              <span class="edit-dialog-basic-info-label">直属上级</span>
+              <span class="edit-dialog-basic-info-value">{{ memberInfo.supervisorName || '-' }}</span>
+            </div>
+            
+            <!-- 权限角色 -->
+            <div class="edit-dialog-basic-info-item">
+              <span class="edit-dialog-basic-info-label">权限角色</span>
+              <span class="edit-dialog-basic-info-value">
+                <span :class="['role-badge', getRoleClass(memberInfo.role)]">
+                  {{ memberInfo.role }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 区域二：可编辑信息 -->
+        <el-form :model="editDialog.form" label-width="100px" class="edit-dialog-form">
+          <!-- 归属部门 -->
+          <div class="edit-dialog-form-section">
+            <div class="edit-dialog-form-section-title">归属部门</div>
+            <el-form-item>
+              <el-cascader
+                v-model="editDialog.form.departmentId"
+                :options="departmentTree"
+                :props="{ value: 'id', label: 'name', children: 'children', checkStrictly: true }"
+                placeholder="请选择部门"
+                style="width: 100%;"
+                clearable
+              />
+            </el-form-item>
+          </div>
+          
+          <!-- 直属上级 -->
+          <div class="edit-dialog-form-section">
+            <div class="edit-dialog-form-section-title">直属上级</div>
+            <el-form-item>
+              <el-select
+                v-model="editDialog.form.supervisorId"
+                placeholder="请选择直属上级"
+                filterable
+                clearable
+                style="width: 100%;"
+              >
+                <el-option
+                  v-for="member in availableSupervisors"
+                  :key="member.id"
+                  :label="member.name"
+                  :value="member.id"
+                >
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>{{ member.name }}</span>
+                    <span style="color: var(--text-3); font-size: 12px;">{{ member.departmentName }}</span>
+                  </div>
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </div>
+          
+          <!-- 权限角色 -->
+          <div class="edit-dialog-form-section">
+            <div class="edit-dialog-form-section-title">权限角色</div>
+            <el-form-item>
+              <div class="edit-dialog-role-group">
+                <div 
+                  :class="['edit-dialog-role-item', { selected: editDialog.form.role === '成员' }]"
+                  @click="editDialog.form.role = '成员'"
+                >
+                  <el-radio value="成员" v-model="editDialog.form.role" />
+                  <div class="edit-dialog-role-content">
+                    <div class="edit-dialog-role-name">成员</div>
+                    <div class="edit-dialog-role-desc">租户的普通成员，拥有基础使用权限</div>
+                  </div>
+                </div>
+                
+                <div 
+                  :class="['edit-dialog-role-item', { selected: editDialog.form.role === '管理员' }]"
+                  @click="editDialog.form.role = '管理员'"
+                >
+                  <el-radio value="管理员" v-model="editDialog.form.role" />
+                  <div class="edit-dialog-role-content">
+                    <div class="edit-dialog-role-name">管理员</div>
+                    <div class="edit-dialog-role-desc">拥有成员管理、配置管理等高级权限</div>
+                  </div>
+                </div>
+                
+                <div 
+                  :class="['edit-dialog-role-item', { selected: editDialog.form.role === '空间创建员' }]"
+                  @click="editDialog.form.role = '空间创建员'"
+                >
+                  <el-radio value="空间创建员" v-model="editDialog.form.role" />
+                  <div class="edit-dialog-role-content">
+                    <div class="edit-dialog-role-name">空间创建员</div>
+                    <div class="edit-dialog-role-desc">可以创建和管理空间，拥有空间管理权限</div>
+                  </div>
+                </div>
+              </div>
+            </el-form-item>
+          </div>
+        </el-form>
+      </div>
+      
+      <template #footer>
+        <div class="edit-dialog-footer">
+          <el-button @click="editDialog.visible = false">取消</el-button>
+          <el-button type="primary" @click="saveMemberInfo" :loading="editDialog.loading">
+            保存
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  
+  <!-- 工具函数 -->
+  <script src="./assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="./assets/js/mock-data.js"></script>
+  
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+    
+    const app = createApp({
+      setup() {
+        // 租户ID（实际应用中从URL或context获取）
+        const tenantId = ref('T001');
+        const loading = ref(false);
+        
+        const tenantInfo = ref({
+          id: '',
+          name: '',
+          version: '',
+          owner: '',
+          memberCount: 0
+        });
+        
+        const stats = ref({
+          total: 0,
+          admins: 0,
+          spaceCreators: 0,
+          departments: 0
+        });
+        
+        const tableData = ref([]);
+        const allDepartments = ref([]);
+        const departmentTree = ref([]);
+        
+        const filters = ref({
+          search: '',
+          departments: [],
+          roles: [],
+          status: '全部',
+          dateRange: null
+        });
+        
+        const pagination = ref({
+          page: 1,
+          pageSize: 20,
+          total: 0
+        });
+        
+        // 成员详情抽屉
+        const memberDrawer = ref({
+          visible: false
+        });
+        
+        const activeTab = ref('overview');
+        
+        const memberInfo = ref({
+          id: '',
+          name: '',
+          avatar: '',
+          phone: '',
+          email: '',
+          departmentId: '',
+          departmentName: '',
+          supervisorId: null,
+          supervisorName: null,
+          role: '',
+          joinTime: null,
+          status: '正常'
+        });
+        
+        // 编辑对话框
+        const editDialog = ref({
+          visible: false,
+          loading: false,
+          form: {
+            departmentId: '',
+            supervisorId: null,
+            role: ''
+          }
+        });
+        
+        // 可选的上级列表（排除自己）
+        const availableSupervisors = computed(() => {
+          return tableData.value.filter(m => m.id !== memberInfo.value.id);
+        });
+        
+        // 加载租户信息
+        const loadTenantInfo = () => {
+          tenantInfo.value = MockData.getTenant();
+          tenantId.value = tenantInfo.value.id;
+        };
+        
+        // 加载部门数据
+        const loadDepartments = () => {
+          const departments = MockData.getDepartments(tenantId.value);
+          allDepartments.value = departments;
+          
+          // 构建部门树
+          const deptMap = {};
+          departments.forEach(dept => {
+            deptMap[dept.id] = { ...dept, children: [] };
+          });
+          
+          const tree = [];
+          departments.forEach(dept => {
+            if (dept.parentId) {
+              if (deptMap[dept.parentId]) {
+                deptMap[dept.parentId].children.push(deptMap[dept.id]);
+              }
+            } else {
+              tree.push(deptMap[dept.id]);
+            }
+          });
+          
+          departmentTree.value = tree;
+        };
+        
+        // 加载统计数据
+        const loadStats = () => {
+          const members = MockData.getTenantMembers(tenantId.value, { page: 1, pageSize: 9999 }).list;
+          stats.value = {
+            total: members.length,
+            admins: members.filter(m => m.role === '管理员').length,
+            spaceCreators: members.filter(m => m.role === '空间创建员').length,
+            departments: allDepartments.value.length
+          };
+        };
+        
+        // 加载成员数据
+        const loadData = () => {
+          loading.value = true;
+          
+          const params = {
+            page: pagination.value.page,
+            pageSize: pagination.value.pageSize,
+            search: filters.value.search,
+            departments: filters.value.departments,
+            roles: filters.value.roles,
+            status: filters.value.status
+          };
+          
+          if (filters.value.dateRange) {
+            params.startDate = filters.value.dateRange[0];
+            params.endDate = filters.value.dateRange[1];
+          }
+          
+          setTimeout(() => {
+            const result = MockData.getTenantMembers(tenantId.value, params);
+            tableData.value = result.list;
+            pagination.value.total = result.total;
+            loading.value = false;
+          }, 300);
+        };
+        
+        // 防抖搜索
+        const handleSearch = Utils.debounce(() => {
+          pagination.value.page = 1;
+          loadData();
+        }, 500);
+        
+        // 筛选
+        const handleFilter = () => {
+          pagination.value.page = 1;
+          loadData();
+        };
+        
+        // 排序
+        const handleSortChange = ({ prop, order }) => {
+          // 实现排序逻辑
+          loadData();
+        };
+        
+        // 分页
+        const handlePageChange = () => {
+          loadData();
+        };
+        
+        const handleSizeChange = () => {
+          pagination.value.page = 1;
+          loadData();
+        };
+        
+        // 获取角色样式类
+        const getRoleClass = (role) => {
+          const map = {
+            '所有者': 'owner',
+            '管理员': 'admin',
+            '成员': 'member',
+            '空间创建员': 'space-creator'
+          };
+          return map[role] || 'member';
+        };
+        
+        // 复制文本
+        const copyText = async (text) => {
+          const success = await Utils.copyToClipboard(text);
+          if (success) {
+            ElementPlus.ElMessage.success('复制成功');
+          } else {
+            ElementPlus.ElMessage.error('复制失败');
+          }
+        };
+        
+        // 查看成员详情
+        const viewMemberDetail = (row) => {
+          memberInfo.value = { ...row };
+          activeTab.value = 'overview';
+          memberDrawer.value.visible = true;
+        };
+        
+        // 关闭抽屉
+        const handleDrawerClose = () => {
+          memberDrawer.value.visible = false;
+        };
+        
+        // 查找部门路径（用于cascader）
+        const findDepartmentPath = (deptId, tree, path = []) => {
+          if (!deptId) return [];
+          for (const node of tree) {
+            const currentPath = [...path, node.id];
+            if (node.id === deptId) {
+              return currentPath;
+            }
+            if (node.children && node.children.length > 0) {
+              const found = findDepartmentPath(deptId, node.children, currentPath);
+              if (found.length > 0) {
+                return found;
+              }
+            }
+          }
+          return [];
+        };
+        
+        // 编辑成员信息
+        const editMemberInfo = () => {
+          if (memberInfo.value.role === '所有者') {
+            ElementPlus.ElMessage.warning('无法编辑租户所有者的信息');
+            return;
+          }
+          
+          // 将部门ID转换为cascader需要的数组格式
+          const departmentPath = findDepartmentPath(memberInfo.value.departmentId, departmentTree.value);
+          
+          editDialog.value.form = {
+            departmentId: departmentPath.length > 0 ? departmentPath : (memberInfo.value.departmentId ? [memberInfo.value.departmentId] : []),
+            supervisorId: memberInfo.value.supervisorId,
+            role: memberInfo.value.role
+          };
+          editDialog.value.visible = true;
+        };
+        
+        // 保存成员信息
+        const saveMemberInfo = () => {
+          if (memberInfo.value.role === '所有者') {
+            ElementPlus.ElMessage.warning('无法编辑租户所有者的信息');
+            return;
+          }
+          
+          editDialog.value.loading = true;
+          
+          setTimeout(() => {
+            // 从cascader的数组中获取最后一个部门ID
+            const departmentIdArray = Array.isArray(editDialog.value.form.departmentId) 
+              ? editDialog.value.form.departmentId 
+              : [editDialog.value.form.departmentId];
+            const finalDepartmentId = departmentIdArray.length > 0 
+              ? departmentIdArray[departmentIdArray.length - 1] 
+              : null;
+            
+            // 查找部门名称
+            const dept = allDepartments.value.find(d => d.id === finalDepartmentId);
+            // 查找上级名称
+            const supervisor = availableSupervisors.value.find(m => m.id === editDialog.value.form.supervisorId);
+            
+            const updates = {
+              departmentId: finalDepartmentId,
+              departmentName: dept ? dept.name : memberInfo.value.departmentName,
+              supervisorId: editDialog.value.form.supervisorId,
+              supervisorName: supervisor ? supervisor.name : null,
+              role: editDialog.value.form.role
+            };
+            
+            MockData.updateMemberInfo(memberInfo.value.id, tenantId.value, updates);
+            
+            // 更新当前显示的成员信息
+            Object.assign(memberInfo.value, updates);
+            
+            ElementPlus.ElMessage.success('成员信息已更新');
+            editDialog.value.loading = false;
+            editDialog.value.visible = false;
+            
+            // 刷新列表
+            loadData();
+            loadStats();
+          }, 500);
+        };
+        
+        // 从租户中移除成员
+        const removeMember = () => {
+          if (memberInfo.value.role === '所有者') {
+            ElementPlus.ElMessage.warning('无法移除租户所有者');
+            return;
+          }
+          
+          ElementPlus.ElMessageBox.confirm(
+            `您确定要将成员「${memberInfo.value.name}」从当前租户中移除吗？此操作不可撤销。`,
+            '移除成员',
+            {
+              confirmButtonText: '确认移除',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            const success = MockData.removeMemberFromTenant(memberInfo.value.id, tenantId.value);
+            if (success) {
+              ElementPlus.ElMessage.success('成员已移除');
+              memberDrawer.value.visible = false;
+              loadData();
+              loadStats();
+            } else {
+              ElementPlus.ElMessage.error('移除失败');
+            }
+          }).catch(() => {});
+        };
+        
+        // 初始化
+        onMounted(() => {
+          loadTenantInfo();
+          loadDepartments();
+          loadStats();
+          loadData();
+        });
+        
+        return {
+          tenantInfo,
+          stats,
+          loading,
+          tableData,
+          allDepartments,
+          departmentTree,
+          filters,
+          pagination,
+          memberDrawer,
+          activeTab,
+          memberInfo,
+          editDialog,
+          availableSupervisors,
+          handleSearch,
+          handleFilter,
+          handleSortChange,
+          handlePageChange,
+          handleSizeChange,
+          getRoleClass,
+          copyText,
+          viewMemberDetail,
+          handleDrawerClose,
+          editMemberInfo,
+          saveMemberInfo,
+          removeMember,
+          Utils
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

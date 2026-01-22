@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资产与使用分析</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- Custom CSS - 飞书风格 -->
+  <link rel="stylesheet" href="../assets/css/feishu-style.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg-gray-1);
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 全局筛选器 -->
+    <div class="search-bar" style="margin-bottom: 24px;">
+      <el-form :inline="true" :model="filterForm">
+        <el-form-item label="时间范围">
+          <el-select v-model="filterForm.timeRange" @change="handleFilterChange" style="width: 150px">
+            <el-option label="最近7天" value="7"></el-option>
+            <el-option label="最近30天" value="30"></el-option>
+            <el-option label="最近90天" value="90"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="归属租户">
+          <el-select 
+            v-model="filterForm.tenants" 
+            multiple
+            collapse-tags
+            placeholder="全部租户"
+            clearable
+            style="width: 240px"
+            @change="handleFilterChange"
+          >
+            <el-option 
+              v-for="tenant in tenantOptions" 
+              :key="tenant" 
+              :label="tenant" 
+              :value="tenant"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <!-- 整体使用总览 -->
+    <div style="margin-bottom: 48px;">
+      <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+        <el-icon><data-analysis /></el-icon>
+        用户整体使用总览
+      </h3>
+
+      <!-- KPI卡片 -->
+      <div class="kpi-cards">
+      <div class="kpi-card">
+        <div class="kpi-card-header">
+          <span class="kpi-card-title">
+            总调用/运行次数
+            <el-tooltip content="用户所有智能体、工作流、工具的累计调用运行次数" placement="top">
+              <el-icon><question-filled /></el-icon>
+            </el-tooltip>
+          </span>
+          <div class="kpi-card-icon">
+            <el-icon><operation /></el-icon>
+          </div>
+        </div>
+        <div class="kpi-card-value">{{ Utils.formatNumber(overviewKPI.totalCalls) }}</div>
+        <div class="kpi-card-subtitle">智能体+工作流+工具</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-header">
+          <span class="kpi-card-title">
+            最活跃资产类型
+            <el-tooltip content="根据调用次数统计，使用最频繁的资产类型" placement="top">
+              <el-icon><question-filled /></el-icon>
+            </el-tooltip>
+          </span>
+          <div class="kpi-card-icon success">
+            <el-icon><star /></el-icon>
+          </div>
+        </div>
+        <div class="kpi-card-value">{{ overviewKPI.mostActiveType }}</div>
+        <div class="kpi-card-subtitle">按调用次数统计</div>
+      </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-card-title">总资产数</span>
+            <div class="kpi-card-icon warning">
+              <el-icon><grid /></el-icon>
+            </div>
+          </div>
+          <div class="kpi-card-value">{{ overviewKPI.totalAssets }}</div>
+          <div class="kpi-card-subtitle">所有类型资产总和</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card-header">
+            <span class="kpi-card-title">资产使用率</span>
+            <div class="kpi-card-icon danger">
+              <el-icon><histogram /></el-icon>
+            </div>
+          </div>
+          <div class="kpi-card-value">{{ Utils.formatPercent(overviewKPI.usageRate, 1) }}</div>
+          <div class="kpi-card-subtitle">{{ overviewKPI.usedAssets }} / {{ overviewKPI.totalAssets }}</div>
+        </div>
+      </div>
+
+      <!-- 图表 -->
+      <el-row :gutter="24" style="margin-top: 24px;">
+        <el-col :span="16">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">
+                <el-icon><trend-charts /></el-icon>
+                资产使用趋势（多类型对比）
+              </div>
+            </div>
+            <div class="chart-body" id="assetUsageTrendChart" style="height: 350px;"></div>
+          </div>
+        </el-col>
+
+        <el-col :span="8">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">
+                <el-icon><pie-chart /></el-icon>
+                资产创建 vs 使用分布
+              </div>
+            </div>
+            <div class="chart-body" id="createVsUseChart" style="height: 350px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+
+    <!-- 资源类型切换器 -->
+    <div class="resource-switcher">
+      <div 
+        v-for="type in resourceTypes" 
+        :key="type.value"
+        class="resource-switcher-btn"
+        :class="{ active: currentResourceType === type.value }"
+        @click="switchResourceType(type.value)"
+      >
+        <el-icon><component :is="type.icon" /></el-icon>
+        <span>{{ type.label }}</span>
+      </div>
+    </div>
+
+    <!-- 动态内容：智能体 -->
+    <div v-if="currentResourceType === 'bots'" style="margin-top: 24px;">
+      <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+        <el-icon><cpu /></el-icon>
+        智能体（Bots）
+      </h3>
+
+      <div class="kpi-cards">
+        <div class="kpi-card">
+          <div class="kpi-card-title">创建总数</div>
+          <div class="kpi-card-value">{{ botStats.total }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">总调用次数</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(botStats.totalCalls) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">关联消耗Token</div>
+          <div class="kpi-card-value">{{ Utils.abbreviateNumber(botStats.totalTokens) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">最活跃智能体</div>
+          <div class="kpi-card-value" style="font-size: 16px;">{{ botStats.mostActive }}</div>
+          <div class="kpi-card-subtitle">调用次数: {{ Utils.formatNumber(botStats.mostActiveCalls) }}</div>
+        </div>
+      </div>
+
+      <el-row :gutter="24" style="margin-top: 24px;">
+        <el-col :span="16">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">创建与调用趋势</div>
+            </div>
+            <div class="chart-body" id="botTrendChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">Token消耗排行</div>
+            </div>
+            <div class="chart-body" id="botTokenChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <!-- 明细列表 -->
+      <div class="data-table" style="margin-top: 24px;">
+        <el-table :data="currentBots" style="width: 100%">
+          <el-table-column prop="name" label="名称" width="280"></el-table-column>
+          <el-table-column prop="runCount" label="运行次数" width="110" sortable></el-table-column>
+          <el-table-column label="用户数（周期内）" width="140" sortable>
+            <template #default="scope">{{ scope.row.userCount || 0 }}</template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" width="100">
+            <template #default="scope">
+              <el-tag :type="scope.row.status === '已发布' ? 'success' : 'info'" size="small">
+                {{ scope.row.status }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="userName" label="创建人" width="120"></el-table-column>
+          <el-table-column prop="createdAt" label="创建时间" width="180">
+            <template #default="scope">{{ Utils.formatDate(scope.row.createdAt) }}</template>
+          </el-table-column>
+          <el-table-column prop="lastRunAt" label="最后运行时间" width="180">
+            <template #default="scope">{{ Utils.formatDate(scope.row.lastRunAt) }}</template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <!-- 动态内容：工作流 -->
+    <div v-if="currentResourceType === 'workflows'" style="margin-top: 24px;">
+      <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+        <el-icon><connection /></el-icon>
+        工作流（Workflows）
+      </h3>
+
+      <div class="kpi-cards">
+        <div class="kpi-card">
+          <div class="kpi-card-title">创建总数</div>
+          <div class="kpi-card-value">{{ workflowStats.total }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">总运行次数</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(workflowStats.totalRuns) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">关联消耗积分</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(workflowStats.totalPoints, 2) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">最常用工作流</div>
+          <div class="kpi-card-value" style="font-size: 16px;">{{ workflowStats.mostUsed }}</div>
+          <div class="kpi-card-subtitle">运行次数: {{ Utils.formatNumber(workflowStats.mostUsedRuns) }}</div>
+        </div>
+      </div>
+
+      <!-- 图表 -->
+      <el-row :gutter="24" style="margin-top: 24px;">
+        <el-col :span="16">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">创建与运行趋势</div>
+            </div>
+            <div class="chart-body" id="workflowTrendChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">各工作流关联消耗排行</div>
+            </div>
+            <div class="chart-body" id="workflowPointsChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <!-- 明细列表 -->
+      <div class="data-table" style="margin-top: 24px;">
+        <el-table :data="currentWorkflows" style="width: 100%">
+          <el-table-column prop="name" label="名称" width="280"></el-table-column>
+          <el-table-column prop="runCount" label="运行次数" width="110" sortable></el-table-column>
+          <el-table-column label="用户数（周期内）" width="140" sortable>
+            <template #default="scope">{{ scope.row.userCount || 0 }}</template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" width="100">
+            <template #default="scope">
+              <el-tag :type="scope.row.status === '已发布' ? 'success' : 'info'" size="small">
+                {{ scope.row.status }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="userName" label="创建人" width="120"></el-table-column>
+          <el-table-column prop="createdAt" label="创建时间" width="180">
+            <template #default="scope">{{ Utils.formatDate(scope.row.createdAt) }}</template>
+          </el-table-column>
+          <el-table-column prop="lastRunAt" label="最后运行时间" width="180">
+            <template #default="scope">{{ Utils.formatDate(scope.row.lastRunAt) }}</template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <!-- 动态内容：工具 -->
+    <div v-if="currentResourceType === 'tools'" style="margin-top: 24px;">
+      <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+        <el-icon><tools /></el-icon>
+        工具（Tools）
+      </h3>
+
+      <div class="kpi-cards">
+        <div class="kpi-card">
+          <div class="kpi-card-title">创建总数</div>
+          <div class="kpi-card-value">{{ toolStats.total }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">总调用次数</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(toolStats.totalCalls) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">被引用次数</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(toolStats.totalReferences) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">关联消耗积分</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(toolStats.totalPoints, 2) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">最常用工具</div>
+          <div class="kpi-card-value" style="font-size: 16px;">{{ toolStats.mostUsed }}</div>
+          <div class="kpi-card-subtitle">调用次数: {{ Utils.formatNumber(toolStats.mostUsedCalls) }}</div>
+        </div>
+      </div>
+
+      <el-row :gutter="24" style="margin-top: 24px;">
+        <el-col :span="16">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">创建与调用趋势</div>
+            </div>
+            <div class="chart-body" id="toolTrendChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">调用次数排行</div>
+            </div>
+            <div class="chart-body" id="toolCallsChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="24" style="margin-top: 24px;">
+        <el-col :span="8">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">被引用来源分布</div>
+            </div>
+            <div class="chart-body" id="toolReferenceChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <!-- 明细列表 -->
+      <div class="data-table" style="margin-top: 24px;">
+        <el-table :data="currentTools" style="width: 100%">
+          <el-table-column prop="name" label="名称" width="240"></el-table-column>
+          <el-table-column prop="toolLibName" label="所属工具库" width="150"></el-table-column>
+          <el-table-column prop="botRefCount" label="智能体引用数" width="130" sortable></el-table-column>
+          <el-table-column prop="workflowRefCount" label="工作流引用数" width="130" sortable></el-table-column>
+          <el-table-column prop="callCount" label="调用次数" width="110" sortable></el-table-column>
+          <el-table-column prop="userName" label="创建人" width="120"></el-table-column>
+          <el-table-column prop="createdAt" label="创建时间" width="180">
+            <template #default="scope">{{ Utils.formatDate(scope.row.createdAt) }}</template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <!-- 动态内容：工具库 -->
+    <div v-if="currentResourceType === 'toolLibs'" style="margin-top: 24px;">
+      <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+        <el-icon><box /></el-icon>
+        工具库（Tool Libraries）
+      </h3>
+
+      <div class="kpi-cards">
+        <div class="kpi-card">
+          <div class="kpi-card-title">创建总数</div>
+          <div class="kpi-card-value">{{ toolLibStats.total }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">包含工具数</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(toolLibStats.totalTools) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">平均工具数</div>
+          <div class="kpi-card-value">{{ toolLibStats.avgTools }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">最常用类型</div>
+          <div class="kpi-card-value" style="font-size: 18px;">{{ toolLibStats.mostCommonType }}</div>
+          <div class="kpi-card-subtitle">按创建数量统计</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">最大工具库</div>
+          <div class="kpi-card-value" style="font-size: 16px;">{{ toolLibStats.largestLib }}</div>
+          <div class="kpi-card-subtitle">工具数: {{ toolLibStats.largestLibCount }}</div>
+        </div>
+      </div>
+
+      <el-row :gutter="24" style="margin-top: 24px;">
+        <el-col :span="16">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">工具库创建趋势</div>
+            </div>
+            <div class="chart-body" id="toolLibTrendChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">工具数量排行</div>
+            </div>
+            <div class="chart-body" id="toolLibSizeChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <!-- 明细列表 -->
+      <div class="data-table" style="margin-top: 24px;">
+        <el-table :data="currentToolLibs" style="width: 100%">
+          <el-table-column prop="name" label="名称" width="260"></el-table-column>
+          <el-table-column prop="status" label="状态" width="100">
+            <template #default="scope">
+              <el-tag :type="scope.row.status === '已发布' ? 'success' : 'info'" size="small">
+                {{ scope.row.status }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="type" label="类型" width="120"></el-table-column>
+          <el-table-column prop="toolCount" label="包含工具数" width="120" sortable></el-table-column>
+          <el-table-column prop="userName" label="创建人" width="120"></el-table-column>
+          <el-table-column prop="createdAt" label="创建时间" width="180">
+            <template #default="scope">{{ Utils.formatDate(scope.row.createdAt) }}</template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <!-- 动态内容：知识库 -->
+    <div v-if="currentResourceType === 'knowledgeBases'" style="margin-top: 24px;">
+      <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+        <el-icon><reading /></el-icon>
+        知识库（Knowledge Bases）
+      </h3>
+
+      <div class="kpi-cards">
+        <div class="kpi-card">
+          <div class="kpi-card-title">知识库总数</div>
+          <div class="kpi-card-value">{{ kbStats.total }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">总占用容量 (MB)</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(kbStats.totalSize, 1) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">平均容量 (MB)</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(kbStats.avgSize, 1) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">总知识单元数</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(kbStats.totalItems) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">最常被引用知识库</div>
+          <div class="kpi-card-value" style="font-size: 16px;">{{ kbStats.mostReferenced }}</div>
+          <div class="kpi-card-subtitle">被引用: {{ Utils.formatNumber(kbStats.mostReferencedCount) }}次</div>
+        </div>
+      </div>
+
+      <el-row :gutter="24" style="margin-top: 24px;">
+        <el-col :span="16">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">知识库容量趋势</div>
+            </div>
+            <div class="chart-body" id="kbCapacityChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">容量排行</div>
+            </div>
+            <div class="chart-body" id="kbSizeChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <!-- 明细列表 -->
+      <div class="data-table" style="margin-top: 24px;">
+        <el-table :data="currentKBs" style="width: 100%">
+          <el-table-column prop="name" label="名称" width="220"></el-table-column>
+          <el-table-column prop="status" label="状态" width="100">
+            <template #default="scope">
+              <el-tag :type="scope.row.status === '启用' ? 'success' : 'info'" size="small">
+                {{ scope.row.status }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="itemCount" label="知识单元数" width="120" sortable></el-table-column>
+          <el-table-column prop="refCount" label="被引用次数" width="120" sortable></el-table-column>
+          <el-table-column prop="size" label="占用容量 (MB)" width="130" sortable>
+            <template #default="scope">{{ Utils.formatNumber(scope.row.size, 1) }}</template>
+          </el-table-column>
+          <el-table-column prop="userName" label="创建人" width="120"></el-table-column>
+          <el-table-column prop="createdAt" label="创建时间" width="180">
+            <template #default="scope">{{ Utils.formatDate(scope.row.createdAt) }}</template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
+    <!-- 动态内容：空间 -->
+    <div v-if="currentResourceType === 'spaces'" style="margin-top: 24px;">
+      <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+        <el-icon><folder-opened /></el-icon>
+        空间（Spaces）
+      </h3>
+
+      <div class="kpi-cards">
+        <div class="kpi-card">
+          <div class="kpi-card-title">创建总数</div>
+          <div class="kpi-card-value">{{ spaceStats.total }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">空间内总资产数</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(spaceStats.totalAssets) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">总成员数</div>
+          <div class="kpi-card-value">{{ Utils.formatNumber(spaceStats.totalMembers) }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">平均成员数</div>
+          <div class="kpi-card-value">{{ spaceStats.avgMembers }}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-card-title">最活跃空间</div>
+          <div class="kpi-card-value" style="font-size: 16px;">{{ spaceStats.mostActive }}</div>
+          <div class="kpi-card-subtitle">资产数: {{ Utils.formatNumber(spaceStats.mostActiveAssets) }}</div>
+        </div>
+      </div>
+
+      <el-row :gutter="24" style="margin-top: 24px;">
+        <el-col :span="16">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">空间创建趋势</div>
+            </div>
+            <div class="chart-body" id="spaceTrendChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">各空间资产分布</div>
+            </div>
+            <div class="chart-body" id="spaceAssetsChart" style="height: 300px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <!-- 明细列表 -->
+      <div class="data-table" style="margin-top: 24px;">
+        <el-table :data="currentSpaces" style="width: 100%">
+          <el-table-column prop="id" label="空间ID" width="180"></el-table-column>
+          <el-table-column prop="name" label="空间名称" width="200"></el-table-column>
+          <el-table-column prop="type" label="类型" width="120"></el-table-column>
+          <el-table-column prop="owner" label="所有者" width="120"></el-table-column>
+          <el-table-column prop="createdAt" label="空间创建时间" width="180">
+            <template #default="scope">{{ Utils.formatDate(scope.row.createdAt) }}</template>
+          </el-table-column>
+          <el-table-column prop="lastUpdatedBy" label="最近更新人" width="120"></el-table-column>
+          <el-table-column prop="lastUpdatedAt" label="最近更新时间" width="180">
+            <template #default="scope">{{ Utils.formatDate(scope.row.lastUpdatedAt) }}</template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  
+  <!-- Element Plus 图标 -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- ECharts -->
+  <script src="https://unpkg.com/echarts@5.4.3/dist/echarts.min.js"></script>
+  
+  <!-- 自定义JS -->
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/data/static-data.js"></script>
+  <script src="../assets/js/charts.js"></script>
+
+  <script>
+    const { createApp, ref, computed, reactive, onMounted } = Vue;
+
+    const app = createApp({
+      setup() {
+        const userId = ref(Utils.getQueryParam('userId'));
+        const filterForm = reactive({ 
+          timeRange: '30',
+          tenants: []
+        });
+        const currentResourceType = ref('bots');
+
+        const resourceTypes = [
+          { value: 'bots', label: '智能体', icon: 'cpu' },
+          { value: 'workflows', label: '工作流', icon: 'connection' },
+          { value: 'tools', label: '工具', icon: 'tools' },
+          { value: 'toolLibs', label: '工具库', icon: 'box' },
+          { value: 'knowledgeBases', label: '知识库', icon: 'reading' },
+          { value: 'spaces', label: '空间', icon: 'folder-opened' }
+        ];
+
+        const tenantOptions = computed(() => {
+          const allConsumptions = MockData.consumptions.filter(c => c.userId === userId.value);
+          return [...new Set(allConsumptions.map(c => c.tenantName))].sort();
+        });
+
+        const filteredConsumptions = computed(() => {
+          let consumptions = MockData.consumptions.filter(c => c.userId === userId.value);
+          
+          // 时间筛选
+          const days = parseInt(filterForm.timeRange);
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() - days);
+          consumptions = consumptions.filter(c => c.date >= startDate);
+          
+          // 租户筛选
+          if (filterForm.tenants && filterForm.tenants.length > 0) {
+            consumptions = consumptions.filter(c => filterForm.tenants.includes(c.tenantName));
+          }
+          
+          return consumptions;
+        });
+
+        const currentBots = computed(() => MockData.assets.bots.filter(b => b.userId === userId.value));
+        const currentWorkflows = computed(() => MockData.assets.workflows.filter(w => w.userId === userId.value));
+        const currentTools = computed(() => MockData.assets.tools.filter(t => t.userId === userId.value));
+        const currentToolLibs = computed(() => MockData.assets.toolLibs.filter(l => l.userId === userId.value));
+        const currentKBs = computed(() => MockData.assets.knowledgeBases.filter(k => k.userId === userId.value));
+        const currentSpaces = computed(() => MockData.assets.spaces.filter(s => s.userId === userId.value));
+
+        const overviewKPI = computed(() => {
+          const consumptions = filteredConsumptions.value;
+          const assetCalls = consumptions.filter(c => ['智能体', '工作流', '工具'].includes(c.resourceType));
+          
+          const typeCounts = {
+            '智能体': assetCalls.filter(c => c.resourceType === '智能体').length,
+            '工作流': assetCalls.filter(c => c.resourceType === '工作流').length,
+            '工具': assetCalls.filter(c => c.resourceType === '工具').length
+          };
+          
+          const mostActiveType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '智能体';
+          const totalAssets = currentBots.value.length + currentWorkflows.value.length + currentTools.value.length;
+          const usedAssets = new Set(consumptions.filter(c => c.assetId).map(c => c.assetId)).size;
+          
+          return {
+            totalCalls: assetCalls.length,
+            mostActiveType,
+            totalAssets,
+            usedAssets,
+            usageRate: totalAssets > 0 ? usedAssets / totalAssets : 0
+          };
+        });
+
+        const botStats = computed(() => {
+          const bots = currentBots.value;
+          const sorted = [...bots].sort((a, b) => b.runCount - a.runCount);
+          const mostActiveBot = sorted[0];
+          
+          return {
+            total: bots.length,
+            totalCalls: bots.reduce((sum, b) => sum + b.runCount, 0),
+            totalTokens: bots.reduce((sum, b) => sum + b.tokenUsed, 0),
+            mostActive: mostActiveBot ? mostActiveBot.name : '无数据',
+            mostActiveCalls: mostActiveBot ? mostActiveBot.runCount : 0
+          };
+        });
+
+        const workflowStats = computed(() => {
+          const workflows = currentWorkflows.value;
+          const sorted = [...workflows].sort((a, b) => b.runCount - a.runCount);
+          const mostUsedWorkflow = sorted[0];
+          
+          return {
+            total: workflows.length,
+            totalRuns: workflows.reduce((sum, w) => sum + w.runCount, 0),
+            totalPoints: workflows.reduce((sum, w) => sum + w.pointsUsed, 0),
+            mostUsed: mostUsedWorkflow ? mostUsedWorkflow.name : '无数据',
+            mostUsedRuns: mostUsedWorkflow ? mostUsedWorkflow.runCount : 0
+          };
+        });
+
+        const toolStats = computed(() => {
+          const tools = currentTools.value;
+          const sorted = [...tools].sort((a, b) => (b.callCount || 0) - (a.callCount || 0));
+          const mostUsedTool = sorted[0];
+          
+          // 演示数据：关联消耗积分
+          const totalPoints = 1256.8;
+          
+          return {
+            total: tools.length,
+            totalCalls: tools.reduce((sum, t) => sum + (t.callCount || 0), 0),
+            totalReferences: tools.reduce((sum, t) => sum + (t.referenceCount || 0), 0),
+            totalPoints: totalPoints,
+            mostUsed: mostUsedTool ? mostUsedTool.name : '无数据',
+            mostUsedCalls: mostUsedTool ? (mostUsedTool.callCount || 0) : 0
+          };
+        });
+
+        const toolLibStats = computed(() => {
+          const toolLibs = currentToolLibs.value;
+          const totalTools = toolLibs.reduce((sum, l) => sum + (l.toolCount || 0), 0);
+          
+          // 统计type分布
+          const typeCounts = {};
+          toolLibs.forEach(lib => {
+            const type = lib.type || '未知';
+            typeCounts[type] = (typeCounts[type] || 0) + 1;
+          });
+          const mostCommonType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'API';
+          
+          // 找最大工具库
+          const sorted = [...toolLibs].sort((a, b) => (b.toolCount || 0) - (a.toolCount || 0));
+          const largestLib = sorted[0];
+          
+          return {
+            total: toolLibs.length,
+            totalTools,
+            avgTools: toolLibs.length > 0 ? Math.round(totalTools / toolLibs.length) : 0,
+            mostCommonType: mostCommonType,
+            largestLib: largestLib ? largestLib.name : '无数据',
+            largestLibCount: largestLib ? (largestLib.toolCount || 0) : 0
+          };
+        });
+
+        const kbStats = computed(() => {
+          const kbs = currentKBs.value;
+          const totalSize = kbs.reduce((sum, k) => sum + (k.size || 0), 0);
+          const totalItems = kbs.reduce((sum, k) => sum + (k.itemCount || 0), 0);
+          
+          // 找最常被引用知识库
+          const sorted = [...kbs].sort((a, b) => (b.refCount || 0) - (a.refCount || 0));
+          const mostReferencedKb = sorted[0];
+          
+          return {
+            total: kbs.length,
+            totalSize,
+            avgSize: kbs.length > 0 ? totalSize / kbs.length : 0,
+            totalItems: totalItems,
+            mostReferenced: mostReferencedKb ? mostReferencedKb.name : '无数据',
+            mostReferencedCount: mostReferencedKb ? (mostReferencedKb.refCount || 0) : 0
+          };
+        });
+
+        const spaceStats = computed(() => {
+          const spaces = currentSpaces.value;
+          const totalMembers = spaces.reduce((sum, s) => sum + (s.memberCount || 0), 0);
+          const totalAssets = spaces.reduce((sum, s) => sum + (s.assetCount || 0), 0);
+          
+          // 找最活跃空间
+          const sorted = [...spaces].sort((a, b) => (b.assetCount || 0) - (a.assetCount || 0));
+          const mostActiveSpace = sorted[0];
+          
+          return {
+            total: spaces.length,
+            totalMembers,
+            avgMembers: spaces.length > 0 ? Math.round(totalMembers / spaces.length) : 0,
+            totalAssets: totalAssets,
+            mostActive: mostActiveSpace ? mostActiveSpace.name : '无数据',
+            mostActiveAssets: mostActiveSpace ? (mostActiveSpace.assetCount || 0) : 0
+          };
+        });
+
+        const switchResourceType = (type) => {
+          currentResourceType.value = type;
+          setTimeout(renderCharts, 100);
+        };
+
+        const getCurrentResourceTitle = () => {
+          const type = resourceTypes.find(t => t.value === currentResourceType.value);
+          return type ? type.label : '';
+        };
+
+
+        const renderCharts = () => {
+          // 资产使用趋势
+          const chart1 = echarts.init(document.getElementById('assetUsageTrendChart'));
+          chart1.setOption(Charts.stackedAreaChart(
+            ['第1周', '第2周', '第3周', '第4周'],
+            [
+              { name: '智能体', data: [10, 15, 20, 18] },
+              { name: '工作流', data: [5, 8, 12, 15] },
+              { name: '工具', data: [20, 25, 30, 28] }
+            ]
+          ));
+
+          // 创建vs使用
+          const chart2 = echarts.init(document.getElementById('createVsUseChart'));
+          chart2.setOption(Charts.pieChart([
+            { name: '智能体', value: currentBots.value.length },
+            { name: '工作流', value: currentWorkflows.value.length },
+            { name: '工具', value: currentTools.value.length }
+          ]));
+
+          if (currentResourceType.value === 'bots') {
+            const chart3 = echarts.init(document.getElementById('botTrendChart'));
+            chart3.setOption(Charts.lineChart(['Week 1', 'Week 2', 'Week 3', 'Week 4'], [
+              { name: '创建', data: [2, 3, 1, 2] },
+              { name: '调用', data: [10, 15, 20, 18] }
+            ]));
+
+            const chart4 = echarts.init(document.getElementById('botTokenChart'));
+            const topBots = currentBots.value
+              .filter(b => b.tokenUsed > 0)
+              .sort((a, b) => b.tokenUsed - a.tokenUsed)
+              .slice(0, 5)
+              .map(b => ({ name: b.name, value: b.tokenUsed }));
+            chart4.setOption(Charts.horizontalBarChart(topBots.length > 0 ? topBots : [
+              { name: 'AI助手', value: 2500000 },
+              { name: '数据分析师', value: 1800000 },
+              { name: '代码审查', value: 1200000 }
+            ], 'Tokens'));
+          }
+
+          if (currentResourceType.value === 'workflows') {
+            const chart5 = echarts.init(document.getElementById('workflowTrendChart'));
+            chart5.setOption(Charts.comboChart(
+              ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+              [{ name: '创建数量', data: [2, 3, 1, 2] }],
+              [{ name: '运行次数', data: [25, 35, 28, 40] }]
+            ));
+
+            const chart6 = echarts.init(document.getElementById('workflowPointsChart'));
+            const topWorkflows = currentWorkflows.value
+              .filter(w => w.pointsUsed > 0)
+              .sort((a, b) => b.pointsUsed - a.pointsUsed)
+              .slice(0, 5)
+              .map(w => ({ name: w.name, value: w.pointsUsed }));
+            chart6.setOption(Charts.horizontalBarChart(topWorkflows.length > 0 ? topWorkflows : [
+              { name: '数据处理流程', value: 456.8 },
+              { name: '报告生成流程', value: 328.5 },
+              { name: '自动审核流程', value: 245.2 }
+            ], '积分'));
+          }
+
+          if (currentResourceType.value === 'tools') {
+            const chart7 = echarts.init(document.getElementById('toolTrendChart'));
+            chart7.setOption(Charts.lineChart(['Week 1', 'Week 2', 'Week 3', 'Week 4'], [
+              { name: '创建', data: [3, 5, 2, 4] },
+              { name: '调用', data: [20, 25, 30, 28] }
+            ]));
+
+            const chart8 = echarts.init(document.getElementById('toolCallsChart'));
+            const topTools = currentTools.value
+              .filter(t => t.callCount > 0)
+              .sort((a, b) => b.callCount - a.callCount)
+              .slice(0, 5)
+              .map(t => ({ name: t.name, value: t.callCount }));
+            chart8.setOption(Charts.horizontalBarChart(topTools.length > 0 ? topTools : [
+              { name: 'PDF解析器', value: 1245 },
+              { name: '数据可视化', value: 986 },
+              { name: 'API调用器', value: 754 }
+            ], '次'));
+
+            const chart9 = echarts.init(document.getElementById('toolReferenceChart'));
+            // 计算引用分布
+            const botRefs = currentTools.value.reduce((sum, t) => sum + (t.botRefCount || 0), 0);
+            const workflowRefs = currentTools.value.reduce((sum, t) => sum + (t.workflowRefCount || 0), 0);
+            chart9.setOption(Charts.doughnutChart(
+              botRefs + workflowRefs > 0 ? [
+                { name: '智能体引用', value: botRefs },
+                { name: '工作流引用', value: workflowRefs }
+              ] : [
+                { name: '智能体引用', value: 145 },
+                { name: '工作流引用', value: 98 }
+              ]
+            ));
+          }
+
+          if (currentResourceType.value === 'toolLibs') {
+            const chart7 = echarts.init(document.getElementById('toolLibTrendChart'));
+            chart7.setOption(Charts.lineChart(['Week 1', 'Week 2', 'Week 3', 'Week 4'], [
+              { name: '创建工具库', data: [1, 2, 1, 1] }
+            ]));
+
+            const chart8 = echarts.init(document.getElementById('toolLibSizeChart'));
+            const topLibs = currentToolLibs.value
+              .sort((a, b) => (b.toolCount || 0) - (a.toolCount || 0))
+              .slice(0, 5)
+              .map(l => ({ name: l.name, value: l.toolCount || 0 }));
+            chart8.setOption(Charts.horizontalBarChart(topLibs, '个'));
+          }
+
+          if (currentResourceType.value === 'knowledgeBases') {
+            const chart9 = echarts.init(document.getElementById('kbCapacityChart'));
+            chart9.setOption(Charts.lineChart(['Week 1', 'Week 2', 'Week 3', 'Week 4'], [
+              { name: '总容量', data: [50, 120, 180, 250] }
+            ]));
+
+            const chart10 = echarts.init(document.getElementById('kbSizeChart'));
+            const topKBs = currentKBs.value
+              .sort((a, b) => (b.size || 0) - (a.size || 0))
+              .slice(0, 5)
+              .map(k => ({ name: k.name, value: k.size || 0 }));
+            chart10.setOption(Charts.horizontalBarChart(topKBs, 'MB'));
+          }
+
+          if (currentResourceType.value === 'spaces') {
+            const chart11 = echarts.init(document.getElementById('spaceTrendChart'));
+            chart11.setOption(Charts.lineChart(['Week 1', 'Week 2', 'Week 3', 'Week 4'], [
+              { name: '创建空间', data: [1, 1, 2, 1] }
+            ]));
+
+            const chart12 = echarts.init(document.getElementById('spaceAssetsChart'));
+            const topSpaces = currentSpaces.value
+              .sort((a, b) => (b.assetCount || 0) - (a.assetCount || 0))
+              .slice(0, 5);
+            
+            // 堆叠条形图数据
+            const spaceNames = topSpaces.length > 0 ? topSpaces.map(s => s.name) : ['项目A空间', '营销团队', '研发中心'];
+            const botsData = topSpaces.length > 0 ? topSpaces.map(() => Math.floor(Math.random() * 20 + 5)) : [12, 8, 15];
+            const workflowsData = topSpaces.length > 0 ? topSpaces.map(() => Math.floor(Math.random() * 15 + 3)) : [8, 6, 10];
+            const toolsData = topSpaces.length > 0 ? topSpaces.map(() => Math.floor(Math.random() * 25 + 10)) : [18, 12, 20];
+            
+            chart12.setOption(Charts.barChart(
+              spaceNames,
+              [
+                { name: '智能体', data: botsData },
+                { name: '工作流', data: workflowsData },
+                { name: '工具', data: toolsData }
+              ],
+              true // stacked
+            ));
+          }
+
+          window.addEventListener('resize', () => {
+            chart1.resize();
+            chart2.resize();
+          });
+        };
+
+        const handleFilterChange = () => {
+          setTimeout(renderCharts, 100);
+        };
+
+        onMounted(() => {
+          setTimeout(renderCharts, 100);
+        });
+
+        return {
+          filterForm,
+          currentResourceType,
+          resourceTypes,
+          tenantOptions,
+          currentBots,
+          currentWorkflows,
+          currentTools,
+          currentToolLibs,
+          currentKBs,
+          currentSpaces,
+          overviewKPI,
+          botStats,
+          workflowStats,
+          toolStats,
+          toolLibStats,
+          kbStats,
+          spaceStats,
+          switchResourceType,
+          getCurrentResourceTitle,
+          handleFilterChange,
+          Utils
+        };
+      }
+    });
+
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

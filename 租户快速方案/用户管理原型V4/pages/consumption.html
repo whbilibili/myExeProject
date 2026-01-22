@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>消费明细</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义CSS -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--space-6);
+    }
+
+    .page-header {
+      margin-bottom: var(--space-4);
+    }
+
+    .page-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .advanced-filter {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5) var(--space-6);
+      box-shadow: var(--shadow-base);
+      margin-bottom: var(--space-4);
+    }
+
+    .filter-rows {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .filter-row-inline {
+      display: flex;
+      gap: var(--space-4);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-row-inline .filter-item { flex: 1; min-width: 260px; display: flex; align-items: center; gap: var(--space-2); }
+    .filter-row-inline .el-input { width: 280px; }
+    .filter-row-inline .el-select { width: 200px; }
+    .filter-row-inline .el-date-editor { width: 420px; }
+
+    .filter-label-inline {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      white-space: nowrap;
+      min-width: 80px;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+
+    .table-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <h1 class="page-title">
+        <el-icon color="var(--primary-color)"><el-icon-document /></el-icon>
+        消费明细流水
+      </h1>
+    </div>
+
+    <!-- 高级筛选器 -->
+    <div class="advanced-filter">
+      <div class="filter-rows">
+        <div class="filter-row-inline">
+          <div class="filter-item" style="flex: 2;">
+            <span class="filter-label-inline">时间范围</span>
+            <el-date-picker
+              v-model="filters.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              clearable
+              style="width: 100%;"
+              @change="handleFilter"
+            />
+          </div>
+
+          <div class="filter-item">
+            <span class="filter-label-inline">资源类型</span>
+            <el-select
+              v-model="filters.resourceTypes"
+              multiple
+              filterable
+              collapse-tags
+              collapse-tags-tooltip
+              placeholder="全部"
+              clearable
+              style="width: 100%;"
+              @change="handleFilter"
+            >
+              <el-option label="Token" value="Token" />
+              <el-option label="云电脑设备时长" value="云电脑设备时长" />
+              <el-option label="云手机设备时长" value="云手机设备时长" />
+              <el-option label="存储空间" value="存储空间" />
+              <el-option label="带宽流量" value="带宽流量" />
+            </el-select>
+          </div>
+
+          <div class="filter-item">
+            <span class="filter-label-inline">行为</span>
+            <el-input
+              v-model="filters.actionSearch"
+              placeholder="搜索行为"
+              clearable
+              style="width: 100%;"
+              @input="handleSearchDebounce"
+            >
+              <template #prefix>
+                <el-icon><el-icon-search /></el-icon>
+              </template>
+            </el-input>
+          </div>
+        </div>
+
+        <div class="filter-row-inline">
+          <div class="filter-item">
+            <span class="filter-label-inline">变动类型</span>
+            <el-select
+              v-model="filters.changeType"
+              placeholder="全部"
+              clearable
+              style="width: 100%;"
+              @change="handleFilter"
+            >
+              <el-option label="全部" value="全部" />
+              <el-option label="消耗" value="消耗" />
+              <el-option label="返还" value="返还" />
+            </el-select>
+          </div>
+
+          <div class="filter-item">
+            <span class="filter-label-inline">计费租户</span>
+            <el-select
+              v-model="filters.tenant"
+              filterable
+              placeholder="全部租户"
+              clearable
+              style="width: 100%;"
+              @change="handleFilter"
+            >
+              <el-option
+                v-for="tenant in allTenants"
+                :key="tenant.value"
+                :label="tenant.label"
+                :value="tenant.label"
+              />
+            </el-select>
+          </div>
+
+          <div class="filter-item">
+            <span class="filter-label-inline">是否消耗积分</span>
+            <el-select
+              v-model="filters.hasPointsConsumed"
+              placeholder="全部"
+              clearable
+              style="width: 100%;"
+              @change="handleFilter"
+            >
+              <el-option label="全部" :value="null" />
+              <el-option label="是" :value="true" />
+              <el-option label="否" :value="false" />
+            </el-select>
+            <el-tooltip content="用于筛选该条记录是否产生了实际的积分变动。例如，免费额度内的使用记录不会消耗积分。" placement="top">
+              <span class="tooltip-icon">i</span>
+            </el-tooltip>
+          </div>
+
+          <div class="filter-item" style="flex: 0;">
+            <el-button type="primary" @click="handleFilter">
+              <el-icon><el-icon-search /></el-icon>
+              查询
+            </el-button>
+            <el-button @click="handleReset">
+              <el-icon><el-icon-refresh /></el-icon>
+              重置
+            </el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 表格头部 -->
+    <div class="table-header">
+      <div class="table-title">
+        共 {{ pagination.total }} 条记录
+      </div>
+      <el-button type="primary" @click="exportCSV">
+        <el-icon><el-icon-download /></el-icon>
+        导出CSV
+      </el-button>
+    </div>
+
+    <!-- 数据表格 -->
+    <div class="table-container">
+      <el-table
+        :data="tableData"
+        style="width: 100%"
+        v-loading="loading"
+        @sort-change="handleSortChange"
+        :default-sort="{ prop: 'date', order: 'descending' }"
+        stripe
+        border
+        table-layout="fixed"
+      >
+        <el-table-column
+          prop="date"
+          label="日期"
+          width="180"
+          sortable="custom"
+        >
+          <template #default="{ row }">
+            {{ Utils.formatDate(row.date) }}
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="resourceType"
+          label="资源类型"
+          width="160"
+        >
+          <template #default="{ row }">
+            <el-tag size="small" type="info">{{ row.resourceType }}</el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="action"
+          label="行为"
+          width="200"
+          show-overflow-tooltip
+        >
+          <template #default="{ row }">
+            <el-tooltip :content="`用户通过${row.action}产生的消耗`" placement="top">
+              <span>{{ row.action }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="changeType"
+          label="变动类型"
+          width="100"
+        >
+          <template #default="{ row }">
+            <el-tag
+              :type="row.changeType === '消耗' ? 'danger' : 'success'"
+              size="small"
+            >
+              {{ row.changeType }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          label="用量"
+          min-width="200"
+          show-overflow-tooltip
+        >
+          <template #default="{ row }">
+            <span style="color: var(--text-secondary); font-size: var(--font-size-sm);">
+              {{ row.usage }}
+            </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="points"
+          label="消耗积分"
+          width="120"
+          sortable="custom"
+        >
+          <template #default="{ row }">
+            <span :style="{ 
+              color: row.points > 0 ? 'var(--danger-color)' : 'var(--text-tertiary)',
+              fontWeight: row.points > 0 ? '600' : '400'
+            }">
+              {{ row.points > 0 ? Utils.formatNumber(row.points) : '0' }} 点
+            </span>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="tenant"
+          label="计费租户"
+          width="160"
+          show-overflow-tooltip
+        >
+          <template #default="{ row }">
+            <el-tag size="small">{{ row.tenant }}</el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" width="100" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              link
+              type="primary"
+              size="small"
+              @click="viewDetail(row)"
+            >
+              查看详情
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div style="padding: var(--space-4); display: flex; justify-content: flex-end;">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :page-sizes="[20, 50, 100, 200]"
+          :total="pagination.total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
+    </div>
+
+    <!-- 详情对话框 -->
+    <el-dialog
+      v-model="detailDialog.visible"
+      title="消费记录详情"
+      width="600px"
+    >
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="记录ID">
+          {{ detailDialog.record.id }}
+        </el-descriptions-item>
+        <el-descriptions-item label="日期">
+          {{ Utils.formatDate(detailDialog.record.date) }}
+        </el-descriptions-item>
+        <el-descriptions-item label="资源类型">
+          <el-tag size="small" type="info">{{ detailDialog.record.resourceType }}</el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="行为">
+          {{ detailDialog.record.action }}
+        </el-descriptions-item>
+        <el-descriptions-item label="变动类型">
+          <el-tag
+            :type="detailDialog.record.changeType === '消耗' ? 'danger' : 'success'"
+            size="small"
+          >
+            {{ detailDialog.record.changeType }}
+          </el-tag>
+        </el-descriptions-item>
+        <el-descriptions-item label="用量">
+          {{ detailDialog.record.usage }}
+        </el-descriptions-item>
+        <el-descriptions-item label="消耗积分">
+          <span style="font-weight: 600; color: var(--danger-color);">
+            {{ Utils.formatNumber(detailDialog.record.points) }} 点
+          </span>
+        </el-descriptions-item>
+        <el-descriptions-item label="计费租户">
+          {{ detailDialog.record.tenant }}
+        </el-descriptions-item>
+        <el-descriptions-item label="是否消耗积分">
+          <el-tag
+            :type="detailDialog.record.hasPointsConsumed ? 'danger' : 'info'"
+            size="small"
+          >
+            {{ detailDialog.record.hasPointsConsumed ? '是' : '否' }}
+          </el-tag>
+        </el-descriptions-item>
+      </el-descriptions>
+
+      <template #footer>
+        <el-button @click="detailDialog.visible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+
+    const app = createApp({
+      setup() {
+        const userId = ref('');
+        const loading = ref(false);
+        const tableData = ref([]);
+        const allTenants = ref([]);
+
+        const filters = ref({
+          dateRange: null,
+          resourceTypes: [],
+          actionSearch: '',
+          changeType: '全部',
+          tenant: null,
+          hasPointsConsumed: null
+        });
+
+        const pagination = ref({
+          page: 1,
+          pageSize: 20,
+          total: 0
+        });
+
+        const detailDialog = ref({
+          visible: false,
+          record: {}
+        });
+
+        // 获取用户ID
+        const getUserId = () => {
+          const params = Utils.parseUrlParams();
+          return params.userId || '';
+        };
+
+        // 加载数据
+        const loadData = () => {
+          loading.value = true;
+
+          const params = {
+            page: pagination.value.page,
+            pageSize: pagination.value.pageSize,
+            resourceTypes: filters.value.resourceTypes,
+            actionSearch: filters.value.actionSearch,
+            changeType: filters.value.changeType,
+            tenant: filters.value.tenant,
+            hasPointsConsumed: filters.value.hasPointsConsumed
+          };
+
+          if (filters.value.dateRange) {
+            params.startDate = filters.value.dateRange[0];
+            params.endDate = filters.value.dateRange[1];
+          }
+
+          const result = MockData.getUserConsumptionRecords(userId.value, params);
+          tableData.value = result.list;
+          pagination.value.total = result.total;
+
+          setTimeout(() => {
+            loading.value = false;
+          }, 300);
+        };
+
+        // 筛选
+        const handleFilter = () => {
+          pagination.value.page = 1;
+          loadData();
+        };
+
+        // 防抖搜索
+        const handleSearchDebounce = Utils.debounce(() => {
+          handleFilter();
+        }, 500);
+
+        // 重置
+        const handleReset = () => {
+          filters.value = {
+            dateRange: null,
+            resourceTypes: [],
+            actionSearch: '',
+            changeType: '全部',
+            tenant: null,
+            hasPointsConsumed: null
+          };
+          handleFilter();
+        };
+
+        // 排序
+        const handleSortChange = ({ prop, order }) => {
+          console.log('排序:', prop, order);
+          // 实现排序逻辑
+          loadData();
+        };
+
+        // 分页
+        const handlePageChange = () => {
+          loadData();
+        };
+
+        const handleSizeChange = () => {
+          pagination.value.page = 1;
+          loadData();
+        };
+
+        // 查看详情
+        const viewDetail = (row) => {
+          detailDialog.value.record = row;
+          detailDialog.value.visible = true;
+        };
+
+        // 导出CSV
+        const exportCSV = () => {
+          const headers = {
+            date: '日期',
+            resourceType: '资源类型',
+            action: '行为',
+            changeType: '变动类型',
+            usage: '用量',
+            points: '消耗积分',
+            tenant: '计费租户'
+          };
+
+          const exportData = tableData.value.map(row => ({
+            date: Utils.formatDate(row.date),
+            resourceType: row.resourceType,
+            action: row.action,
+            changeType: row.changeType,
+            usage: row.usage,
+            points: row.points,
+            tenant: row.tenant
+          }));
+
+          const filename = `消费明细_${Utils.formatDate(new Date(), 'YYYYMMDD_HHmmss')}.csv`;
+          Utils.exportCSV(exportData, filename, Object.values(headers));
+
+          ElementPlus.ElMessage.success('导出成功');
+        };
+
+        // 初始化
+        onMounted(() => {
+          userId.value = getUserId();
+          allTenants.value = MockData.getAllTenants();
+          loadData();
+        });
+
+        return {
+          loading,
+          tableData,
+          allTenants,
+          filters,
+          pagination,
+          detailDialog,
+          handleFilter,
+          handleSearchDebounce,
+          handleReset,
+          handleSortChange,
+          handlePageChange,
+          handleSizeChange,
+          viewDetail,
+          exportCSV,
+          Utils
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

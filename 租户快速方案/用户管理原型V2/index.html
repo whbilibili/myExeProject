@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户管理系统 - 高保真原型</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="./assets/css/custom.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 导航栏 -->
+    <div class="navbar">
+      <div class="navbar-content">
+        <div class="navbar-title">
+          <i class="el-icon-user-solid"></i>
+          <span>用户管理系统</span>
+        </div>
+        <div>
+          <el-button type="primary" @click="showAbout">关于</el-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 用户列表页 -->
+      <div v-if="currentView === 'list'">
+        <user-list 
+          @view-detail="viewUserDetail"
+        ></user-list>
+      </div>
+
+      <!-- 用户详情页 -->
+      <div v-if="currentView === 'detail'">
+        <user-detail 
+          :user-id="currentUserId"
+          @back="backToList"
+        ></user-detail>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  
+  <!-- Element Plus 图标 -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- ECharts -->
+  <script src="https://unpkg.com/echarts@5.4.3/dist/echarts.min.js"></script>
+  
+  <!-- Day.js -->
+  <script src="https://unpkg.com/dayjs@1.11.10/dayjs.min.js"></script>
+  
+  <!-- 自定义JS -->
+  <script src="./assets/js/utils.js"></script>
+  <script src="./assets/js/mock-data.js"></script>
+  <script src="./assets/js/charts.js"></script>
+
+  <script>
+    const { createApp, ref, computed, reactive, onMounted, watch, nextTick } = Vue;
+    const { ElMessage, ElMessageBox } = ElementPlus;
+
+    const app = createApp({
+      setup() {
+        const currentView = ref('list');
+        const currentUserId = ref(null);
+
+        const viewUserDetail = (userId) => {
+          currentUserId.value = userId;
+          currentView.value = 'detail';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const backToList = () => {
+          currentView.value = 'list';
+          currentUserId.value = null;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        const showAbout = () => {
+          ElMessageBox.alert(
+            '这是一个基于 Vue 3 + Element Plus + ECharts 构建的企业级用户管理系统高保真原型。包含用户列表、用户详情（6个标签页）、完整的数据可视化和交互功能。',
+            '关于系统',
+            {
+              confirmButtonText: '确定',
+              type: 'info'
+            }
+          );
+        };
+
+        return {
+          currentView,
+          currentUserId,
+          viewUserDetail,
+          backToList,
+          showAbout
+        };
+      }
+    });
+
+    // 用户列表组件
+    app.component('user-list', {
+      template: `
+        <div>
+          <!-- 搜索栏 -->
+          <div class="search-bar">
+            <el-form :inline="true" :model="searchForm">
+              <el-form-item>
+                <el-input
+                  v-model="searchForm.keyword"
+                  placeholder="筛选用户名称、用户ID、手机号、邮箱号、MIS号"
+                  style="width: 400px"
+                  clearable
+                  prefix-icon="Search"
+                  @input="handleSearch"
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-select
+                  v-model="searchForm.status"
+                  placeholder="状态"
+                  style="width: 120px"
+                  clearable
+                  @change="handleSearch"
+                >
+                  <el-option label="全部" value=""></el-option>
+                  <el-option label="正常" value="正常"></el-option>
+                  <el-option label="已禁用" value="已禁用"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-select
+                  v-model="searchForm.tenants"
+                  placeholder="归属租户"
+                  style="width: 200px"
+                  multiple
+                  collapse-tags
+                  clearable
+                  filterable
+                  @change="handleSearch"
+                >
+                  <el-option
+                    v-for="tenant in allTenants"
+                    :key="tenant.id"
+                    :label="tenant.name"
+                    :value="tenant.id"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-date-picker
+                  v-model="searchForm.dateRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="创建开始日期"
+                  end-placeholder="创建结束日期"
+                  style="width: 340px"
+                  :shortcuts="dateShortcuts"
+                  @change="handleSearch"
+                />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="handleSearch">
+                  <el-icon><Search /></el-icon>
+                  搜索
+                </el-button>
+                <el-button @click="resetSearch">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+
+          <!-- 数据表格 -->
+          <div class="data-table">
+            <el-table
+              :data="paginatedData"
+              style="width: 100%"
+              stripe
+              :default-sort="{ prop: 'createdAt', order: 'descending' }"
+            >
+              <el-table-column prop="id" label="用户ID" width="120" />
+              
+              <el-table-column label="用户名称" width="220">
+                <template #default="{ row }">
+                  <div class="user-cell">
+                    <el-avatar :size="40" :src="row.avatar" />
+                    <div class="user-info">
+                      <div class="user-name" @click="$emit('view-detail', row.id)">
+                        {{ row.name }}
+                      </div>
+                      <div class="user-id">ID: {{ row.id }}</div>
+                    </div>
+                  </div>
+                </template>
+              </el-table-column>
+              
+              <el-table-column label="归属租户" width="240">
+                <template #default="{ row }">
+                  <div class="tenant-tags">
+                    <el-tag
+                      v-for="(tenant, index) in row.tenants.slice(0, 2)"
+                      :key="tenant.tenantId"
+                      size="small"
+                      class="tenant-tag"
+                    >
+                      {{ tenant.tenantName }}
+                    </el-tag>
+                    <el-tooltip
+                      v-if="row.tenants.length > 2"
+                      :content="row.tenants.slice(2).map(t => t.tenantName).join(', ')"
+                      placement="top"
+                    >
+                      <el-tag size="small">+{{ row.tenants.length - 2 }}</el-tag>
+                    </el-tooltip>
+                  </div>
+                </template>
+              </el-table-column>
+              
+              <el-table-column label="绑定手机" width="160">
+                <template #default="{ row }">
+                  {{ row.phone }}
+                  <el-icon class="copy-btn" @click="copyText(row.phone)">
+                    <CopyDocument />
+                  </el-icon>
+                </template>
+              </el-table-column>
+              
+              <el-table-column label="绑定邮箱" width="200">
+                <template #default="{ row }">
+                  {{ row.email }}
+                  <el-icon class="copy-btn" @click="copyText(row.email)">
+                    <CopyDocument />
+                  </el-icon>
+                </template>
+              </el-table-column>
+              
+              <el-table-column label="绑定MIS" width="120">
+                <template #default="{ row }">
+                  <span v-if="row.mis">
+                    {{ row.mis }}
+                    <el-icon class="copy-btn" @click="copyText(row.mis)">
+                      <CopyDocument />
+                    </el-icon>
+                  </span>
+                  <span v-else style="color: #C0C4CC">-</span>
+                </template>
+              </el-table-column>
+              
+              <el-table-column
+                prop="createdAt"
+                label="创建时间"
+                width="180"
+                sortable
+                :formatter="formatDate"
+              />
+              
+              <el-table-column
+                prop="lastLoginAt"
+                label="最后登录时间"
+                width="180"
+                sortable
+                :formatter="formatDate"
+              />
+              
+              <el-table-column label="状态" width="100">
+                <template #default="{ row }">
+                  <el-tag :type="getStatusType(row.status)">
+                    {{ row.status }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              
+              <el-table-column label="账号金额" width="120" sortable prop="balance">
+                <template #default="{ row }">
+                  <span style="color: #F56C6C; font-weight: 600">
+                    {{ row.balance.toFixed(2) }} w币
+                  </span>
+                </template>
+              </el-table-column>
+              
+              <el-table-column label="操作" width="200" fixed="right">
+                <template #default="{ row }">
+                  <div class="action-buttons">
+                    <el-button size="small" @click="resetPassword(row)">
+                      重置密码
+                    </el-button>
+                    <el-button
+                      size="small"
+                      :type="row.status === '正常' ? 'warning' : 'success'"
+                      @click="toggleStatus(row)"
+                    >
+                      {{ row.status === '正常' ? '禁用' : '启用' }}
+                    </el-button>
+                    <el-button
+                      size="small"
+                      type="danger"
+                      @click="deleteUser(row)"
+                    >
+                      注销
+                    </el-button>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+
+            <!-- 分页 -->
+            <el-pagination
+              v-model:current-page="currentPage"
+              v-model:page-size="pageSize"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="filteredData.length"
+              layout="total, sizes, prev, pager, next, jumper"
+            />
+          </div>
+        </div>
+      `,
+      emits: ['view-detail'],
+      setup(props, { emit }) {
+        const searchForm = reactive({
+          keyword: '',
+          status: '',
+          tenants: [],
+          dateRange: null
+        });
+
+        const currentPage = ref(1);
+        const pageSize = ref(20);
+        const allUsers = ref([]);
+        const allTenants = ref([]);
+        const filteredData = ref([]);
+
+        const dateShortcuts = Utils.dateRangeShortcuts;
+
+        onMounted(() => {
+          allUsers.value = mockData.users;
+          allTenants.value = mockData.tenants;
+          filteredData.value = allUsers.value;
+        });
+
+        const paginatedData = computed(() => {
+          const start = (currentPage.value - 1) * pageSize.value;
+          const end = start + pageSize.value;
+          return filteredData.value.slice(start, end);
+        });
+
+        const handleSearch = () => {
+          let result = [...allUsers.value];
+
+          // 关键词搜索
+          if (searchForm.keyword) {
+            const keyword = searchForm.keyword.toLowerCase();
+            result = result.filter(user =>
+              user.name.toLowerCase().includes(keyword) ||
+              user.id.toLowerCase().includes(keyword) ||
+              user.phone.includes(keyword) ||
+              user.email.toLowerCase().includes(keyword) ||
+              (user.mis && user.mis.toLowerCase().includes(keyword))
+            );
+          }
+
+          // 状态筛选
+          if (searchForm.status) {
+            result = result.filter(user => user.status === searchForm.status);
+          }
+
+          // 租户筛选
+          if (searchForm.tenants.length > 0) {
+            result = result.filter(user =>
+              user.tenants.some(t => searchForm.tenants.includes(t.tenantId))
+            );
+          }
+
+          // 日期范围筛选
+          if (searchForm.dateRange && searchForm.dateRange.length === 2) {
+            const [start, end] = searchForm.dateRange;
+            result = result.filter(user => {
+              const createdAt = new Date(user.createdAt);
+              return createdAt >= start && createdAt <= end;
+            });
+          }
+
+          filteredData.value = result;
+          currentPage.value = 1;
+        };
+
+        const resetSearch = () => {
+          searchForm.keyword = '';
+          searchForm.status = '';
+          searchForm.tenants = [];
+          searchForm.dateRange = null;
+          filteredData.value = allUsers.value;
+          currentPage.value = 1;
+        };
+
+        const formatDate = (row, column, cellValue) => {
+          return Utils.formatDate(cellValue);
+        };
+
+        const getStatusType = (status) => {
+          return Utils.getStatusType(status);
+        };
+
+        const copyText = async (text) => {
+          const success = await Utils.copyToClipboard(text);
+          if (success) {
+            ElMessage.success('复制成功');
+          } else {
+            ElMessage.error('复制失败');
+          }
+        };
+
+        const resetPassword = (user) => {
+          ElMessageBox.prompt('请输入新密码', '重置密码', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            inputType: 'password',
+            inputPattern: /.{6,}/,
+            inputErrorMessage: '密码至少6位'
+          }).then(({ value }) => {
+            ElMessage.success(`用户 ${user.name} 的密码已重置`);
+          }).catch(() => {});
+        };
+
+        const toggleStatus = (user) => {
+          const action = user.status === '正常' ? '禁用' : '启用';
+          ElMessageBox.confirm(
+            `确定要${action}用户 ${user.name} 吗？`,
+            '确认操作',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            user.status = user.status === '正常' ? '已禁用' : '正常';
+            ElMessage.success(`已${action}用户`);
+          }).catch(() => {});
+        };
+
+        const deleteUser = (user) => {
+          ElMessageBox.prompt(
+            `注销用户是高危操作，请输入 "确认注销" 来继续`,
+            `注销用户 ${user.name}`,
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              inputPattern: /^确认注销$/,
+              inputErrorMessage: '请输入"确认注销"'
+            }
+          ).then(() => {
+            ElMessage.success(`用户 ${user.name} 已注销`);
+          }).catch(() => {});
+        };
+
+        return {
+          searchForm,
+          currentPage,
+          pageSize,
+          allTenants,
+          filteredData,
+          paginatedData,
+          dateShortcuts,
+          handleSearch,
+          resetSearch,
+          formatDate,
+          getStatusType,
+          copyText,
+          resetPassword,
+          toggleStatus,
+          deleteUser
+        };
+      }
+    });
+
+    // 用户详情组件
+    app.component('user-detail', {
+      props: ['userId'],
+      template: `
+        <div v-if="user">
+          <!-- 返回按钮 -->
+          <div class="page-header">
+            <div class="page-header-top">
+              <div class="page-header-title">
+                <el-button @click="$emit('back')" icon="ArrowLeft">返回</el-button>
+                <h2>{{ user.name }}</h2>
+              </div>
+              <div class="page-header-actions">
+                <el-button
+                  :type="user.status === '正常' ? 'warning' : 'success'"
+                  @click="toggleStatus"
+                >
+                  {{ user.status === '正常' ? '禁用用户' : '启用用户' }}
+                </el-button>
+                <el-button @click="resetPassword">重置密码</el-button>
+                <el-button type="danger" @click="deleteUser">注销用户</el-button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 用户基本信息 -->
+          <div class="user-detail-header">
+            <div class="user-detail-info">
+              <el-avatar :size="80" :src="user.avatar" class="user-detail-avatar" />
+              <div class="user-detail-main">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px">
+                  <h2 class="user-detail-name">{{ user.name }}</h2>
+                  <el-tag :type="getStatusType(user.status)">{{ user.status }}</el-tag>
+                </div>
+                <div class="user-detail-meta">
+                  <div class="user-detail-meta-item">
+                    <span class="user-detail-meta-label">用户ID:</span>
+                    <span class="user-detail-meta-value">{{ user.id }}</span>
+                  </div>
+                  <div class="user-detail-meta-item">
+                    <span class="user-detail-meta-label">手机号:</span>
+                    <span class="user-detail-meta-value">{{ user.phone }}</span>
+                  </div>
+                  <div class="user-detail-meta-item">
+                    <span class="user-detail-meta-label">邮箱:</span>
+                    <span class="user-detail-meta-value">{{ user.email }}</span>
+                  </div>
+                  <div class="user-detail-meta-item" v-if="user.mis">
+                    <span class="user-detail-meta-label">MIS:</span>
+                    <span class="user-detail-meta-value">{{ user.mis }}</span>
+                  </div>
+                  <div class="user-detail-meta-item">
+                    <span class="user-detail-meta-label">创建时间:</span>
+                    <span class="user-detail-meta-value">{{ formatDate(user.createdAt) }}</span>
+                  </div>
+                  <div class="user-detail-meta-item">
+                    <span class="user-detail-meta-label">最后登录:</span>
+                    <span class="user-detail-meta-value">{{ formatDate(user.lastLoginAt) }}</span>
+                  </div>
+                  <div class="user-detail-meta-item">
+                    <span class="user-detail-meta-label">账号余额:</span>
+                    <span class="user-detail-meta-value" style="color: #F56C6C; font-weight: 600">
+                      {{ user.balance.toFixed(2) }} w币
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 标签页 -->
+          <el-tabs v-model="activeTab" type="card">
+            <el-tab-pane label="数据总览" name="overview">
+              <tab-overview :user="user" :global-filters="globalFilters" />
+            </el-tab-pane>
+            
+            <el-tab-pane label="消费分析" name="consumption">
+              <tab-consumption :user="user" :global-filters="globalFilters" />
+            </el-tab-pane>
+            
+            <el-tab-pane label="使用分析" name="usage">
+              <tab-usage :user="user" :global-filters="globalFilters" />
+            </el-tab-pane>
+            
+            <el-tab-pane label="消费明细" name="details">
+              <tab-consumption-details :user="user" :global-filters="globalFilters" />
+            </el-tab-pane>
+            
+            <el-tab-pane label="资产明细" name="assets">
+              <tab-assets :user="user" />
+            </el-tab-pane>
+            
+            <el-tab-pane label="加入的租户" name="tenants">
+              <tab-tenants :user="user" />
+            </el-tab-pane>
+          </el-tabs>
+        </div>
+      `,
+      emits: ['back'],
+      setup(props, { emit }) {
+        const user = ref(null);
+        const activeTab = ref('overview');
+        
+        const globalFilters = reactive({
+          dateRange: [],
+          selectedTenant: ''
+        });
+
+        onMounted(() => {
+          user.value = mockData.users.find(u => u.id === props.userId);
+          
+          // 默认最近30天
+          const end = new Date();
+          const start = new Date();
+          start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+          globalFilters.dateRange = [start, end];
+        });
+
+        const formatDate = (date) => {
+          return Utils.formatDate(date);
+        };
+
+        const getStatusType = (status) => {
+          return Utils.getStatusType(status);
+        };
+
+        const toggleStatus = () => {
+          const action = user.value.status === '正常' ? '禁用' : '启用';
+          ElMessageBox.confirm(
+            `确定要${action}用户 ${user.value.name} 吗？`,
+            '确认操作',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            user.value.status = user.value.status === '正常' ? '已禁用' : '正常';
+            ElMessage.success(`已${action}用户`);
+          }).catch(() => {});
+        };
+
+        const resetPassword = () => {
+          ElMessageBox.prompt('请输入新密码', '重置密码', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            inputType: 'password',
+            inputPattern: /.{6,}/,
+            inputErrorMessage: '密码至少6位'
+          }).then(({ value }) => {
+            ElMessage.success(`用户 ${user.value.name} 的密码已重置`);
+          }).catch(() => {});
+        };
+
+        const deleteUser = () => {
+          ElMessageBox.prompt(
+            `注销用户是高危操作，请输入 "确认注销" 来继续`,
+            `注销用户 ${user.value.name}`,
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              inputPattern: /^确认注销$/,
+              inputErrorMessage: '请输入"确认注销"'
+            }
+          ).then(() => {
+            ElMessage.success(`用户 ${user.value.name} 已注销`);
+            emit('back');
+          }).catch(() => {});
+        };
+
+        return {
+          user,
+          activeTab,
+          globalFilters,
+          formatDate,
+          getStatusType,
+          toggleStatus,
+          resetPassword,
+          deleteUser
+        };
+      }
+    });
+
+    // 数据总览标签页组件
+    app.component('tab-overview', {
+      props: ['user', 'globalFilters'],
+      template: `
+        <div>
+          <!-- 全局筛选器 -->
+          <el-card style="margin-bottom: 24px">
+            <el-form :inline="true">
+              <el-form-item label="时间范围">
+                <el-date-picker
+                  v-model="globalFilters.dateRange"
+                  type="daterange"
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  :shortcuts="dateShortcuts"
+                  @change="loadData"
+                />
+              </el-form-item>
+              <el-form-item label="租户">
+                <el-select
+                  v-model="globalFilters.selectedTenant"
+                  placeholder="全部租户"
+                  clearable
+                  @change="loadData"
+                >
+                  <el-option label="全部租户" value=""></el-option>
+                  <el-option
+                    v-for="tenant in user.tenants"
+                    :key="tenant.tenantId"
+                    :label="tenant.tenantName"
+                    :value="tenant.tenantId"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-form>
+          </el-card>
+
+          <!-- KPI卡片 -->
+          <div class="card-grid">
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <div class="kpi-card-title">总消耗积分</div>
+                <div class="kpi-card-icon" style="background: linear-gradient(135deg, #F56C6C 0%, #ff8585 100%)">
+                  <el-icon><Coin /></el-icon>
+                </div>
+              </div>
+              <div class="kpi-card-value">{{ kpiData.totalPoints.toLocaleString() }}</div>
+              <div class="kpi-card-subtitle">积分</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <div class="kpi-card-title">Token消耗总量</div>
+                <div class="kpi-card-icon" style="background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%)">
+                  <el-icon><DataAnalysis /></el-icon>
+                </div>
+              </div>
+              <div class="kpi-card-value" style="font-size: 20px">
+                输入: {{ formatTokens(kpiData.inputTokens) }} / 输出: {{ formatTokens(kpiData.outputTokens) }}
+              </div>
+              <div class="kpi-card-subtitle">Token</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <div class="kpi-card-title">云设备消耗总时长</div>
+                <div class="kpi-card-icon" style="background: linear-gradient(135deg, #67C23A 0%, #85ce61 100%)">
+                  <el-icon><Monitor /></el-icon>
+                </div>
+              </div>
+              <div class="kpi-card-value" style="font-size: 18px">
+                云电脑: {{ kpiData.cloudPCMinutes }} min / 云手机: {{ kpiData.cloudPhoneMinutes }} min
+              </div>
+              <div class="kpi-card-subtitle">分钟</div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-card-header">
+                <div class="kpi-card-title">总创建资产</div>
+                <div class="kpi-card-icon" style="background: linear-gradient(135deg, #E6A23C 0%, #ebb563 100%)">
+                  <el-icon><Grid /></el-icon>
+                </div>
+              </div>
+              <div class="kpi-card-value">{{ kpiData.totalAssets }}</div>
+              <div class="kpi-card-subtitle">
+                <el-tooltip :content="assetBreakdown" placement="top">
+                  <span style="cursor: help">查看详情</span>
+                </el-tooltip>
+              </div>
+            </div>
+          </div>
+
+          <!-- 积分分析 -->
+          <el-card style="margin-top: 24px">
+            <template #header>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <el-icon color="#F56C6C"><Coin /></el-icon>
+                <span style="font-weight: 600">积分分析</span>
+              </div>
+            </template>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px">
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">日均消耗</div>
+                <div class="kpi-card-value" style="font-size: 24px">
+                  {{ pointsMetrics.avgDaily.toFixed(2) }}
+                </div>
+                <div class="kpi-card-subtitle">积分/天</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">最高单日消耗</div>
+                <div class="kpi-card-value" style="font-size: 24px">
+                  {{ pointsMetrics.maxDaily.toFixed(2) }}
+                </div>
+                <div class="kpi-card-subtitle">积分</div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px">
+              <div class="chart-container">
+                <div class="chart-header">
+                  <div class="chart-title">
+                    <el-icon><TrendCharts /></el-icon>
+                    积分消耗趋势
+                  </div>
+                  <el-radio-group v-model="pointsGranularity" size="small" @change="updatePointsChart">
+                    <el-radio-button label="daily">按日</el-radio-button>
+                    <el-radio-button label="weekly">按周</el-radio-button>
+                    <el-radio-button label="monthly">按月</el-radio-button>
+                  </el-radio-group>
+                </div>
+                <div ref="pointsTrendChart" class="chart-body"></div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 20px">
+                <div class="chart-container">
+                  <div class="chart-header">
+                    <div class="chart-title">积分消耗构成</div>
+                  </div>
+                  <div ref="pointsCompositionChart" class="chart-body" style="min-height: 250px"></div>
+                </div>
+
+                <div class="chart-container">
+                  <div class="chart-header">
+                    <div class="chart-title">按租户消耗排行</div>
+                  </div>
+                  <div ref="tenantRankingChart" class="chart-body" style="min-height: 250px"></div>
+                </div>
+              </div>
+            </div>
+          </el-card>
+
+          <!-- Token分析 -->
+          <el-card style="margin-top: 24px">
+            <template #header>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <el-icon color="#409EFF"><DataAnalysis /></el-icon>
+                <span style="font-weight: 600">Token分析</span>
+              </div>
+            </template>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px">
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">最常用模型</div>
+                <div class="kpi-card-value" style="font-size: 20px">
+                  {{ tokenMetrics.mostUsedModel }}
+                </div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">输入/输出比</div>
+                <div class="kpi-card-value" style="font-size: 24px">
+                  {{ tokenMetrics.ioRatio }}
+                </div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px">
+              <div class="chart-container">
+                <div class="chart-header">
+                  <div class="chart-title">Token消耗趋势</div>
+                  <el-radio-group v-model="tokenGranularity" size="small" @change="updateTokenChart">
+                    <el-radio-button label="daily">按日</el-radio-button>
+                    <el-radio-button label="weekly">按周</el-radio-button>
+                    <el-radio-button label="monthly">按月</el-radio-button>
+                  </el-radio-group>
+                </div>
+                <div ref="tokenTrendChart" class="chart-body"></div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 20px">
+                <div class="chart-container">
+                  <div class="chart-header">
+                    <div class="chart-title">输入/输出分布</div>
+                  </div>
+                  <div ref="tokenDistChart" class="chart-body" style="min-height: 250px"></div>
+                </div>
+
+                <div class="chart-container">
+                  <div class="chart-header">
+                    <div class="chart-title">按模型消耗分布</div>
+                  </div>
+                  <div ref="modelDistChart" class="chart-body" style="min-height: 250px"></div>
+                </div>
+              </div>
+            </div>
+          </el-card>
+
+          <!-- 设备时长分析 -->
+          <el-card style="margin-top: 24px">
+            <template #header>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <el-icon color="#67C23A"><Monitor /></el-icon>
+                <span style="font-weight: 600">设备时长分析</span>
+              </div>
+            </template>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px">
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">总会话次数</div>
+                <div class="kpi-card-value" style="font-size: 24px">
+                  {{ deviceMetrics.totalSessions }}
+                </div>
+                <div class="kpi-card-subtitle">次</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">平均会话时长</div>
+                <div class="kpi-card-value" style="font-size: 24px">
+                  {{ deviceMetrics.avgSessionDuration.toFixed(1) }}
+                </div>
+                <div class="kpi-card-subtitle">分钟</div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px">
+              <div class="chart-container">
+                <div class="chart-header">
+                  <div class="chart-title">设备时长消耗趋势</div>
+                  <el-radio-group v-model="deviceGranularity" size="small" @change="updateDeviceChart">
+                    <el-radio-button label="daily">按日</el-radio-button>
+                    <el-radio-button label="weekly">按周</el-radio-button>
+                    <el-radio-button label="monthly">按月</el-radio-button>
+                  </el-radio-group>
+                </div>
+                <div ref="deviceTrendChart" class="chart-body"></div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 20px">
+                <div class="chart-container">
+                  <div class="chart-header">
+                    <div class="chart-title">设备时长分布</div>
+                  </div>
+                  <div ref="deviceDistChart" class="chart-body" style="min-height: 250px"></div>
+                </div>
+
+                <div class="chart-container">
+                  <div class="chart-header">
+                    <div class="chart-title">会话时长分布</div>
+                  </div>
+                  <div ref="sessionDistChart" class="chart-body" style="min-height: 250px"></div>
+                </div>
+              </div>
+            </div>
+          </el-card>
+        </div>
+      `,
+      setup(props) {
+        const dateShortcuts = Utils.dateRangeShortcuts;
+        const pointsGranularity = ref('daily');
+        const tokenGranularity = ref('daily');
+        const deviceGranularity = ref('daily');
+
+        const kpiData = reactive({
+          totalPoints: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+          cloudPCMinutes: 0,
+          cloudPhoneMinutes: 0,
+          totalAssets: 0
+        });
+
+        const pointsMetrics = reactive({
+          avgDaily: 0,
+          maxDaily: 0
+        });
+
+        const tokenMetrics = reactive({
+          mostUsedModel: '-',
+          ioRatio: '0:0'
+        });
+
+        const deviceMetrics = reactive({
+          totalSessions: 0,
+          avgSessionDuration: 0
+        });
+
+        const assetBreakdown = ref('');
+
+        // 图表引用
+        const pointsTrendChart = ref(null);
+        const pointsCompositionChart = ref(null);
+        const tenantRankingChart = ref(null);
+        const tokenTrendChart = ref(null);
+        const tokenDistChart = ref(null);
+        const modelDistChart = ref(null);
+        const deviceTrendChart = ref(null);
+        const deviceDistChart = ref(null);
+        const sessionDistChart = ref(null);
+
+        const formatTokens = (num) => Utils.formatTokens(num);
+
+        const loadData = () => {
+          // 获取该用户的消费数据
+          const userConsumptions = mockData.consumptions.filter(c => c.userId === props.user.id);
+          
+          // 过滤时间范围
+          let filtered = userConsumptions;
+          if (props.globalFilters.dateRange && props.globalFilters.dateRange.length === 2) {
+            const [start, end] = props.globalFilters.dateRange;
+            filtered = filtered.filter(c => c.date >= start && c.date <= end);
+          }
+          
+          // 过滤租户
+          if (props.globalFilters.selectedTenant) {
+            filtered = filtered.filter(c => c.tenantId === props.globalFilters.selectedTenant);
+          }
+
+          // 计算KPI
+          kpiData.totalPoints = filtered.reduce((sum, c) => sum + c.pointsUsed, 0);
+          kpiData.inputTokens = filtered
+            .filter(c => c.resourceType === 'Token')
+            .reduce((sum, c) => sum + (c.inputTokens || 0), 0);
+          kpiData.outputTokens = filtered
+            .filter(c => c.resourceType === 'Token')
+            .reduce((sum, c) => sum + (c.outputTokens || 0), 0);
+          kpiData.cloudPCMinutes = filtered
+            .filter(c => c.resourceType === '云电脑设备时长')
+            .reduce((sum, c) => sum + (c.minutes || 0), 0);
+          kpiData.cloudPhoneMinutes = filtered
+            .filter(c => c.resourceType === '云手机设备时长')
+            .reduce((sum, c) => sum + (c.minutes || 0), 0);
+
+          // 计算资产总数
+          const userAssets = mockData.assets;
+          kpiData.totalAssets = 
+            userAssets.bots.filter(a => a.userId === props.user.id).length +
+            userAssets.workflows.filter(a => a.userId === props.user.id).length +
+            userAssets.tools.filter(a => a.userId === props.user.id).length +
+            userAssets.toolLibs.filter(a => a.userId === props.user.id).length +
+            userAssets.knowledgeBases.filter(a => a.userId === props.user.id).length +
+            userAssets.spaces.filter(a => a.userId === props.user.id).length;
+
+          assetBreakdown.value = `智能体: ${userAssets.bots.filter(a => a.userId === props.user.id).length}, ` +
+            `工作流: ${userAssets.workflows.filter(a => a.userId === props.user.id).length}, ` +
+            `工具: ${userAssets.tools.filter(a => a.userId === props.user.id).length}, ` +
+            `工具库: ${userAssets.toolLibs.filter(a => a.userId === props.user.id).length}, ` +
+            `知识库: ${userAssets.knowledgeBases.filter(a => a.userId === props.user.id).length}, ` +
+            `空间: ${userAssets.spaces.filter(a => a.userId === props.user.id).length}`;
+
+          // 计算指标
+          const days = props.globalFilters.dateRange && props.globalFilters.dateRange.length === 2
+            ? Math.ceil((props.globalFilters.dateRange[1] - props.globalFilters.dateRange[0]) / (1000 * 60 * 60 * 24))
+            : 30;
+          pointsMetrics.avgDaily = kpiData.totalPoints / days;
+
+          // 按天聚合计算最高单日消耗
+          const dailyPoints = {};
+          filtered.forEach(c => {
+            const date = Utils.formatDate(c.date, 'YYYY-MM-DD');
+            dailyPoints[date] = (dailyPoints[date] || 0) + c.pointsUsed;
+          });
+          pointsMetrics.maxDaily = Math.max(...Object.values(dailyPoints), 0);
+
+          // Token指标
+          const modelUsage = {};
+          filtered.filter(c => c.resourceType === 'Token').forEach(c => {
+            if (c.model) {
+              modelUsage[c.model] = (modelUsage[c.model] || 0) + (c.inputTokens || 0) + (c.outputTokens || 0);
+            }
+          });
+          const topModel = Object.entries(modelUsage).sort((a, b) => b[1] - a[1])[0];
+          tokenMetrics.mostUsedModel = topModel ? topModel[0] : '-';
+          tokenMetrics.ioRatio = kpiData.inputTokens > 0 
+            ? `${(kpiData.inputTokens / 1000).toFixed(1)}K : ${(kpiData.outputTokens / 1000).toFixed(1)}K`
+            : '0:0';
+
+          // 设备指标
+          deviceMetrics.totalSessions = filtered.filter(c => 
+            c.resourceType === '云电脑设备时长' || c.resourceType === '云手机设备时长'
+          ).length;
+          deviceMetrics.avgSessionDuration = deviceMetrics.totalSessions > 0
+            ? (kpiData.cloudPCMinutes + kpiData.cloudPhoneMinutes) / deviceMetrics.totalSessions
+            : 0;
+
+          // 更新图表
+          nextTick(() => {
+            updatePointsChart();
+            updateTokenChart();
+            updateDeviceChart();
+          });
+        };
+
+        const updatePointsChart = () => {
+          const userConsumptions = mockData.consumptions.filter(c => c.userId === props.user.id);
+          let filtered = userConsumptions;
+          
+          if (props.globalFilters.dateRange && props.globalFilters.dateRange.length === 2) {
+            const [start, end] = props.globalFilters.dateRange;
+            filtered = filtered.filter(c => c.date >= start && c.date <= end);
+          }
+          
+          if (props.globalFilters.selectedTenant) {
+            filtered = filtered.filter(c => c.tenantId === props.globalFilters.selectedTenant);
+          }
+
+          // 聚合数据
+          const aggregated = Utils.aggregateByGranularity(
+            filtered.map(c => ({
+              date: c.date,
+              tokenPoints: c.resourceType === 'Token' ? c.pointsUsed : 0,
+              cloudPCPoints: c.resourceType === '云电脑设备时长' ? c.pointsUsed : 0,
+              cloudPhonePoints: c.resourceType === '云手机设备时长' ? c.pointsUsed : 0
+            })),
+            pointsGranularity.value
+          );
+
+          const chartData = {
+            dates: aggregated.map(d => Utils.formatDate(d.date, 'MM-DD')),
+            tokenPoints: aggregated.map(d => d.tokenPoints || 0),
+            cloudPCPoints: aggregated.map(d => d.cloudPCPoints || 0),
+            cloudPhonePoints: aggregated.map(d => d.cloudPhonePoints || 0)
+          };
+
+          const chart1 = echarts.init(pointsTrendChart.value);
+          chart1.setOption(ChartConfigs.pointsTrendArea(chartData, pointsGranularity.value));
+
+          // 积分构成
+          const composition = [
+            { value: chartData.tokenPoints.reduce((a, b) => a + b, 0), name: 'Token消耗' },
+            { value: chartData.cloudPCPoints.reduce((a, b) => a + b, 0), name: '云电脑时长抵扣' },
+            { value: chartData.cloudPhonePoints.reduce((a, b) => a + b, 0), name: '云手机时长抵扣' }
+          ].filter(d => d.value > 0);
+
+          const chart2 = echarts.init(pointsCompositionChart.value);
+          chart2.setOption(ChartConfigs.pointsCompositionDoughnut(composition));
+
+          // 租户排行
+          const tenantPoints = {};
+          filtered.forEach(c => {
+            tenantPoints[c.tenantName] = (tenantPoints[c.tenantName] || 0) + c.pointsUsed;
+          });
+          const tenantData = {
+            tenants: Object.keys(tenantPoints),
+            points: Object.values(tenantPoints)
+          };
+
+          const chart3 = echarts.init(tenantRankingChart.value);
+          chart3.setOption(ChartConfigs.tenantRankingBar(tenantData));
+        };
+
+        const updateTokenChart = () => {
+          const userConsumptions = mockData.consumptions.filter(c => 
+            c.userId === props.user.id && c.resourceType === 'Token'
+          );
+          
+          let filtered = userConsumptions;
+          if (props.globalFilters.dateRange && props.globalFilters.dateRange.length === 2) {
+            const [start, end] = props.globalFilters.dateRange;
+            filtered = filtered.filter(c => c.date >= start && c.date <= end);
+          }
+          
+          if (props.globalFilters.selectedTenant) {
+            filtered = filtered.filter(c => c.tenantId === props.globalFilters.selectedTenant);
+          }
+
+          const aggregated = Utils.aggregateByGranularity(
+            filtered.map(c => ({
+              date: c.date,
+              inputTokens: c.inputTokens || 0,
+              outputTokens: c.outputTokens || 0
+            })),
+            tokenGranularity.value
+          );
+
+          const chartData = {
+            dates: aggregated.map(d => Utils.formatDate(d.date, 'MM-DD')),
+            input: aggregated.map(d => d.inputTokens || 0),
+            output: aggregated.map(d => d.outputTokens || 0)
+          };
+
+          const chart1 = echarts.init(tokenTrendChart.value);
+          chart1.setOption(ChartConfigs.tokenTrendLine(chartData));
+
+          // Token分布
+          const totalInput = chartData.input.reduce((a, b) => a + b, 0);
+          const totalOutput = chartData.output.reduce((a, b) => a + b, 0);
+          const distData = [
+            { value: totalInput, name: '输入Token' },
+            { value: totalOutput, name: '输出Token' }
+          ];
+
+          const chart2 = echarts.init(tokenDistChart.value);
+          chart2.setOption(ChartConfigs.tokenDistributionPie(distData));
+
+          // 模型分布
+          const modelTokens = {};
+          filtered.forEach(c => {
+            if (c.model) {
+              modelTokens[c.model] = (modelTokens[c.model] || 0) + 
+                (c.inputTokens || 0) + (c.outputTokens || 0);
+            }
+          });
+          const modelData = Object.entries(modelTokens).map(([name, value]) => ({ name, value }));
+
+          const chart3 = echarts.init(modelDistChart.value);
+          chart3.setOption(ChartConfigs.modelDistributionDoughnut(modelData));
+        };
+
+        const updateDeviceChart = () => {
+          const userConsumptions = mockData.consumptions.filter(c => 
+            c.userId === props.user.id && 
+            (c.resourceType === '云电脑设备时长' || c.resourceType === '云手机设备时长')
+          );
+          
+          let filtered = userConsumptions;
+          if (props.globalFilters.dateRange && props.globalFilters.dateRange.length === 2) {
+            const [start, end] = props.globalFilters.dateRange;
+            filtered = filtered.filter(c => c.date >= start && c.date <= end);
+          }
+          
+          if (props.globalFilters.selectedTenant) {
+            filtered = filtered.filter(c => c.tenantId === props.globalFilters.selectedTenant);
+          }
+
+          const aggregated = Utils.aggregateByGranularity(
+            filtered.map(c => ({
+              date: c.date,
+              cloudPC: c.resourceType === '云电脑设备时长' ? (c.minutes || 0) : 0,
+              cloudPhone: c.resourceType === '云手机设备时长' ? (c.minutes || 0) : 0
+            })),
+            deviceGranularity.value
+          );
+
+          const chartData = {
+            dates: aggregated.map(d => Utils.formatDate(d.date, 'MM-DD')),
+            cloudPC: aggregated.map(d => d.cloudPC || 0),
+            cloudPhone: aggregated.map(d => d.cloudPhone || 0)
+          };
+
+          const chart1 = echarts.init(deviceTrendChart.value);
+          chart1.setOption(ChartConfigs.deviceTimeTrendLine(chartData));
+
+          // 设备分布
+          const totalPC = chartData.cloudPC.reduce((a, b) => a + b, 0);
+          const totalPhone = chartData.cloudPhone.reduce((a, b) => a + b, 0);
+          const distData = [
+            { value: totalPC, name: '云电脑' },
+            { value: totalPhone, name: '云手机' }
+          ];
+
+          const chart2 = echarts.init(deviceDistChart.value);
+          chart2.setOption(ChartConfigs.tokenDistributionPie(distData));
+
+          // 会话时长分布
+          const sessionRanges = ['0-10分钟', '10-30分钟', '30-60分钟', '60+分钟'];
+          const sessionCounts = [0, 0, 0, 0];
+          filtered.forEach(c => {
+            const minutes = c.minutes || 0;
+            if (minutes < 10) sessionCounts[0]++;
+            else if (minutes < 30) sessionCounts[1]++;
+            else if (minutes < 60) sessionCounts[2]++;
+            else sessionCounts[3]++;
+          });
+
+          const chart3 = echarts.init(sessionDistChart.value);
+          chart3.setOption(ChartConfigs.sessionDurationHistogram({
+            ranges: sessionRanges,
+            counts: sessionCounts
+          }));
+        };
+
+        onMounted(() => {
+          loadData();
+        });
+
+        return {
+          dateShortcuts,
+          pointsGranularity,
+          tokenGranularity,
+          deviceGranularity,
+          kpiData,
+          pointsMetrics,
+          tokenMetrics,
+          deviceMetrics,
+          assetBreakdown,
+          pointsTrendChart,
+          pointsCompositionChart,
+          tenantRankingChart,
+          tokenTrendChart,
+          tokenDistChart,
+          modelDistChart,
+          deviceTrendChart,
+          deviceDistChart,
+          sessionDistChart,
+          formatTokens,
+          loadData,
+          updatePointsChart,
+          updateTokenChart,
+          updateDeviceChart
+        };
+      }
+    });
+
+    // 消费分析标签页组件（简化版，展示关键功能）
+    app.component('tab-consumption', {
+      props: ['user', 'globalFilters'],
+      template: `
+        <div>
+          <div class="info-banner">
+            <el-icon><InfoFilled /></el-icon>
+            <div class="info-banner-content">
+              此页面是您用户的<strong>"积分账单"</strong>。这里汇总了所有导致积分消耗的资源（Token、超额设备时长）的详细分析图表与流水明细。
+            </div>
+          </div>
+
+          <el-card>
+            <template #header>积分消费总览</template>
+            <div class="card-grid">
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">总消耗积分</div>
+                <div class="kpi-card-value" style="font-size: 24px">{{ totalPoints.toFixed(2) }}</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">日均消耗</div>
+                <div class="kpi-card-value" style="font-size: 24px">{{ avgDaily.toFixed(2) }}</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">最高单日消耗</div>
+                <div class="kpi-card-value" style="font-size: 24px">{{ maxDaily.toFixed(2) }}</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">消费资源种类数</div>
+                <div class="kpi-card-value" style="font-size: 24px">{{ resourceTypes }}</div>
+              </div>
+            </div>
+            
+            <el-divider></el-divider>
+            
+            <el-table :data="consumptionSummary" style="width: 100%" max-height="300">
+              <el-table-column prop="date" label="日期" width="180" />
+              <el-table-column prop="resourceType" label="资源类型" width="150" />
+              <el-table-column prop="behavior" label="行为" />
+              <el-table-column prop="usage" label="用量" />
+              <el-table-column prop="points" label="消耗积分" sortable>
+                <template #default="{ row }">
+                  <span :style="{ color: row.points > 0 ? '#F56C6C' : '#67C23A' }">
+                    {{ row.points.toFixed(2) }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="tenant" label="计费租户" />
+            </el-table>
+          </el-card>
+        </div>
+      `,
+      setup(props) {
+        const totalPoints = ref(0);
+        const avgDaily = ref(0);
+        const maxDaily = ref(0);
+        const resourceTypes = ref(0);
+        const consumptionSummary = ref([]);
+
+        const loadData = () => {
+          const userConsumptions = mockData.consumptions.filter(c => c.userId === props.user.id);
+          let filtered = userConsumptions;
+          
+          if (props.globalFilters.dateRange && props.globalFilters.dateRange.length === 2) {
+            const [start, end] = props.globalFilters.dateRange;
+            filtered = filtered.filter(c => c.date >= start && c.date <= end);
+          }
+          
+          if (props.globalFilters.selectedTenant) {
+            filtered = filtered.filter(c => c.tenantId === props.globalFilters.selectedTenant);
+          }
+
+          totalPoints.value = filtered.reduce((sum, c) => sum + c.pointsUsed, 0);
+          
+          const days = props.globalFilters.dateRange && props.globalFilters.dateRange.length === 2
+            ? Math.ceil((props.globalFilters.dateRange[1] - props.globalFilters.dateRange[0]) / (1000 * 60 * 60 * 24))
+            : 30;
+          avgDaily.value = totalPoints.value / days;
+
+          const dailyPoints = {};
+          filtered.forEach(c => {
+            const date = Utils.formatDate(c.date, 'YYYY-MM-DD');
+            dailyPoints[date] = (dailyPoints[date] || 0) + c.pointsUsed;
+          });
+          maxDaily.value = Math.max(...Object.values(dailyPoints), 0);
+
+          const resourceTypesSet = new Set(filtered.map(c => c.resourceType));
+          resourceTypes.value = resourceTypesSet.size;
+
+          consumptionSummary.value = filtered.slice(0, 20).map(c => ({
+            date: Utils.formatDate(c.date),
+            resourceType: c.resourceType,
+            behavior: c.behavior,
+            usage: c.usage,
+            points: c.pointsUsed,
+            tenant: c.tenantName
+          }));
+        };
+
+        watch(() => [props.globalFilters.dateRange, props.globalFilters.selectedTenant], loadData, { deep: true });
+
+        onMounted(loadData);
+
+        return {
+          totalPoints,
+          avgDaily,
+          maxDaily,
+          resourceTypes,
+          consumptionSummary
+        };
+      }
+    });
+
+    // 使用分析标签页组件
+    app.component('tab-usage', {
+      props: ['user', 'globalFilters'],
+      template: `
+        <div>
+          <div class="info-banner">
+            <el-icon><InfoFilled /></el-icon>
+            <div class="info-banner-content">
+              此页面专注于分析用户的平台活动与资产创造。您可以在此深入探索用户创建了哪些资产（如智能体、工作流），以及这些资产的使用频率和关联消耗。
+            </div>
+          </div>
+
+          <!-- 资源类型切换器 -->
+          <div class="resource-switcher">
+            <div
+              v-for="type in resourceTypes"
+              :key="type.value"
+              :class="['resource-switcher-btn', { active: selectedResource === type.value }]"
+              @click="selectedResource = type.value"
+            >
+              <el-icon><component :is="type.icon" /></el-icon>
+              {{ type.label }}
+            </div>
+          </div>
+
+          <!-- 智能体分析 -->
+          <div v-if="selectedResource === 'bots'">
+            <div class="card-grid">
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">创建总数</div>
+                <div class="kpi-card-value" style="font-size: 24px">{{ botsData.total }}</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">总调用次数</div>
+                <div class="kpi-card-value" style="font-size: 24px">{{ botsData.calls }}</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">关联消耗Token</div>
+                <div class="kpi-card-value" style="font-size: 24px">{{ formatTokens(botsData.tokens) }}</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">最活跃智能体</div>
+                <div class="kpi-card-value" style="font-size: 18px">{{ botsData.mostActive }}</div>
+              </div>
+            </div>
+
+            <el-card style="margin-top: 24px">
+              <template #header>智能体列表</template>
+              <el-table :data="botsData.list" style="width: 100%">
+                <el-table-column prop="name" label="名称" />
+                <el-table-column prop="status" label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="runCount" label="调用次数" width="120" sortable />
+                <el-table-column prop="tokenUsed" label="消耗Token" width="150" sortable>
+                  <template #default="{ row }">
+                    {{ formatTokens(row.tokenUsed) }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="createdAt" label="创建时间" width="180">
+                  <template #default="{ row }">
+                    {{ formatDate(row.createdAt) }}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-card>
+          </div>
+
+          <!-- 工作流分析 -->
+          <div v-if="selectedResource === 'workflows'">
+            <div class="card-grid">
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">创建总数</div>
+                <div class="kpi-card-value" style="font-size: 24px">{{ workflowsData.total }}</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">总运行次数</div>
+                <div class="kpi-card-value" style="font-size: 24px">{{ workflowsData.runs }}</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">关联消耗积分</div>
+                <div class="kpi-card-value" style="font-size: 24px">{{ workflowsData.points.toFixed(2) }}</div>
+              </div>
+              <div class="kpi-card" style="padding: 16px">
+                <div class="kpi-card-title">最常用工作流</div>
+                <div class="kpi-card-value" style="font-size: 18px">{{ workflowsData.mostUsed }}</div>
+              </div>
+            </div>
+
+            <el-card style="margin-top: 24px">
+              <template #header>工作流列表</template>
+              <el-table :data="workflowsData.list" style="width: 100%">
+                <el-table-column prop="name" label="名称" />
+                <el-table-column prop="status" label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="runCount" label="运行次数" width="120" sortable />
+                <el-table-column prop="pointsUsed" label="消耗积分" width="120" sortable />
+                <el-table-column prop="createdAt" label="创建时间" width="180">
+                  <template #default="{ row }">
+                    {{ formatDate(row.createdAt) }}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-card>
+          </div>
+
+          <!-- 其他资源类型（工具、知识库、空间）使用类似结构 -->
+          <div v-if="!['bots', 'workflows'].includes(selectedResource)">
+            <el-empty description="该资源类型的详细分析功能开发中" />
+          </div>
+        </div>
+      `,
+      setup(props) {
+        const selectedResource = ref('bots');
+        const resourceTypes = [
+          { label: '智能体', value: 'bots', icon: 'Robot' },
+          { label: '工作流', value: 'workflows', icon: 'Connection' },
+          { label: '工具库', value: 'toolLibs', icon: 'Box' },
+          { label: '工具', value: 'tools', icon: 'Tools' },
+          { label: '知识库', value: 'knowledgeBases', icon: 'Collection' },
+          { label: '空间', value: 'spaces', icon: 'Grid' }
+        ];
+
+        const botsData = reactive({
+          total: 0,
+          calls: 0,
+          tokens: 0,
+          mostActive: '-',
+          list: []
+        });
+
+        const workflowsData = reactive({
+          total: 0,
+          runs: 0,
+          points: 0,
+          mostUsed: '-',
+          list: []
+        });
+
+        const loadData = () => {
+          // 加载智能体数据
+          const userBots = mockData.assets.bots.filter(b => b.userId === props.user.id);
+          botsData.total = userBots.length;
+          botsData.calls = userBots.reduce((sum, b) => sum + b.runCount, 0);
+          botsData.tokens = userBots.reduce((sum, b) => sum + b.tokenUsed, 0);
+          
+          const sortedBots = [...userBots].sort((a, b) => b.runCount - a.runCount);
+          botsData.mostActive = sortedBots[0]?.name || '-';
+          botsData.list = userBots;
+
+          // 加载工作流数据
+          const userWorkflows = mockData.assets.workflows.filter(w => w.userId === props.user.id);
+          workflowsData.total = userWorkflows.length;
+          workflowsData.runs = userWorkflows.reduce((sum, w) => sum + w.runCount, 0);
+          workflowsData.points = userWorkflows.reduce((sum, w) => sum + w.pointsUsed, 0);
+          
+          const sortedWorkflows = [...userWorkflows].sort((a, b) => b.runCount - a.runCount);
+          workflowsData.mostUsed = sortedWorkflows[0]?.name || '-';
+          workflowsData.list = userWorkflows;
+        };
+
+        const formatDate = (date) => Utils.formatDate(date);
+        const formatTokens = (num) => Utils.formatTokens(num);
+        const getStatusType = (status) => Utils.getStatusType(status);
+
+        onMounted(loadData);
+
+        return {
+          selectedResource,
+          resourceTypes,
+          botsData,
+          workflowsData,
+          formatDate,
+          formatTokens,
+          getStatusType
+        };
+      }
+    });
+
+    // 消费明细标签页组件
+    app.component('tab-consumption-details', {
+      props: ['user', 'globalFilters'],
+      template: `
+        <div>
+          <!-- 高级筛选器 -->
+          <div class="search-bar">
+            <el-form :inline="true" :model="filters">
+              <el-form-item label="资源类型">
+                <el-select
+                  v-model="filters.resourceTypes"
+                  multiple
+                  collapse-tags
+                  placeholder="全部"
+                  style="width: 200px"
+                  @change="applyFilters"
+                >
+                  <el-option
+                    v-for="type in allResourceTypes"
+                    :key="type"
+                    :label="type"
+                    :value="type"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="行为">
+                <el-input
+                  v-model="filters.behavior"
+                  placeholder="搜索行为"
+                  clearable
+                  style="width: 200px"
+                  @input="applyFilters"
+                />
+              </el-form-item>
+              <el-form-item label="变动类型">
+                <el-select
+                  v-model="filters.changeType"
+                  placeholder="全部"
+                  clearable
+                  style="width: 120px"
+                  @change="applyFilters"
+                >
+                  <el-option label="全部" value="" />
+                  <el-option label="消耗" value="消耗" />
+                  <el-option label="返还" value="返还" />
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="applyFilters">筛选</el-button>
+                <el-button @click="resetFilters">重置</el-button>
+                <el-button @click="exportData">
+                  <el-icon><Download /></el-icon>
+                  导出CSV
+                </el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+
+          <!-- 数据表格 -->
+          <el-card>
+            <template #header>
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <span>消费明细流水</span>
+                <span style="color: #909399; font-size: 13px">共 {{ filteredData.length }} 条记录</span>
+              </div>
+            </template>
+            <el-table
+              :data="paginatedData"
+              style="width: 100%"
+              :default-sort="{ prop: 'date', order: 'descending' }"
+            >
+              <el-table-column prop="date" label="日期" width="180" sortable>
+                <template #default="{ row }">
+                  {{ formatDate(row.date) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="resourceType" label="资源类型" width="150" sortable />
+              <el-table-column prop="behavior" label="行为" width="200" />
+              <el-table-column prop="changeType" label="变动类型" width="100" sortable>
+                <template #default="{ row }">
+                  <el-tag :type="getStatusType(row.changeType)">{{ row.changeType }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="usage" label="用量" width="200" />
+              <el-table-column prop="pointsUsed" label="消耗积分" width="120" sortable>
+                <template #default="{ row }">
+                  <span :style="{ color: row.pointsUsed > 0 ? '#F56C6C' : '#67C23A', fontWeight: 600 }">
+                    {{ row.pointsUsed > 0 ? '+' : '' }}{{ row.pointsUsed.toFixed(2) }}
+                  </span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="tenantName" label="计费租户" sortable />
+            </el-table>
+
+            <el-pagination
+              v-model:current-page="currentPage"
+              v-model:page-size="pageSize"
+              :page-sizes="[20, 50, 100, 200]"
+              :total="filteredData.length"
+              layout="total, sizes, prev, pager, next, jumper"
+            />
+          </el-card>
+        </div>
+      `,
+      setup(props) {
+        const filters = reactive({
+          resourceTypes: [],
+          behavior: '',
+          changeType: ''
+        });
+
+        const currentPage = ref(1);
+        const pageSize = ref(20);
+        const allResourceTypes = ref([]);
+        const filteredData = ref([]);
+
+        const paginatedData = computed(() => {
+          const start = (currentPage.value - 1) * pageSize.value;
+          const end = start + pageSize.value;
+          return filteredData.value.slice(start, end);
+        });
+
+        const loadData = () => {
+          let data = mockData.consumptions.filter(c => c.userId === props.user.id);
+          
+          if (props.globalFilters.dateRange && props.globalFilters.dateRange.length === 2) {
+            const [start, end] = props.globalFilters.dateRange;
+            data = data.filter(c => c.date >= start && c.date <= end);
+          }
+          
+          if (props.globalFilters.selectedTenant) {
+            data = data.filter(c => c.tenantId === props.globalFilters.selectedTenant);
+          }
+
+          // 获取所有资源类型
+          allResourceTypes.value = [...new Set(data.map(c => c.resourceType))];
+          filteredData.value = data;
+        };
+
+        const applyFilters = () => {
+          let data = mockData.consumptions.filter(c => c.userId === props.user.id);
+          
+          if (props.globalFilters.dateRange && props.globalFilters.dateRange.length === 2) {
+            const [start, end] = props.globalFilters.dateRange;
+            data = data.filter(c => c.date >= start && c.date <= end);
+          }
+          
+          if (props.globalFilters.selectedTenant) {
+            data = data.filter(c => c.tenantId === props.globalFilters.selectedTenant);
+          }
+
+          if (filters.resourceTypes.length > 0) {
+            data = data.filter(c => filters.resourceTypes.includes(c.resourceType));
+          }
+
+          if (filters.behavior) {
+            data = data.filter(c => c.behavior.toLowerCase().includes(filters.behavior.toLowerCase()));
+          }
+
+          if (filters.changeType) {
+            data = data.filter(c => c.changeType === filters.changeType);
+          }
+
+          filteredData.value = data;
+          currentPage.value = 1;
+        };
+
+        const resetFilters = () => {
+          filters.resourceTypes = [];
+          filters.behavior = '';
+          filters.changeType = '';
+          loadData();
+        };
+
+        const exportData = () => {
+          const exportData = filteredData.value.map(row => ({
+            '日期': Utils.formatDate(row.date),
+            '资源类型': row.resourceType,
+            '行为': row.behavior,
+            '变动类型': row.changeType,
+            '用量': row.usage,
+            '消耗积分': row.pointsUsed.toFixed(2),
+            '计费租户': row.tenantName
+          }));
+          
+          Utils.exportToCSV(exportData, `消费明细_${props.user.name}_${Date.now()}.csv`);
+          ElMessage.success('数据导出成功');
+        };
+
+        const formatDate = (date) => Utils.formatDate(date);
+        const getStatusType = (status) => Utils.getStatusType(status);
+
+        watch(() => [props.globalFilters.dateRange, props.globalFilters.selectedTenant], loadData, { deep: true });
+
+        onMounted(loadData);
+
+        return {
+          filters,
+          currentPage,
+          pageSize,
+          allResourceTypes,
+          filteredData,
+          paginatedData,
+          applyFilters,
+          resetFilters,
+          exportData,
+          formatDate,
+          getStatusType
+        };
+      }
+    });
+
+    // 资产明细标签页组件
+    app.component('tab-assets', {
+      props: ['user'],
+      template: `
+        <div>
+          <div class="info-banner success-banner">
+            <el-icon><SuccessFilled /></el-icon>
+            <div class="info-banner-content">
+              数据更新时间: T+1 | 最后更新: {{ lastUpdateTime }}
+              <el-button size="small" style="margin-left: 16px" @click="refreshData">
+                <el-icon><Refresh /></el-icon>
+                刷新
+              </el-button>
+            </div>
+          </div>
+
+          <el-tabs v-model="activeAssetTab" type="card">
+            <el-tab-pane label="智能体" name="bots">
+              <el-table :data="assetsData.bots" style="width: 100%">
+                <el-table-column prop="name" label="名称" />
+                <el-table-column prop="runCount" label="运行次数" width="120" sortable />
+                <el-table-column prop="userCount" label="用户数" width="100" sortable />
+                <el-table-column prop="status" label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="lastRunAt" label="最后运行时间" width="180">
+                  <template #default="{ row }">
+                    {{ formatDate(row.lastRunAt) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="100">
+                  <template #default="{ row }">
+                    <el-button size="small" text>查看详情</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+
+            <el-tab-pane label="工作流" name="workflows">
+              <el-table :data="assetsData.workflows" style="width: 100%">
+                <el-table-column prop="name" label="名称" />
+                <el-table-column prop="runCount" label="运行次数" width="120" sortable />
+                <el-table-column prop="status" label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="lastRunAt" label="最后运行时间" width="180">
+                  <template #default="{ row }">
+                    {{ formatDate(row.lastRunAt) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="100">
+                  <template #default="{ row }">
+                    <el-button size="small" text>查看详情</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+
+            <el-tab-pane label="工具" name="tools">
+              <el-table :data="assetsData.tools" style="width: 100%">
+                <el-table-column prop="name" label="名称" />
+                <el-table-column prop="toolLibName" label="所属工具库" width="150" />
+                <el-table-column prop="botRefCount" label="智能体引用数" width="130" sortable />
+                <el-table-column prop="workflowRefCount" label="工作流引用数" width="130" sortable />
+                <el-table-column prop="createdAt" label="创建时间" width="180">
+                  <template #default="{ row }">
+                    {{ formatDate(row.createdAt) }}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+
+            <el-tab-pane label="工具库" name="toolLibs">
+              <el-table :data="assetsData.toolLibs" style="width: 100%">
+                <el-table-column prop="name" label="名称" />
+                <el-table-column prop="type" label="类型" width="100" />
+                <el-table-column prop="status" label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="toolCount" label="工具数" width="100" sortable />
+                <el-table-column prop="createdAt" label="创建时间" width="180">
+                  <template #default="{ row }">
+                    {{ formatDate(row.createdAt) }}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+
+            <el-tab-pane label="知识库" name="knowledgeBases">
+              <el-table :data="assetsData.knowledgeBases" style="width: 100%">
+                <el-table-column prop="name" label="名称" />
+                <el-table-column prop="status" label="状态" width="100">
+                  <template #default="{ row }">
+                    <el-tag :type="getStatusType(row.status)">{{ row.status }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="itemCount" label="知识单元" width="100" sortable />
+                <el-table-column prop="refCount" label="被引用次数" width="120" sortable />
+                <el-table-column prop="storageSize" label="占用容量" width="120" sortable>
+                  <template #default="{ row }">
+                    {{ row.storageSize.toFixed(2) }} MB
+                  </template>
+                </el-table-column>
+                <el-table-column prop="createdAt" label="创建时间" width="180">
+                  <template #default="{ row }">
+                    {{ formatDate(row.createdAt) }}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+
+            <el-tab-pane label="空间" name="spaces">
+              <el-table :data="assetsData.spaces" style="width: 100%">
+                <el-table-column prop="name" label="空间名称" />
+                <el-table-column prop="type" label="类型" width="100" />
+                <el-table-column prop="owner" label="所有者" width="120" />
+                <el-table-column prop="memberCount" label="成员数" width="100" sortable />
+                <el-table-column prop="assetCount" label="资产数" width="100" sortable />
+                <el-table-column prop="createdAt" label="创建时间" width="180">
+                  <template #default="{ row }">
+                    {{ formatDate(row.createdAt) }}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </el-tab-pane>
+          </el-tabs>
+        </div>
+      `,
+      setup(props) {
+        const activeAssetTab = ref('bots');
+        const lastUpdateTime = ref('');
+        
+        const assetsData = reactive({
+          bots: [],
+          workflows: [],
+          tools: [],
+          toolLibs: [],
+          knowledgeBases: [],
+          spaces: []
+        });
+
+        const loadData = () => {
+          assetsData.bots = mockData.assets.bots.filter(a => a.userId === props.user.id);
+          assetsData.workflows = mockData.assets.workflows.filter(a => a.userId === props.user.id);
+          assetsData.tools = mockData.assets.tools.filter(a => a.userId === props.user.id);
+          assetsData.toolLibs = mockData.assets.toolLibs.filter(a => a.userId === props.user.id);
+          assetsData.knowledgeBases = mockData.assets.knowledgeBases.filter(a => a.userId === props.user.id);
+          assetsData.spaces = mockData.assets.spaces.filter(a => a.userId === props.user.id);
+          
+          lastUpdateTime.value = Utils.formatDate(new Date());
+        };
+
+        const refreshData = () => {
+          ElMessage.info('正在刷新数据...');
+          setTimeout(() => {
+            loadData();
+            ElMessage.success('数据已刷新');
+          }, 500);
+        };
+
+        const formatDate = (date) => Utils.formatDate(date);
+        const getStatusType = (status) => Utils.getStatusType(status);
+
+        onMounted(loadData);
+
+        return {
+          activeAssetTab,
+          lastUpdateTime,
+          assetsData,
+          loadData,
+          refreshData,
+          formatDate,
+          getStatusType
+        };
+      }
+    });
+
+    // 加入的租户标签页组件
+    app.component('tab-tenants', {
+      props: ['user'],
+      template: `
+        <div>
+          <!-- 操作栏 -->
+          <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center">
+            <el-button type="primary" @click="showAddDialog">
+              <el-icon><Plus /></el-icon>
+              添加到租户
+            </el-button>
+            <el-button
+              :disabled="selectedTenants.length === 0"
+              @click="batchRemove"
+            >
+              批量移出租户
+            </el-button>
+            <el-input
+              v-model="searchKeyword"
+              placeholder="搜索租户名称、租户ID"
+              style="width: 300px"
+              clearable
+            />
+          </div>
+
+          <!-- 租户列表 -->
+          <el-card>
+            <el-table
+              :data="filteredTenants"
+              style="width: 100%"
+              @selection-change="handleSelectionChange"
+            >
+              <el-table-column type="selection" width="55" :selectable="checkSelectable" />
+              <el-table-column prop="tenantId" label="租户ID" width="120" />
+              <el-table-column label="租户名称" width="200">
+                <template #default="{ row }">
+                  <div style="display: flex; align-items: center; gap: 8px">
+                    <el-avatar :size="32" :src="getTenant(row.tenantId).avatar" />
+                    <span>{{ row.tenantName }}</span>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="joinedAt" label="加入时间" width="180">
+                <template #default="{ row }">
+                  {{ formatDate(row.joinedAt) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="租户版本" width="120">
+                <template #default="{ row }">
+                  <el-tag>{{ getTenant(row.tenantId).version }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="所有者" width="150">
+                <template #default="{ row }">
+                  {{ getTenant(row.tenantId).owner }}
+                </template>
+              </el-table-column>
+              <el-table-column label="创建时间" width="180">
+                <template #default="{ row }">
+                  {{ formatDate(getTenant(row.tenantId).createdAt) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="120" fixed="right">
+                <template #default="{ row }">
+                  <el-tooltip
+                    v-if="row.isOwner"
+                    content="用户是该租户的所有者，不可移除"
+                    placement="top"
+                  >
+                    <el-button size="small" disabled>移出租户</el-button>
+                  </el-tooltip>
+                  <el-button v-else size="small" @click="removeTenant(row)">
+                    移出租户
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-card>
+
+          <!-- 添加到租户对话框 -->
+          <el-dialog
+            v-model="addDialogVisible"
+            title="添加到租户"
+            width="600px"
+          >
+            <el-input
+              v-model="tenantSearch"
+              placeholder="搜索租户名称/ID"
+              style="margin-bottom: 16px"
+              clearable
+            />
+            <el-table
+              :data="availableTenants"
+              max-height="400"
+              @selection-change="handleAddSelectionChange"
+            >
+              <el-table-column type="selection" width="55" :selectable="checkAddSelectable" />
+              <el-table-column prop="id" label="租户ID" width="120" />
+              <el-table-column label="租户名称">
+                <template #default="{ row }">
+                  <div style="display: flex; align-items: center; gap: 8px">
+                    <el-avatar :size="32" :src="row.avatar" />
+                    <span>{{ row.name }}</span>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="owner" label="所有者" width="120" />
+            </el-table>
+            <template #footer>
+              <el-button @click="addDialogVisible = false">取消</el-button>
+              <el-button type="primary" @click="confirmAdd">确定</el-button>
+            </template>
+          </el-dialog>
+        </div>
+      `,
+      setup(props) {
+        const searchKeyword = ref('');
+        const selectedTenants = ref([]);
+        const addDialogVisible = ref(false);
+        const tenantSearch = ref('');
+        const tenantsToAdd = ref([]);
+
+        const userTenants = computed(() => props.user.tenants || []);
+
+        const filteredTenants = computed(() => {
+          if (!searchKeyword.value) return userTenants.value;
+          const keyword = searchKeyword.value.toLowerCase();
+          return userTenants.value.filter(t =>
+            t.tenantName.toLowerCase().includes(keyword) ||
+            t.tenantId.toLowerCase().includes(keyword)
+          );
+        });
+
+        const availableTenants = computed(() => {
+          const userTenantIds = userTenants.value.map(t => t.tenantId);
+          let tenants = mockData.tenants.filter(t => !userTenantIds.includes(t.id));
+          
+          if (tenantSearch.value) {
+            const keyword = tenantSearch.value.toLowerCase();
+            tenants = tenants.filter(t =>
+              t.name.toLowerCase().includes(keyword) ||
+              t.id.toLowerCase().includes(keyword)
+            );
+          }
+          
+          return tenants;
+        });
+
+        const getTenant = (tenantId) => {
+          return mockData.tenants.find(t => t.id === tenantId) || {};
+        };
+
+        const checkSelectable = (row) => {
+          return !row.isOwner;
+        };
+
+        const checkAddSelectable = (row) => {
+          return true;
+        };
+
+        const handleSelectionChange = (selection) => {
+          selectedTenants.value = selection;
+        };
+
+        const handleAddSelectionChange = (selection) => {
+          tenantsToAdd.value = selection;
+        };
+
+        const showAddDialog = () => {
+          addDialogVisible.value = true;
+          tenantSearch.value = '';
+          tenantsToAdd.value = [];
+        };
+
+        const confirmAdd = () => {
+          if (tenantsToAdd.value.length === 0) {
+            ElMessage.warning('请选择要添加的租户');
+            return;
+          }
+
+          tenantsToAdd.value.forEach(tenant => {
+            props.user.tenants.push({
+              tenantId: tenant.id,
+              tenantName: tenant.name,
+              joinedAt: new Date(),
+              isOwner: false
+            });
+          });
+
+          ElMessage.success(`已将用户添加到 ${tenantsToAdd.value.length} 个租户`);
+          addDialogVisible.value = false;
+        };
+
+        const removeTenant = (tenant) => {
+          ElMessageBox.confirm(
+            `确定要将用户从租户 "${tenant.tenantName}" 移出吗？`,
+            '确认操作',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            const index = props.user.tenants.findIndex(t => t.tenantId === tenant.tenantId);
+            if (index > -1) {
+              props.user.tenants.splice(index, 1);
+              ElMessage.success('已移出租户');
+            }
+          }).catch(() => {});
+        };
+
+        const batchRemove = () => {
+          ElMessageBox.confirm(
+            `确定要将用户从选中的 ${selectedTenants.value.length} 个租户移出吗？`,
+            '批量移出租户',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            selectedTenants.value.forEach(tenant => {
+                const index = props.user.tenants.findIndex(t => t.tenantId === tenant.tenantId);
+              if (index > -1) {
+                props.user.tenants.splice(index, 1);
+              }
+            });
+            ElMessage.success(`已从 ${selectedTenants.value.length} 个租户移出用户`);
+            selectedTenants.value = [];
+          }).catch(() => {});
+        };
+
+        const formatDate = (date) => Utils.formatDate(date);
+
+        return {
+          searchKeyword,
+          selectedTenants,
+          addDialogVisible,
+          tenantSearch,
+          tenantsToAdd,
+          filteredTenants,
+          availableTenants,
+          getTenant,
+          checkSelectable,
+          checkAddSelectable,
+          handleSelectionChange,
+          handleAddSelectionChange,
+          showAddDialog,
+          confirmAdd,
+          removeTenant,
+          batchRemove,
+          formatDate
+        };
+      }
+    });
+
+    // 注册所有Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+
+    // 使用Element Plus
+    app.use(ElementPlus);
+
+    // 挂载应用
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,97 @@
+<!--
+ * @Author: wanghong52 wanghong52@meituan.com
+ * @Date: 2025-07-30 10:33:40
+ * @LastEditors: wanghong52 wanghong52@meituan.com
+ * @LastEditTime: 2025-07-30 10:33:43
+ * @FilePath: /租户快速方案/卡片效果示例.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>卡片样式对比示例</title>
+  <!-- Tailwind CDN，方便演示 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ① 细线描边：借助 inset box-shadow 比 border 更柔和 */
+    .card-border {
+      background-color: #ffffff;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+    }
+
+    /* ② 轻微阴影：最常见的卡片 */
+    .card-shadow {
+      background-color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06),
+                  0 4px 10px rgba(0,0,0,0.04);
+    }
+
+    /* ③ 浅灰底 + 描边（Off-White） */
+    .card-offwhite {
+      background-color: #f9fafb;        /* bg-gray-50 */
+      box-shadow: inset 0 0 0 1px #e5e7eb;
+    }
+
+    /* ④ 毛玻璃（Frosted） */
+    .card-frosted {
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* ⑤ 浅品牌色卡片 */
+    .card-brand {
+      background: rgba(59,130,246,0.05); /* 主蓝 5% */
+      box-shadow: inset 0 0 0 1px rgba(59,130,246,0.2);
+    }
+  </style>
+</head>
+
+<body class="bg-white text-gray-800">
+  <h1 class="text-2xl font-bold text-center py-8">卡片样式对比示例</h1>
+
+  <!-- 容器 -->
+  <div class="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-6 pb-16">
+    <!-- 细线描边 -->
+    <div class="card-border rounded-xl p-6">
+      <h2 class="font-semibold mb-2">① 细线描边</h2>
+      <p class="text-sm leading-6 text-gray-600">
+        使用 <code>inset box-shadow</code> 实现 1 px 边线，干净且不影响布局尺寸。
+      </p>
+    </div>
+
+    <!-- 轻微阴影 -->
+    <div class="card-shadow rounded-xl p-6">
+      <h2 class="font-semibold mb-2">② 轻微阴影</h2>
+      <p class="text-sm leading-6 text-gray-600">
+        传统白底卡片，通过柔和阴影制造浮层感。
+      </p>
+    </div>
+
+    <!-- 浅灰底 + 描边 -->
+    <div class="card-offwhite rounded-xl p-6">
+      <h2 class="font-semibold mb-2">③ 浅灰底 + 描边</h2>
+      <p class="text-sm leading-6 text-gray-600">
+        背景灰度比纯白暗 3%～5%，配合 1 px 描边即可与白色背景区分。
+      </p>
+    </div>
+
+    <!-- 毛玻璃 -->
+    <div class="card-frosted rounded-xl p-6">
+      <h2 class="font-semibold mb-2">④ 毛玻璃 (Frosted)</h2>
+      <p class="text-sm leading-6 text-gray-600">
+        半透明白+<code>backdrop-filter: blur()</code>；适合背景有图或渐变时使用。
+      </p>
+    </div>
+
+    <!-- 品牌色浅色块 -->
+    <div class="card-brand rounded-xl p-6">
+      <h2 class="font-semibold mb-2">⑤ 品牌色浅色块</h2>
+      <p class="text-sm leading-6 text-gray-600">
+        用品牌主色的 5% 不透明度作背景，再加内描边，既统一又易区分。
+      </p>
+    </div>
+  </div>
+</body>
+</html> 

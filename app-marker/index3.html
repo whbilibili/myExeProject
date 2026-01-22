@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bots 应用市场</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for webkit browsers */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        [x-cloak] { display: none !important; }
+        
+        /* Enhanced shadows */
+        .card-shadow {
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .card-shadow-hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .modal-shadow {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Custom focus styles */
+        .focus-ring:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+    </style>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 custom-scrollbar font-sans" x-data="appMarket()">
+
+    <!-- Main Content Area -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen">
+
+        <!-- Tabs Navigation and Main Search/Actions (Hidden when viewing app details) -->
+        <div x-show="!selectedApp">
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">应用市场</h1>
+                <p class="text-sm text-gray-600">管理和发现您的应用包</p>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="mb-8">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <template x-for="tab in tabs" :key="tab.id">
+                            <button @click="currentTab = tab.id; selectedApp = null; packageSearchTerm = '';"
+                                    :class="currentTab === tab.id ? 'border-blue-500 text-blue-600 font-medium' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-normal'"
+                                    class="whitespace-nowrap py-3 px-1 border-b-2 text-sm transition-all duration-200 ease-in-out">
+                                <span x-text="tab.name"></span>
+                                <span x-if="tab.id === 'myUploads' && myUploadsCount > 0" 
+                                      x-text="'(' + myUploadsCount + ')'" 
+                                      class="ml-1.5 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full"></span>
+                            </button>
+                        </template>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Search and Actions Bar -->
+            <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="relative w-full sm:w-96">
+                    <input type="search" x-model="searchTerm" @input.debounce.300ms="filterApps"
+                           class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus-ring text-sm placeholder-gray-500"
+                           placeholder="搜索应用名称、描述、PackageID...">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+                <div x-show="currentTab === 'myUploads'">
+                    <button @click="openCreateAppModal()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-colors duration-200 flex items-center">
+                        <svg class="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        创建新应用
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- App List View Area (Hidden when viewing app details) -->
+        <div x-show="!selectedApp" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <template x-for="app in filteredApps" :key="app.id">
+                <div class="bg-white rounded-xl card-shadow hover:card-shadow-hover transition-all duration-300 flex flex-col overflow-hidden border border-gray-100">
+                    <div class="p-6 flex-grow">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3 flex-1 min-w-0">
+                                <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0 border border-gray-200"
+                                     :class="{
+                                         'bg-red-500': app.iconUrl && app.iconUrl.includes('FOOD'),
+                                         'bg-teal-500': app.iconUrl && app.iconUrl.includes('OFFICE'), 
+                                         'bg-blue-500': app.iconUrl && app.iconUrl.includes('CONTACT'),
+                                         'bg-purple-500': app.iconUrl && app.iconUrl.includes('VIDEO'),
+                                         'bg-orange-500': app.iconUrl && app.iconUrl.includes('SHOP'),
+                                         'bg-indigo-500': !app.iconUrl || (!app.iconUrl.includes('FOOD') && !app.iconUrl.includes('OFFICE') && !app.iconUrl.includes('CONTACT') && !app.iconUrl.includes('VIDEO') && !app.iconUrl.includes('SHOP'))
+                                     }"
+                                     x-text="app.name.charAt(0)">
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <h3 class="text-base font-semibold text-gray-900 truncate" x-text="app.name"></h3>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1"
+                                          :class="{ 
+                                              'bg-blue-50 text-blue-700 border border-blue-200': app.platform === 'Android', 
+                                              'bg-gray-50 text-gray-700 border border-gray-200': app.platform === 'iOS', 
+                                              'bg-green-50 text-green-700 border border-green-200': app.platform === 'HarmonyOS' 
+                                          }"
+                                          x-text="app.platform"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed" 
+                           :title="app.description" 
+                           x-text="truncateText(app.description, 100)"></p>
+                        
+                        <div class="text-xs text-gray-500 space-y-1">
+                            <div class="flex justify-between items-center">
+                                <span>
+                                    <span class="font-medium">最新版本:</span>
+                                    <span class="ml-1 font-medium text-gray-700" x-text="app.latestVersion"></span>
+                                </span>
+                                <span class="text-gray-400" x-text="app.lastUpdateTime"></span>
+                            </div>
+                            <div>
+                                <span class="font-medium">上传者:</span>
+                                <span class="ml-1 font-medium text-gray-700" x-text="getUploaderDisplayName(app.uploader, app.uploaderType)"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center gap-1.5">
+                        <button @click="viewAppDetails(app.id)" 
+                                class="text-xs font-medium bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 py-2 px-2.5 rounded-md transition-colors duration-200 whitespace-nowrap flex-shrink-0">
+                            查看详情
+                        </button>
+                        <template x-if="currentTab === 'myUploads' && app.uploader === 'currentUser'">
+                            <div class="flex items-center gap-1.5 flex-1">
+                                <button @click="openEditAppModal(app.id)" 
+                                        class="text-xs font-medium bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 py-2 px-2 rounded-md transition-colors duration-200 whitespace-nowrap flex-shrink-0">
+                                    编辑
+                                </button>
+                                <button @click="app.isShared ? confirmCancelShareApp(app.id) : confirmShareApp(app.id)"
+                                        :class="app.isShared ? 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'"
+                                        class="text-xs font-medium border py-2 px-2 rounded-md transition-colors duration-200 whitespace-nowrap flex-1 min-w-0 text-center"
+                                        x-text="app.isShared ? '取消共享' : '共享应用'"></button>
+                                <button @click="confirmDeleteApp(app.id)" 
+                                        class="text-xs font-medium bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 py-2 px-2 rounded-md transition-colors duration-200 whitespace-nowrap flex-shrink-0">
+                                    删除
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+            
+            <div x-show="filteredApps.length === 0 && !isLoading" class="col-span-full text-center py-16">
+                <svg class="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">没有应用</h3>
+                <p class="text-sm text-gray-500" x-text="currentTab === 'myUploads' ? '开始创建一个新应用吧！' : '此分类下暂无应用。'"></p>
+            </div>
+        </div>
+
+        <!-- Application Details View -->
+        <div x-show="selectedApp" x-cloak class="bg-white rounded-xl card-shadow border border-gray-100">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <button @click="selectedApp = null; selectedAppDetails = null; packageSearchTerm = '';" 
+                            class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200">
+                        <svg class="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                        返回应用列表
+                    </button>
+                    
+                    <div class="relative w-full sm:w-80">
+                        <input type="search" x-model="packageSearchTerm" @input.debounce.300ms="filterPackages"
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus-ring text-sm placeholder-gray-500"
+                               placeholder="搜索包版本、描述、PackageID...">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div x-if="selectedAppDetails && selectedAppDetails.uploader === 'currentUser'">
+                        <button @click="openUploadPackageModal(selectedAppDetails.id)" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-colors duration-200 flex items-center text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            上传新包
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Package List -->
+            <div x-if="selectedAppDetails" class="p-6">
+                <div class="overflow-hidden rounded-lg border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">版本号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">包描述</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">PackageID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">上传者</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">上传时间</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <template x-for="pkg in filteredPackages" :key="pkg.id">
+                                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="pkg.version"></td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 max-w-xs">
+                                        <div class="truncate" :title="pkg.description" x-text="truncateText(pkg.description, 50)"></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="font-mono text-xs bg-gray-100 px-2 py-1 rounded" x-text="pkg.packageId"></span>
+                                            <button @click="copyToClipboard(pkg.packageId)" 
+                                                    title="复制PackageID" 
+                                                    class="text-gray-400 hover:text-blue-500 transition-colors duration-200">
+                                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" x-text="getUploaderDisplayName(pkg.uploader, pkg.uploaderType)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="pkg.uploadTime"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex items-center justify-end space-x-3">
+                                            <button @click="downloadPackage(pkg.packageUrl)" 
+                                                    class="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200">下载</button>
+                                            <button @click="copyToClipboard(pkg.packageUrl)" 
+                                                    class="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200">复制链接</button>
+                                            <template x-if="pkg.uploader === 'currentUser'">
+                                                <div class="flex items-center space-x-3">
+                                                    <button @click="openEditPackageModal(selectedAppDetails.id, pkg.id)" 
+                                                            class="text-amber-600 hover:text-amber-700 font-medium transition-colors duration-200">编辑</button>
+                                                    <button @click="confirmDeletePackage(selectedAppDetails.id, pkg.id)" 
+                                                            class="text-red-600 hover:text-red-700 font-medium transition-colors duration-200">删除</button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                             <tr x-show="filteredPackages.length === 0">
+                                <td colspan="6" class="px-6 py-16 text-center">
+                                    <div class="text-gray-400">
+                                        <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                        </svg>
+                                        <p class="text-sm text-gray-500">
+                                            <span x-show="packageSearchTerm === ''">此应用下暂无包</span>
+                                            <span x-show="packageSearchTerm !== ''">未找到匹配的包</span>
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div x-show="isLoading && !selectedAppDetails" class="p-16 text-center">
+                <div class="inline-flex items-center text-sm text-gray-500">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    加载应用详情中...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Create New Application Modal -->
+    <div x-show="isCreateAppModalOpen" x-cloak class="fixed inset-0 bg-black bg-opacity-50 transition-opacity flex items-center justify-center z-50 p-4" @click.self="isCreateAppModalOpen = false">
+        <div class="bg-white rounded-xl modal-shadow w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar" @click.stop>
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">创建新应用</h3>
+            </div>
+            <form @submit.prevent="createNewApp" class="p-6">
+                <div class="space-y-5">
+                    <div>
+                        <label for="newAppName" class="block text-sm font-medium text-gray-700 mb-1">
+                            应用名称 <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" x-model="newApp.name" id="newAppName" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus-ring text-sm">
+                    </div>
+                    <div>
+                        <label for="newAppPlatform" class="block text-sm font-medium text-gray-700 mb-1">
+                            平台类型 <span class="text-red-500">*</span>
+                        </label>
+                        <select x-model="newApp.platform" id="newAppPlatform" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus-ring text-sm">
+                            <option value="Android">Android</option>
+                            <option value="iOS">iOS</option>
+                            <option value="HarmonyOS">HarmonyOS</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="newAppDescription" class="block text-sm font-medium text-gray-700 mb-1">应用描述</label>
+                        <textarea x-model="newApp.description" id="newAppDescription" rows="3" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus-ring text-sm resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label for="newAppIconFile" class="block text-sm font-medium text-gray-700 mb-1">应用图标 (可选)</label>
+                        <input type="file" @change="newApp.iconFile = $event.target.files[0]; newApp.iconPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null" 
+                               accept="image/*" id="newAppIconFile" 
+                               class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer">
+                        <template x-if="newApp.iconPreview">
+                            <div class="mt-3">
+                                <img :src="newApp.iconPreview" alt="Icon Preview" class="h-20 w-20 rounded-lg object-cover border border-gray-200">
+                            </div>
+                        </template>
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">共享设置</label>
+                        <div class="space-y-3">
+                            <label class="flex items-center">
+                                <input type="radio" x-model="newApp.isShared" :value="false" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                <span class="ml-3 text-sm text-gray-700">私有 (仅自己可见)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" x-model="newApp.isShared" :value="true" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                <span class="ml-3 text-sm text-gray-700">共享到司内应用</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button type="button" @click="isCreateAppModalOpen = false" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                        取消
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        创建应用
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload New Package Modal -->
+    <div x-show="isUploadPackageModalOpen" x-cloak class="fixed inset-0 bg-black bg-opacity-50 transition-opacity flex items-center justify-center z-50 p-4" @click.self="isUploadPackageModalOpen = false">
+        <div class="bg-white rounded-xl modal-shadow w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar" @click.stop>
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">上传新包</h3>
+                <p class="text-sm text-gray-600 mt-1" x-text="'为应用: ' + (uploadingToApp ? uploadingToApp.name : '')"></p>
+            </div>
+            <form @submit.prevent="uploadNewPackage" class="p-6">
+                <div class="space-y-5">
+                    <div>
+                        <label for="newPackageFile" class="block text-sm font-medium text-gray-700 mb-1">
+                            应用包文件 <span class="text-red-500">*</span>
+                        </label>
+                        <input type="file" id="newPackageFile" @change="newPackage.file = $event.target.files[0]" required 
+                               class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer">
+                    </div>
+                    <div>
+                        <label for="newPackageVersion" class="block text-sm font-medium text-gray-700 mb-1">
+                            版本号 <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" x-model="newPackage.version" id="newPackageVersion" placeholder="例如: 1.0.0" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus-ring text-sm">
+                    </div>
+                    <div>
+                        <label for="newPackageDescription" class="block text-sm font-medium text-gray-700 mb-1">包描述</label>
+                        <textarea x-model="newPackage.description" id="newPackageDescription" rows="3" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus-ring text-sm resize-none"></textarea>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button type="button" @click="isUploadPackageModalOpen = false" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                        取消
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        上传包
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Edit Application Modal -->
+    <div x-show="isEditAppModalOpen" x-cloak class="fixed inset-0 bg-black bg-opacity-50 transition-opacity flex items-center justify-center z-50 p-4" @click.self="isEditAppModalOpen = false">
+        <div class="bg-white rounded-xl modal-shadow w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar" @click.stop>
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">编辑应用信息</h3>
+            </div>
+            <form @submit.prevent="updateAppInfo" x-if="editingApp" class="p-6">
+                <div class="space-y-5">
+                    <div>
+                        <label for="editAppName" class="block text-sm font-medium text-gray-700 mb-1">
+                            应用名称 <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" x-model="editingApp.name" id="editAppName" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus-ring text-sm">
+                    </div>
+                     <div>
+                        <label for="editAppPlatform" class="block text-sm font-medium text-gray-700 mb-1">平台类型</label>
+                        <input type="text" :value="editingApp.platform" id="editAppPlatform" disabled 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50 text-gray-500 text-sm">
+                    </div>
+                    <div>
+                        <label for="editAppDescription" class="block text-sm font-medium text-gray-700 mb-1">应用描述</label>
+                        <textarea x-model="editingApp.description" id="editAppDescription" rows="3" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus-ring text-sm resize-none"></textarea>
+                    </div>
+                     <div>
+                        <label for="editAppIconFile" class="block text-sm font-medium text-gray-700 mb-1">应用图标 (可选)</label>
+                        <input type="file" @change="editingApp.iconFile = $event.target.files[0]; editingApp.iconPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : (editingApp.iconUrl || null);" 
+                               accept="image/*" id="editAppIconFile" 
+                               class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer">
+                        <template x-if="editingApp.iconPreview">
+                            <div class="mt-3">
+                                <img :src="editingApp.iconPreview" alt="Icon Preview" class="h-20 w-20 rounded-lg object-cover border border-gray-200">
+                            </div>
+                        </template>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">共享设置</label>
+                        <div class="space-y-3">
+                            <label class="flex items-center">
+                                <input type="radio" x-model="editingApp.isShared" :value="false" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                <span class="ml-3 text-sm text-gray-700">私有 (仅自己可见)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" x-model="editingApp.isShared" :value="true" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                <span class="ml-3 text-sm text-gray-700">共享到司内应用</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button type="button" @click="closeEditAppModal()" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                        取消
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        保存更改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Package Modal -->
+     <div x-show="isEditPackageModalOpen" x-cloak class="fixed inset-0 bg-black bg-opacity-50 transition-opacity flex items-center justify-center z-50 p-4" @click.self="isEditPackageModalOpen = false">
+        <div class="bg-white rounded-xl modal-shadow w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar" @click.stop>
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">编辑包信息</h3>
+            </div>
+            <form @submit.prevent="updatePackageInfo" x-if="editingPackage" class="p-6">
+                <div class="space-y-5">
+                    <div>
+                        <label for="editPackageVersion" class="block text-sm font-medium text-gray-700 mb-1">版本号</label>
+                        <input type="text" :value="editingPackage.version" id="editPackageVersion" disabled 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50 text-gray-500 text-sm">
+                    </div>
+                    <div>
+                        <label for="editPackageDescription" class="block text-sm font-medium text-gray-700 mb-1">包描述</label>
+                        <textarea x-model="editingPackage.description" id="editPackageDescription" rows="3" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus-ring text-sm resize-none"></textarea>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button type="button" @click="isEditPackageModalOpen = false" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                        取消
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        保存更改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Generic Confirmation Modal -->
+    <div x-show="isConfirmModalOpen" x-cloak class="fixed inset-0 bg-black bg-opacity-50 transition-opacity flex items-center justify-center z-50 p-4" @click.self="isConfirmModalOpen = false">
+        <div class="bg-white rounded-xl modal-shadow w-full max-w-md" @click.stop>
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2" x-text="confirmModalContent.title"></h3>
+                <p class="text-sm text-gray-600 mb-6" x-text="confirmModalContent.message"></p>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" @click="isConfirmModalOpen = false; if(confirmModalContent.onCancel) confirmModalContent.onCancel();" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                        取消
+                    </button>
+                    <button type="button" @click="confirmModalContent.onConfirm(); isConfirmModalOpen = false;" 
+                            :class="confirmModalContent.confirmButtonClass || 'bg-red-600 hover:bg-red-700'"
+                            class="px-4 py-2 text-sm font-medium text-white border border-transparent rounded-lg transition-colors duration-200" 
+                            x-text="confirmModalContent.confirmButtonText || '确认'"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+        <!-- Toast Notification -->
+        <div x-show="toast.show" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform translate-y-2" 
+        class="fixed bottom-5 right-5 bg-gray-900 text-white py-3 px-4 rounded-lg shadow-lg z-50 max-w-sm" role="alert">
+       <p class="text-sm font-medium" x-text="toast.message"></p>
+   </div>
+
+   <script>
+       function appMarket() {
+           return {
+               // State
+               currentTab: 'myUploads',
+               searchTerm: '',
+               packageSearchTerm: '',
+               isLoading: true,
+               apps: [],
+               selectedApp: null,
+               selectedAppDetails: null,
+
+               isCreateAppModalOpen: false,
+               newApp: { name: '', platform: 'Android', description: '', iconUrl: '', iconFile: null, iconPreview: null, isShared: false },
+
+               isUploadPackageModalOpen: false,
+               uploadingToAppId: null,
+               uploadingToApp: null,
+               newPackage: { file: null, version: '', description: '' },
+
+               isEditAppModalOpen: false,
+               editingApp: null,
+               
+               isEditPackageModalOpen: false,
+               editingPackageAppId: null,
+               editingPackage: null,
+
+               isConfirmModalOpen: false,
+               confirmModalContent: { title: '', message: '', onConfirm: () => {}, onCancel: () => {}, confirmButtonText: '确认', confirmButtonClass: 'bg-red-600 hover:bg-red-700' },
+               
+               toast: { show: false, message: '', type: 'success' },
+
+               init() {
+                   this.isLoading = true;
+                   setTimeout(() => {
+                       this.apps = [
+                           { id: 'app1', name: '外卖App (Android)', platform: 'Android', latestVersion: '2.5.1', description: '便捷的点餐应用，支持多种支付方式，快速送达。覆盖全国主要城市。', category: '生活服务', lastUpdateTime: '2023-10-26', uploader: 'currentUser', uploaderType: 'USER', iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iOCIgZmlsbD0iI0ZGNkI2QiIvPgo8dGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7lpJY8L3RleHQ+Cjwvc3ZnPgo=', isShared: true, createTime: '2023-01-15', packages: [
+                               { id: 'pkg1-1', version: '2.5.1', description: '修复了一些已知问题，提升稳定性。', packageId: 'com.example.food.android.v251', packageUrl: '#', uploader: 'currentUser', uploaderType: 'USER', uploadTime: '2023-10-26', isVisibleInShared: true },
+                               { id: 'pkg1-2', version: '2.5.0', description: '新增节日优惠活动。', packageId: 'com.example.food.android.v250', packageUrl: '#', uploader: 'currentUser', uploaderType: 'USER', uploadTime: '2023-10-10', isVisibleInShared: true },
+                           ]},
+                           { id: 'app2', name: '办公套件 (iOS)', platform: 'iOS', latestVersion: '1.2.0', description: '高效的移动办公软件，支持文档编辑、表格制作和PPT演示。', category: '效率工具', lastUpdateTime: '2023-11-01', uploader: 'orgUser123', uploaderType: 'USER', iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iOCIgZmlsbD0iIzRFQ0RDNCIvPgo8dGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7ljYY8L3RleHQ+Cjwvc3ZnPgo=', isShared: true, createTime: '2023-02-20', packages: [
+                                { id: 'pkg2-1', version: '1.2.0', description: '优化大文件打开速度。', packageId: 'com.example.office.ios.v120', packageUrl: '#', uploader: 'orgUser123', uploaderType: 'USER', uploadTime: '2023-11-01', isVisibleInShared: true },
+                           ]},
+                           { id: 'app3', name: '内部通讯录 (Android)', platform: 'Android', latestVersion: '1.0.5', description: '公司内部员工通讯录，方便查找联系人。仅限内部使用。', category: '内部工具', lastUpdateTime: '2023-09-15', uploader: 'official', uploaderType: 'OFFICIAL', iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iOCIgZmlsbD0iIzQ1QjdEMSIvPgo8dGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7lhoU8L3RleHQ+Cjwvc3ZnPgo=', isShared: true, createTime: '2023-03-10', packages: [
+                               { id: 'pkg3-1', version: '1.0.5', description: '同步最新组织架构。', packageId: 'com.internal.contacts.android.v105', packageUrl: '#', uploader: 'official', uploaderType: 'OFFICIAL', uploadTime: '2023-09-15', isVisibleInShared: true },
+                           ]},
+                           { id: 'app4', name: '视频编辑Pro (HarmonyOS)', platform: 'HarmonyOS', latestVersion: '3.1.0', description: '专业级视频编辑工具，支持4K剪辑和丰富特效。', category: '影音图像', lastUpdateTime: '2023-11-05', uploader: 'currentUser', uploaderType: 'USER', iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iOCIgZmlsbD0iIzlCNTlCNiIvPgo8dGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7op4Y8L3RleHQ+Cjwvc3ZnPgo=', isShared: false, createTime: '2023-04-01', packages: [
+                               { id: 'pkg4-1', version: '3.1.0', description: '新增AI抠图功能。', packageId: 'com.proedit.harmony.v310', packageUrl: '#', uploader: 'currentUser', uploaderType: 'USER', uploadTime: '2023-11-05', isVisibleInShared: true },
+                           ]},
+                            { id: 'app5', name: '外部市场应用-京东 (Android)', platform: 'Android', latestVersion: '10.1.0', description: '京东官方购物App，海量商品，正品保障。', category: '购物', lastUpdateTime: '2023-11-10', uploader: 'official', uploaderType: 'OFFICIAL_EXTERNAL', iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiByeD0iOCIgZmlsbD0iI0YzOUMxMiIvPgo8dGV4dCB4PSIyNCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7lpJY8L3RleHQ+Cjwvc3ZnPgo=', isShared: true, createTime: '2023-01-01', packages: [
+                               { id: 'pkg5-1', version: '10.1.0', description: '双十一活动更新。', packageId: 'com.jd.android.v1010', packageUrl: '#', uploader: 'official', uploaderType: 'OFFICIAL_EXTERNAL', uploadTime: '2023-11-10', isVisibleInShared: true },
+                           ]},
+                       ];
+                       this.isLoading = false;
+                       this.filterApps(); 
+                   }, 500); 
+               },
+
+               tabs: [
+                   { id: 'myUploads', name: '我上传的' },
+                   { id: 'internalMarket', name: '司内应用' },
+                   { id: 'externalMarket', name: '司外应用' },
+                   { id: 'sharedByMe', name: '我共享的' },
+               ],
+               
+               get myUploadsCount() {
+                   if (this.isLoading) return 0;
+                   return this.apps.filter(app => app.uploader === 'currentUser').length;
+               },
+
+               get filteredApps() {
+                   if (this.isLoading || this.selectedApp) return [];
+                   let appsToDisplay = [];
+                   if (this.currentTab === 'myUploads') {
+                       appsToDisplay = this.apps.filter(app => app.uploader === 'currentUser');
+                   } else if (this.currentTab === 'internalMarket') {
+                       appsToDisplay = this.apps.filter(app => app.uploaderType === 'OFFICIAL' || (app.uploaderType === 'USER' && app.isShared));
+                   } else if (this.currentTab === 'externalMarket') {
+                       appsToDisplay = this.apps.filter(app => app.uploaderType === 'OFFICIAL_EXTERNAL');
+                   } else if (this.currentTab === 'sharedByMe') {
+                       appsToDisplay = this.apps.filter(app => app.uploader === 'currentUser' && app.isShared);
+                   }
+
+                   if (this.searchTerm.trim() === '') {
+                       return appsToDisplay;
+                   }
+                   const lowerSearchTerm = this.searchTerm.toLowerCase();
+                   return appsToDisplay.filter(app => 
+                       app.name.toLowerCase().includes(lowerSearchTerm) || 
+                       app.description.toLowerCase().includes(lowerSearchTerm) ||
+                       (app.packages && app.packages.some(pkg => pkg.packageId.toLowerCase().includes(lowerSearchTerm)))
+                   );
+               },
+
+               filterApps() { /* Reactive due to getter `filteredApps` */ },
+               
+               truncateText(text, maxLength) {
+                   if (!text) return '';
+                   if (text.length <= maxLength) return text;
+                   return text.substring(0, maxLength) + '...';
+               },
+
+               getUploaderDisplayName(uploaderId, uploaderType) {
+                   if (uploaderType === 'OFFICIAL' || uploaderType === 'OFFICIAL_EXTERNAL') return 'Bots官方';
+                   if (uploaderId === 'currentUser') return '我';
+                   return uploaderId; 
+               },
+
+               viewAppDetails(appId) {
+                   this.isLoading = true;
+                   this.selectedApp = appId;
+                   this.selectedAppDetails = null;
+                   this.packageSearchTerm = '';
+                   setTimeout(() => {
+                       const foundApp = this.apps.find(app => app.id === appId);
+                       if (foundApp) {
+                           this.selectedAppDetails = JSON.parse(JSON.stringify(foundApp));
+                       } else {
+                           this.selectedApp = null;
+                           this.showToast('应用未找到', 'error');
+                       }
+                       this.isLoading = false;
+                   }, 300);
+               },
+
+               openCreateAppModal() {
+                   this.newApp = { name: '', platform: 'Android', description: '', iconUrl: '', iconFile: null, iconPreview: null, isShared: false };
+                   this.isCreateAppModalOpen = true;
+                   this.packageSearchTerm = '';
+               },
+               createNewApp() {
+                   if (this.newApp.iconPreview && !this.newApp.iconFile) {
+                   }
+                   
+                   const iconToUse = this.newApp.iconPreview || `https://via.placeholder.com/48x48/6C5CE7/FFFFFF?text=APP`;
+
+                   const newAppEntry = {
+                       id: 'app' + Date.now() + Math.random().toString(16).slice(2),
+                       name: this.newApp.name + ` (${this.newApp.platform})`,
+                       platform: this.newApp.platform,
+                       latestVersion: 'N/A',
+                       description: this.newApp.description,
+                       category: '', 
+                       lastUpdateTime: new Date().toISOString().slice(0,10),
+                       uploader: 'currentUser',
+                       uploaderType: 'USER',
+                       iconUrl: iconToUse,
+                       isShared: this.newApp.isShared,
+                       createTime: new Date().toISOString().slice(0,10),
+                       packages: []
+                   };
+                   this.apps.push(newAppEntry);
+                   this.isCreateAppModalOpen = false;
+                   this.showToast(`应用 "${newAppEntry.name}" 创建成功!`);
+                   if(this.currentTab !== 'myUploads' && (this.newApp.isShared || !this.newApp.isShared)) { 
+                       this.currentTab = 'myUploads';
+                   }
+                   this.filterApps();
+                   if (this.newApp.iconPreview && this.newApp.iconFile) URL.revokeObjectURL(this.newApp.iconPreview);
+                   this.newApp = { name: '', platform: 'Android', description: '', iconUrl: '', iconFile: null, iconPreview: null, isShared: false };
+               },
+               
+               closeCreateAppModal() {
+                   if (this.newApp.iconPreview && this.newApp.iconFile) {
+                       URL.revokeObjectURL(this.newApp.iconPreview);
+                   }
+                   this.newApp = { name: '', platform: 'Android', description: '', iconUrl: '', iconFile: null, iconPreview: null, isShared: false };
+                   this.isCreateAppModalOpen = false;
+               },
+
+               openUploadPackageModal(appId) {
+                   this.uploadingToAppId = appId;
+                   this.uploadingToApp = this.apps.find(app => app.id === appId);
+                   this.newPackage = { file: null, version: '', description: '' };
+                   this.isUploadPackageModalOpen = true;
+               },
+               uploadNewPackage() {
+                   if (!this.newPackage.file) {
+                       this.showToast('请选择一个包文件。', 'error');
+                       return;
+                   }
+                   const appIndex = this.apps.findIndex(app => app.id === this.uploadingToAppId);
+                   if (appIndex !== -1) {
+                       const newPkgEntry = {
+                           id: 'pkg' + Date.now() + Math.random().toString(16).slice(2),
+                           version: this.newPackage.version,
+                           description: this.newPackage.description,
+                           packageId: `com.example.${this.apps[appIndex].name.split('(')[0].trim().toLowerCase().replace(/\s+/g, '')}.${this.apps[appIndex].platform.toLowerCase()}.v${this.newPackage.version.replace(/\./g,'')}`,
+                           packageUrl: '#',
+                           uploader: 'currentUser',
+                           uploaderType: 'USER',
+                           uploadTime: new Date().toISOString().slice(0,10),
+                           isVisibleInShared: true 
+                       };
+                       this.apps[appIndex].packages.unshift(newPkgEntry);
+                       this.apps[appIndex].latestVersion = newPkgEntry.version;
+                       this.apps[appIndex].lastUpdateTime = newPkgEntry.uploadTime;
+                       
+                       if(this.selectedAppDetails && this.selectedAppDetails.id === this.uploadingToAppId){
+                            this.selectedAppDetails.packages.unshift(JSON.parse(JSON.stringify(newPkgEntry)));
+                            this.selectedAppDetails.latestVersion = newPkgEntry.version;
+                            this.selectedAppDetails.lastUpdateTime = newPkgEntry.uploadTime;
+                       }
+                   }
+                   this.isUploadPackageModalOpen = false;
+                   this.showToast(`包 ${this.newPackage.version} 上传成功!`);
+                   this.filterApps();
+                   this.newPackage = { file: null, version: '', description: '' };
+               },
+
+               openEditAppModal(appId) {
+                   const appToEdit = this.apps.find(app => app.id === appId);
+                   if (appToEdit) {
+                       this.editingApp = JSON.parse(JSON.stringify(appToEdit)); 
+                       this.editingApp.name = this.editingApp.name.replace(` (${this.editingApp.platform})`, '').trim();
+                       this.editingApp.iconFile = null; 
+                       this.editingApp.iconPreview = this.editingApp.iconUrl;
+                       this.isEditAppModalOpen = true;
+                   }
+               },
+               updateAppInfo() {
+                   const appIndex = this.apps.findIndex(app => app.id === this.editingApp.id);
+                   if (appIndex !== -1) {
+                       let iconToUse = this.apps[appIndex].iconUrl; 
+
+                       if (this.editingApp.iconFile && this.editingApp.iconPreview && this.editingApp.iconPreview.startsWith('blob:')) {
+                           iconToUse = this.editingApp.iconPreview;
+                           if (this.apps[appIndex].iconUrl && this.apps[appIndex].iconUrl.startsWith('blob:')) {
+                               URL.revokeObjectURL(this.apps[appIndex].iconUrl);
+                           }
+                       } else if (!this.editingApp.iconFile && this.editingApp.iconUrl) {
+                           iconToUse = this.editingApp.iconUrl;
+                           if (this.apps[appIndex].iconUrl && this.apps[appIndex].iconUrl.startsWith('blob:') && this.apps[appIndex].iconUrl !== this.editingApp.iconUrl) {
+                                URL.revokeObjectURL(this.apps[appIndex].iconUrl);
+                           }
+                       } else if (!this.editingApp.iconFile && !this.editingApp.iconUrl) { 
+                           iconToUse = `https://via.placeholder.com/48x48/6C5CE7/FFFFFF?text=APP`;
+                           if (this.apps[appIndex].iconUrl && this.apps[appIndex].iconUrl.startsWith('blob:')) {
+                               URL.revokeObjectURL(this.apps[appIndex].iconUrl);
+                           }
+                       }
+                       
+                       this.apps[appIndex].name = this.editingApp.name + ` (${this.editingApp.platform})`;
+                       this.apps[appIndex].description = this.editingApp.description;
+                       this.apps[appIndex].iconUrl = iconToUse; 
+                       this.apps[appIndex].isShared = this.editingApp.isShared;
+                       
+                       if (this.selectedAppDetails && this.selectedAppDetails.id === this.editingApp.id) {
+                           this.selectedAppDetails.name = this.apps[appIndex].name;
+                           this.selectedAppDetails.description = this.apps[appIndex].description;
+                           this.selectedAppDetails.iconUrl = this.apps[appIndex].iconUrl;
+                           this.selectedAppDetails.isShared = this.apps[appIndex].isShared;
+                       }
+                       
+                       this.showToast(`应用 "${this.apps[appIndex].name}" 更新成功!`);
+                   }
+                   this.closeEditAppModal();
+                   this.filterApps();
+               },
+               closeEditAppModal() {
+                   if (this.editingApp && this.editingApp.iconPreview && this.editingApp.iconPreview.startsWith('blob:') && this.editingApp.iconFile) {
+                       if(this.apps.find(a => a.id === this.editingApp.id)?.iconUrl !== this.editingApp.iconPreview) {
+                           URL.revokeObjectURL(this.editingApp.iconPreview);
+                       }
+                   }
+                   this.isEditAppModalOpen = false;
+                   this.editingApp = null;
+               },
+               
+               openEditPackageModal(appId, packageId){
+                   const app = this.apps.find(a => a.id === appId);
+                   if(app){
+                       const pkgToEdit = app.packages.find(p => p.id === packageId);
+                       if(pkgToEdit){
+                           this.editingPackageAppId = appId;
+                           this.editingPackage = JSON.parse(JSON.stringify(pkgToEdit));
+                           this.isEditPackageModalOpen = true;
+                       }
+                   }
+               },
+               updatePackageInfo(){
+                   const appIndex = this.apps.findIndex(a => a.id === this.editingPackageAppId);
+                   if(appIndex !== -1){
+                       const pkgIndex = this.apps[appIndex].packages.findIndex(p => p.id === this.editingPackage.id);
+                       if(pkgIndex !== -1){
+                           this.apps[appIndex].packages[pkgIndex].description = this.editingPackage.description;
+                           
+                           if(this.selectedAppDetails && this.selectedAppDetails.id === this.editingPackageAppId){
+                              const selPkgIndex = this.selectedAppDetails.packages.findIndex(p => p.id === this.editingPackage.id);
+                              if(selPkgIndex !== -1) this.selectedAppDetails.packages[selPkgIndex].description = this.editingPackage.description;
+                           }
+                           this.showToast(`包 ${this.editingPackage.version} 更新成功!`);
+                       }
+                   }
+                   this.isEditPackageModalOpen = false;
+                   this.editingPackage = null;
+                   this.editingPackageAppId = null;
+               },
+               confirmShareApp(appId) {
+                   this.confirmModalContent = {
+                       title: '共享应用',
+                       message: '确定要将此应用共享到司内应用吗？共享后，司内应用其他用户将可以看到此应用及其所有包。',
+                       onConfirm: () => this.shareApp(appId),
+                       confirmButtonText: '确认共享',
+                       confirmButtonClass: 'bg-emerald-600 hover:bg-emerald-700'
+                   };
+                   this.isConfirmModalOpen = true;
+               },
+               shareApp(appId) {
+                   const app = this.apps.find(app => app.id === appId);
+                   if (app) app.isShared = true;
+                   this.showToast(`应用 "${app.name}" 已共享到司内应用。`);
+                   this.filterApps();
+               },
+               confirmCancelShareApp(appId) {
+                   this.confirmModalContent = {
+                       title: '取消共享应用',
+                       message: '确定要取消共享此应用吗？取消后，此应用将仅自己可见。',
+                       onConfirm: () => this.cancelShareApp(appId),
+                       confirmButtonText: '确认取消',
+                       confirmButtonClass: 'bg-orange-600 hover:bg-orange-700'
+                   };
+                   this.isConfirmModalOpen = true;
+               },
+               cancelShareApp(appId) {
+                   const app = this.apps.find(app => app.id === appId);
+                   if (app) app.isShared = false;
+                   this.showToast(`应用 "${app.name}" 已取消共享。`);
+                   this.filterApps();
+               },
+               confirmDeleteApp(appId) {
+                   this.confirmModalContent = {
+                       title: '删除应用',
+                       message: '确定要删除此应用及其所有包吗？此操作不可恢复。',
+                       onConfirm: () => this.deleteApp(appId),
+                       confirmButtonText: '确认删除',
+                       confirmButtonClass: 'bg-red-600 hover:bg-red-700'
+                   };
+                   this.isConfirmModalOpen = true;
+               },
+               deleteApp(appId) {
+                   const appName = this.apps.find(app => app.id === appId)?.name;
+                   this.apps = this.apps.filter(app => app.id !== appId);
+                   this.showToast(`应用 "${appName}" 已删除。`);
+                   if(this.selectedApp === appId) this.selectedApp = null;
+                   this.filterApps();
+               },
+               confirmDeletePackage(appId, packageId) {
+                   this.confirmModalContent = {
+                       title: '删除包',
+                       message: '确定要删除此包吗？此操作不可恢复。',
+                       onConfirm: () => this.deletePackage(appId, packageId),
+                       confirmButtonText: '确认删除',
+                       confirmButtonClass: 'bg-red-600 hover:bg-red-700'
+                   };
+                   this.isConfirmModalOpen = true;
+               },
+               deletePackage(appId, packageId) {
+                   const appIndex = this.apps.findIndex(a => a.id === appId);
+                   let pkgVersion = '';
+                   if (appIndex !== -1) {
+                       const pkg = this.apps[appIndex].packages.find(p => p.id === packageId);
+                       if(pkg) pkgVersion = pkg.version;
+                       this.apps[appIndex].packages = this.apps[appIndex].packages.filter(pkg => pkg.id !== packageId);
+                       if (this.apps[appIndex].packages.length > 0) {
+                           this.apps[appIndex].latestVersion = this.apps[appIndex].packages[0].version;
+                       } else {
+                           this.apps[appIndex].latestVersion = 'N/A';
+                       }
+                       if (this.selectedAppDetails && this.selectedAppDetails.id === appId) {
+                           this.selectedAppDetails.packages = this.apps[appIndex].packages;
+                           this.selectedAppDetails.latestVersion = this.apps[appIndex].latestVersion;
+                       }
+                   }
+                   this.showToast(`包 ${pkgVersion} 已删除。`);
+                   this.filterApps();
+               },
+               copyToClipboard(text) {
+                   navigator.clipboard.writeText(text).then(() => {
+                       this.showToast('已复制到剪贴板!');
+                   }).catch(err => {
+                       this.showToast('复制失败!', 'error');
+                       console.error('复制失败:', err);
+                   });
+               },
+               downloadPackage(url){
+                   if(url && url !== '#') {
+                       window.open(url, '_blank');
+                       this.showToast('开始下载...');
+                   } else {
+                       this.showToast('无效的下载链接。', 'error');
+                   }
+               },
+               showToast(message, type = 'success') {
+                   this.toast.message = message;
+                   this.toast.type = type;
+                   this.toast.show = true;
+                   setTimeout(() => {
+                       this.toast.show = false;
+                   }, 3000);
+               },
+               get filteredPackages() {
+                   if (!this.selectedAppDetails || !this.selectedAppDetails.packages) return [];
+                   if (this.packageSearchTerm.trim() === '') {
+                       return this.selectedAppDetails.packages;
+                   }
+                   const lowerSearchTerm = this.packageSearchTerm.toLowerCase();
+                   return this.selectedAppDetails.packages.filter(pkg =>
+                       pkg.version.toLowerCase().includes(lowerSearchTerm) ||
+                       pkg.description.toLowerCase().includes(lowerSearchTerm) ||
+                       pkg.packageId.toLowerCase().includes(lowerSearchTerm)
+                   );
+               },
+               filterPackages() { /* Reactive due to getter `filteredPackages` */ }
+           }
+       }
+   </script>
+</body>
+</html>

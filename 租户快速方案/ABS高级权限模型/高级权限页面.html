@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级权限设置原型</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 使用Inter字体 */
+        body {
+            font-family: "Inter", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* 选中角色的高亮样式 */
+        .role-item.active {
+            background-color: #eef2ff;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        /* 标签页的选中样式 */
+        .tab-item.active {
+            border-bottom-color: #4f46e5;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        
+        /* 隐藏的配置组 */
+        .config-group {
+            display: none;
+        }
+        
+        /* radio选中时，显示对应的配置组 */
+        /* 我们将使用JS来控制显示，而不是纯CSS，以支持更复杂的逻辑 */
+
+        /* 标签页内容 */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 选中的基础权限级别高亮 (原radio) */
+        /* input[type="radio"]:checked + label { ... } */
+
+        /* 新增：基础权限Tab样式 */
+        .base-perm-tab {
+            transition: all 0.2s;
+        }
+        .base-perm-tab.active {
+            background-color: #4f46e5;
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .base-perm-tab:disabled {
+            background-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        
+        /* 新增：为禁用的选项添加样式 */
+        input[type="radio"]:disabled + label {
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- 
+      状态一：介绍弹窗 (默认显示)
+    -->
+    <div id="intro-modal" class="w-full max-w-3xl bg-white rounded-lg shadow-xl p-8 text-center transition-all duration-300">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-semibold text-gray-900">高级权限</h1>
+            <button class="text-gray-400 hover:text-gray-600 close-modal">&times;</button>
+        </div>
+        
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">多维表格高级权限，让协作更安全高效</h2>
+        <p class="text-gray-500 mb-8">
+            精准控制数据表、行列和仪表盘权限，轻松实现权限精细分配。
+            <a href="#" class="text-blue-600">了解更多</a>
+        </p>
+
+        <!-- 功能特性展示 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="p-4 border rounded-lg bg-gray-50">
+                <img src="https://placehold.co/200x120/e0e7ff/4338ca?text=行权限" alt="行权限示意图" class="w-full h-32 object-cover rounded mb-4 bg-gray-200 text-sm text-indigo-800 flex items-center justify-center">
+                <h3 class="font-semibold text-gray-700">行权限</h3>
+                <p class="text-sm text-gray-500">设置谁可查看/编辑指定记录</p>
+            </div>
+            <div class="p-4 border rounded-lg bg-gray-50">
+                <img src="https://placehold.co/200x120/e0e7ff/4338ca?text=列权限" alt="列权限示意图" class="w-full h-32 object-cover rounded mb-4 bg-gray-200 text-sm text-indigo-800 flex items-center justify-center">
+                <h3 class="font-semibold text-gray-700">列权限</h3>
+                <p class="text-sm text-gray-500">精准控制可编辑或可见字段</p>
+            </div>
+            <div class="p-4 border rounded-lg bg-gray-50">
+                <img src="https://placehold.co/200x120/e0e7ff/4338ca?text=仪表盘" alt="仪表盘示意图" class="w-full h-32 object-cover rounded mb-4 bg-gray-200 text-sm text-indigo-800 flex items-center justify-center">
+                <h3 class="font-semibold text-gray-700">仪表盘</h3>
+                <p class="text-sm text-gray-500">灵活管控仪表盘可见性</p>
+            </div>
+        </div>
+
+        <!-- 关键提示 (V2.0方案核心) -->
+        <div class="text-left text-sm text-gray-600 bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-8">
+            <h4 class="font-semibold text-yellow-800 mb-2">启用高级权限须知：</h4>
+            <ul class="list-decimal list-inside space-y-1">
+                <li><b>内容权限：</b> 表格的行列、导入/导出等数据权限，将由表格内部的高级角色独立管理。</li>
+                <li><b>容器权限：</b> 表格的 `创建` 和 `移动` 权限仍由应用控制。</li>
+                <li><b>最高权限：</b> 【应用的所有者】将成为此表格的唯一【所有者】，拥有包括 `删除` 在内的最高权限。</li>
+            </ul>
+        </div>
+
+        <button id="enable-advanced-btn" class="w-1/2 px-5 py-3 bg-indigo-600 text-white rounded-lg font-semibold text-lg hover:bg-indigo-700 transition-colors">
+            开启高级权限
+        </button>
+    </div>
+
+    <!-- 
+      状态二：高级权限配置界面 (默认隐藏)
+    -->
+    <div id="config-ui" class="w-full max-w-5xl h-[700px] bg-white rounded-lg shadow-xl overflow-hidden hidden transition-all duration-300">
+        <div class="flex flex-col h-full">
+            <!-- 顶部标题栏 -->
+            <div class="flex justify-between items-center p-4 border-b">
+                <h1 class="text-xl font-semibold text-gray-900">“薪酬表”的高级权限设置</h1>
+                <button class="text-gray-400 hover:text-gray-600 close-modal">&times;</button>
+            </div>
+
+            <div class="flex flex-1 overflow-hidden">
+                <!-- 左侧：角色列表 -->
+                <div class="w-1/3 min-w-[240px] bg-gray-50 border-r overflow-y-auto p-4">
+                    <!-- 系统角色 (模板) -->
+                    <div class="mb-6">
+                        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">系统角色</h2>
+                        <ul id="system-role-list" class="space-y-1">
+                            <!-- V2.0方案：应用所有者作为唯一的、不可改的“所有者” -->
+                            <li class="role-item flex justify-between items-center p-3 rounded-lg cursor-pointer" data-role-key="owner">
+                                <span class="role-name">所有者 (应用所有者)</span>
+                                <span class="text-gray-400 text-xs">唯一</span>
+                            </li>
+                            <!-- 其他可编辑模板 -->
+                            <li class="role-item flex justify-between items-center p-3 rounded-lg cursor-pointer" data-role-key="admin">
+                                <span class="role-name">管理员 (模板)</span>
+                            </li>
+                            <li class="role-item flex justify-between items-center p-3 rounded-lg cursor-pointer" data-role-key="editor">
+                                <span class="role-name">编辑者 (模板)</span>
+                            </li>
+                            <li class="role-item flex justify-between items-center p-3 rounded-lg cursor-pointer" data-role-key="commenter">
+                                <span class="role-name">查看与评论 (模板)</span>
+                            </li>
+                            <li class="role-item flex justify-between items-center p-3 rounded-lg cursor-pointer" data-role-key="viewer">
+                                <span class="role-name">仅查看 (模板)</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- 自定义角色 -->
+                    <div>
+                        <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">自定义角色</h2>
+                        <ul id="custom-role-list" class="space-y-1">
+                            <li class="role-item flex justify-between items-center p-3 rounded-lg cursor-pointer" data-role-key="auditor">
+                                <span class="role-name">薪酬审计员</span>
+                            </li>
+                        </ul>
+                        <button id="add-custom-role" class="p-3 w-full text-left rounded-lg text-indigo-600 font-medium cursor-pointer hover:bg-indigo-50">
+                            + 新建自定义角色
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 右侧：角色详情 -->
+                <div class="flex-1 flex flex-col overflow-hidden">
+                    <!-- 角色名称和描述 -->
+                    <div class="p-6 border-b bg-white">
+                        <h3 id="role-title" class="text-2xl font-semibold text-gray-900" contenteditable="false">所有者 (应用所有者)</h3>
+                        <p id="role-description" class="text-gray-500 mt-1">拥有此表格的全部内容权限和唯一的删除权限，不可更改。</p>
+                    </div>
+
+                    <!-- 标签页切换 -->
+                    <div class="flex border-b px-6 bg-white sticky top-0">
+                        <button class="tab-item py-4 px-1 mr-6 border-b-2 border-transparent text-gray-500 hover:text-gray-700 active" data-tab="data-permissions">
+                            数据权限
+                        </button>
+                        <button class="tab-item py-4 px-1 mr-6 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="role-members">
+                            角色成员
+                        </button>
+                    </div>
+
+                    <!-- 标签页内容 -->
+                    <div class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                        <!-- Tab 1: 数据权限 -->
+                        <div id="data-permissions" class="tab-content active">
+                            
+                            <!-- 步骤一：设置“基础权限级别” (*** 已重构为Tabs ***) -->
+                            <div class="mb-4">
+                                <label class="block font-medium text-gray-700 mb-3">基础权限级别</label>
+                                <div id="base-permission-tabs" class="flex items-center p-1 bg-gray-100 rounded-lg">
+                                    <button class="base-perm-tab flex-1 py-2 px-3 rounded-md text-sm font-semibold text-gray-600 hover:bg-white" data-value="manage">可管理</button>
+                                    <button class="base-perm-tab flex-1 py-2 px-3 rounded-md text-sm font-semibold text-gray-600 hover:bg-white" data-value="edit">可编辑</button>
+                                    <button class="base-perm-tab flex-1 py-2 px-3 rounded-md text-sm font-semibold text-gray-600 hover:bg-white" data-value="comment">浏览与评论</button>
+                                    <button class="base-perm-tab flex-1 py-2 px-3 rounded-md text-sm font-semibold text-gray-600 hover:bg-white" data-value="view">仅浏览</button>
+                                    <button class="base-perm-tab flex-1 py-2 px-3 rounded-md text-sm font-semibold text-gray-600 hover:bg-white" data-value="none">无权限</button>
+                                </div>
+                            </div>
+
+                            <!-- 权限级别描述 (新增) -->
+                            <div id="base-permission-description" class="text-sm text-gray-500 mb-6 h-10">
+                                <!-- JS会填充此内容 -->
+                            </div>
+
+
+                            <!-- 步骤二：上下文的精细化配置 (*** 已重构为卡片 ***) -->
+                            <div id="config-sections-container">
+                                <!-- "可管理" 组 -->
+                                <div id="config-manage" class="config-group space-y-4">
+                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                        <p class="text-gray-500">此角色拥有所有内容权限（已锁定）。</p>
+                                    </div>
+                                </div>
+
+                                <!-- "可编辑" 组 -->
+                                <div id="config-edit" class="config-group space-y-4">
+                                    <!-- 卡片1: 行操作 -->
+                                    <div class="bg-white rounded-lg shadow-sm p-5">
+                                        <h4 class="font-semibold text-gray-700 mb-4">可进行的行操作</h4>
+                                        <div class="flex space-x-8">
+                                            <label class="flex items-center"><input type="checkbox" checked class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许创建记录</label>
+                                            <label class="flex items-center"><input type="checkbox" checked class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许编辑记录</label>
+                                            <label class="flex items-center"><input type="checkbox" class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许删除记录</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 卡片2: 行范围 (*** MVP 禁用 ***) -->
+                                    <div class="bg-white rounded-lg shadow-sm p-5">
+                                        <h4 class="font-semibold text-gray-700 mb-4">可编辑或删除的行范围</h4>
+                                        <div class="flex space-x-8">
+                                            <label class="flex items-center"><input type="radio" name="row-scope" checked class="mr-2 text-indigo-600 focus:ring-indigo-500"> 全部行</label>
+                                            <label class="flex items-center">
+                                                <input type="radio" name="row-scope" disabled class="mr-2 text-gray-300 focus:ring-gray-200">
+                                                指定行
+                                                <span class="text-xs text-gray-400 ml-2">(开发中)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- 卡片3: 列范围 (*** MVP 禁用 ***) -->
+                                    <div class="bg-white rounded-lg shadow-sm p-5">
+                                        <h4 class="font-semibold text-gray-700 mb-4">可编辑的列范围</h4>
+                                        <div class="flex space-x-8">
+                                            <label class="flex items-center"><input type="radio" name="col-scope" checked class="mr-2 text-indigo-600 focus:ring-indigo-500"> 全部列</label>
+                                            <label class="flex items-center">
+                                                <input type="radio" name="col-scope" disabled class="mr-2 text-gray-300 focus:ring-gray-200">
+                                                自定义列
+                                                <span class="text-xs text-gray-400 ml-2">(开发中)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 卡片4: 视图权限 -->
+                                    <div class="bg-white rounded-lg shadow-sm p-5">
+                                        <h4 class="font-semibold text-gray-700 mb-4">视图权限</h4>
+                                        <label class="flex items-center"><input type="checkbox" checked class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许管理视图 (创建/删除/编辑视图)</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- "浏览与评论" 组 -->
+                                <div id="config-comment" class="config-group space-y-4">
+                                    <div class="bg-white rounded-lg shadow-sm p-5">
+                                        <h4 class="font-semibold text-gray-700 mb-4">行权限</h4>
+                                        <label class="flex items-center"><input type="checkbox" checked class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许查看所有行</label>
+                                    </div>
+                                    <div class="bg-white rounded-lg shadow-sm p-5">
+                                        <h4 class="font-semibold text-gray-700 mb-4">评论权限</h4>
+                                        <label class="flex items-center"><input type="checkbox" checked class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许添加评论</label>
+                                    </div>
+                                </div>
+
+                                <!-- "仅浏览" 组 -->
+                                <div id="config-view" class="config-group space-y-4">
+                                    <div class="bg-white rounded-lg shadow-sm p-5">
+                                        <h4 class="font-semibold text-gray-700 mb-4">行权限</h4>
+                                        <label class="flex items-center"><input type="checkbox" checked class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许查看所有行</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- "无权限" 组 -->
+                                <div id="config-none" class="config-group space-y-4">
+                                    <div class="bg-white rounded-lg shadow-sm p-4">
+                                        <p class="text-gray-500">此角色将无法访问此表格的任何内容。</p>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- 步骤三：管理权限 (新) -->
+                            <fieldset id="admin-permissions" class="mt-8 pt-6 border-t">
+                                <h4 class="font-semibold text-gray-700 mb-4">管理权限</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <label class="flex items-center"><input type="checkbox" class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许 管理角色与成员</label>
+                                </div>
+                            </fieldset>
+
+                            <!-- 步骤四：其他功能权限 (原“其他权限”) -->
+                            <fieldset id="functional-permissions" class="mt-8 pt-6 border-t">
+                                <h4 class="font-semibold text-gray-700 mb-4">功能权限</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <label class="flex items-center"><input type="checkbox" class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许 导出</label>
+                                    <label class="flex items-center"><input type="checkbox" class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许 导入</label>
+                                    <label class="flex items-center"><input type="checkbox" class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许 复制</label>
+                                    <label class="flex items-center"><input type="checkbox" class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许 保存为模板</label>
+                                    <label class="flex items-center"><input type="checkbox" class="rounded mr-2 text-indigo-600 focus:ring-indigo-500"> 允许 编辑表格名称/图标</label>
+                                </div>
+                            </fieldset>
+
+                        </div>
+
+                        <!-- Tab 2: 角色成员 -->
+                        <div id="role-members" class="tab-content relative">
+                            <!-- 锁定遮罩 -->
+                            <div id="members-locked-overlay" class="absolute inset-0 bg-gray-100 bg-opacity-75 flex items-center justify-center z-10 hidden">
+                                <p class="text-gray-600 font-medium">所有者的成员列表不可编辑</p>
+                            </div>
+                            <button id="add-member-btn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-indigo-700 mb-6">
+                                + 添加成员
+                            </button>
+                            <div id="member-list" class="space-y-3">
+                                <div class="member-item flex items-center justify-between p-3 bg-white border rounded-lg">
+                                    <div class="flex items-center">
+                                        <img src="https://placehold.co/40x40/lightgreen/555?text=HR" alt="avatar" class="w-10 h-10 rounded-full mr-3">
+                                        <div>
+                                            <div class="font-semibold">HR总监</div>
+                                            <div class="text-sm text-gray-500">hr.director@company.com</div>
+                                        </div>
+                                    </div>
+                                    <button class="remove-member-btn text-gray-400 hover:text-red-500 text-sm">移除</button>
+                                </div>
+                                <!-- 更多成员... -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --------------------------------------------------
+        // 全局变量 (已修复)
+        // --------------------------------------------------
+        const introModal = document.getElementById('intro-modal');
+        const configUi = document.getElementById('config-ui');
+        const enableBtn = document.getElementById('enable-advanced-btn');
+        const roleTitle = document.getElementById('role-title');
+        const roleDescription = document.getElementById('role-description');
+        const systemRoleList = document.getElementById('system-role-list');
+        const customRoleList = document.getElementById('custom-role-list');
+        const addCustomRoleBtn = document.getElementById('add-custom-role');
+        const basePermissionTabs = document.getElementById('base-permission-tabs'); // 重命名
+        const basePermissionDescription = document.getElementById('base-permission-description'); // 新增
+        const configSectionsContainer = document.getElementById('config-sections-container');
+        const adminPermissions = document.getElementById('admin-permissions');
+        const functionalPermissions = document.getElementById('functional-permissions');
+        const membersLockedOverlay = document.getElementById('members-locked-overlay');
+        const addMemberBtn = document.getElementById('add-member-btn');
+        const memberList = document.getElementById('member-list');
+        
+        // (新增) 基础权限级别的描述
+        const permissionDescriptions = {
+            manage: "拥有最高内容权限，可管理权限、字段和数据。",
+            edit: "可创建、编辑、删除记录，可管理视图，但不能管理字段。",
+            comment: "可查看数据和添加评论，不能编辑。",
+            view: "仅可查看数据，不能评论或编辑。",
+            none: "无法访问此表格。"
+        };
+        
+        // --------------------------------------------------
+        // 模拟的角色数据库
+        // --------------------------------------------------
+        let roleData = {
+            owner: {
+                title: "所有者 (应用所有者)",
+                description: "拥有此表格的全部内容权限和唯一的删除权限，不可更改。",
+                basePermission: "manage",
+                isSystem: true,
+                isLocked: true // 完全锁定
+            },
+            admin: {
+                title: "管理员 (模板)",
+                description: "可管理此表格的内容和权限，但不能删除表格。",
+                basePermission: "manage",
+                isSystem: true,
+                isLocked: false // 模板可改
+            },
+            editor: {
+                title: "编辑者 (模板)",
+                description: "可创建、编辑、删除记录，但不能管理字段。",
+                basePermission: "edit",
+                isSystem: true,
+                isLocked: false
+            },
+            commenter: {
+                title: "查看与评论 (模板)",
+                description: "可查看数据和添加评论，不能编辑。",
+                basePermission: "comment",
+                isSystem: true,
+                isLocked: false
+            },
+            viewer: {
+                title: "仅查看 (模板)",
+                description: "仅可查看数据，不能评论或编辑。",
+                basePermission: "view",
+                isSystem: true,
+                isLocked: false
+            },
+            auditor: {
+                title: "薪酬审计员",
+                description: "自定义角色，用于审计薪酬。",
+                basePermission: "view",
+                isSystem: false,
+                isLocked: false
+            }
+        };
+
+        // --------------------------------------------------
+        // 1. 状态切换逻辑 (介绍 -> 配置)
+        // --------------------------------------------------
+        enableBtn.addEventListener('click', () => {
+            introModal.style.display = 'none';
+            configUi.style.display = 'block';
+            document.querySelector('.role-item[data-role-key="owner"]').click();
+        });
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 模拟关闭，重置原型
+                window.location.reload();
+            });
+        });
+
+        // --------------------------------------------------
+        // 2. 左侧角色列表切换逻辑
+        // --------------------------------------------------
+        function handleRoleClick(e) {
+            const roleItem = e.target.closest('.role-item');
+            if (!roleItem) return;
+
+            document.querySelectorAll('.role-item').forEach(item => item.classList.remove('active'));
+            roleItem.classList.add('active');
+
+            const roleKey = roleItem.dataset.roleKey;
+            const data = roleData[roleKey];
+
+            if (data) {
+                updateRoleDetails(data);
+                // **** updatePermissionsUI 现在需要知道角色是否是 isSystem ****
+                updatePermissionsUI(data); 
+                updateMembersUI(data);
+            }
+        }
+        systemRoleList.addEventListener('click', handleRoleClick);
+        customRoleList.addEventListener('click', handleRoleClick);
+
+        // --------------------------------------------------
+        // 3. 右侧详情更新 (标题、描述)
+        // --------------------------------------------------
+        function updateRoleDetails(data) {
+            roleTitle.textContent = data.title;
+            roleDescription.textContent = data.description;
+            
+            // 允许自定义角色重命名
+            if (!data.isSystem) {
+                roleTitle.contentEditable = 'true';
+                roleTitle.classList.add('cursor-text', 'focus:ring-2', 'focus:ring-indigo-300', 'rounded-md', 'px-1', '-ml-1');
+            } else {
+                roleTitle.contentEditable = 'false';
+                roleTitle.classList.remove('cursor-text', 'focus:ring-2', 'focus:ring-indigo-300', 'rounded-md', 'px-1', '-ml-1');
+            }
+        } // <-- 修复 1: 补上缺失的 '}'
+        
+        // 失去焦点时保存重命名 (模拟)
+        roleTitle.addEventListener('blur', () => {
+            const activeRoleItem = document.querySelector('.role-item.active');
+            if (!activeRoleItem) return;
+            
+            const roleKey = activeRoleItem.dataset.roleKey;
+            if (roleData[roleKey] && !roleData[roleKey].isSystem) {
+                const newTitle = roleTitle.textContent.trim();
+                if (newTitle) {
+                    roleData[roleKey].title = newTitle;
+                    activeRoleItem.querySelector('.role-name').textContent = newTitle;
+                } else {
+                    roleTitle.textContent = roleData[roleKey].title; // 还原
+                }
+            }
+        });
+
+        // --------------------------------------------------
+        // 4. 右侧 "数据权限" Tab 逻辑 (*** 已重构 ***)
+        // --------------------------------------------------
+        function updatePermissionsUI(data) {
+            // 切换到"数据权限"标签页
+            switchTab('data-permissions');
+
+            const isLocked = data.isLocked;
+            const isSystem = data.isSystem;
+            const basePermission = data.basePermission;
+
+            // 1. 设置基础权限级别 (新：Tab样式)
+            document.querySelectorAll('.base-perm-tab').forEach(tab => {
+                if (tab.dataset.value === basePermission) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // 2. 更新描述
+            basePermissionDescription.textContent = permissionDescriptions[basePermission] || "";
+
+            // 3. 根据基础权限显示/隐藏精细化配置
+            updateConfigGroups(basePermission);
+
+            // 4. 锁定"基础权限"Tabs
+            // (新逻辑) 模板角色(isSystem) 的基础权限也是锁定的
+            const lockTabs = isLocked || isSystem;
+            basePermissionTabs.querySelectorAll('button').forEach(btn => {
+                btn.disabled = lockTabs;
+            });
+            
+            // 5. 锁定"精细化配置"
+            configSectionsContainer.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(cb => {
+                // (更新) "所有者"才锁定，模板角色(admin, editor)的精细化配置不锁定
+                cb.disabled = isLocked;
+            });
+            
+            // 6. 控制“管理权限”和“功能权限”的可见性
+            // (更新) "所有者"锁定，模板角色(admin, editor)的对应权限也不锁定
+            updateFunctionalPermissionVisibility(basePermission, isSystem, isLocked);
+        }
+
+        // 监听"基础权限级别" (新：Tab点击)
+        basePermissionTabs.addEventListener('click', (e) => {
+            const tab = e.target.closest('.base-perm-tab');
+            if (!tab || tab.disabled) return;
+
+            const newBasePermission = tab.dataset.value;
+
+            // 更新Tab选中状态
+            document.querySelectorAll('.base-perm-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // 更新描述
+            basePermissionDescription.textContent = permissionDescriptions[newBasePermission] || "";
+            
+            // 更新配置组
+            updateConfigGroups(newBasePermission);
+            
+            const activeRoleItem = document.querySelector('.role-item.active');
+            if (activeRoleItem) {
+                const roleKey = activeRoleItem.dataset.roleKey;
+                const isSystem = roleData[roleKey].isSystem;
+                const isLocked = roleData[roleKey].isLocked;
+                
+                // 更新功能权限区的可见性
+                updateFunctionalPermissionVisibility(newBasePermission, isSystem, isLocked);
+
+                // (模拟保存) 更新 roleData
+                roleData[roleKey].basePermission = newBasePermission;
+            }
+        });
+        
+        // (新函数) 根据角色类型和基础级别，控制功能权限区的显/隐和锁定
+        function updateFunctionalPermissionVisibility(basePermission, isSystem, isLocked) {
+            let showAdmin = false;
+            let showFunc = false;
+
+            if (isSystem) {
+                // 是系统模板
+                if (basePermission === 'manage') {
+                    showAdmin = true;
+                    showFunc = true;
+                }
+                // 'edit', 'view', 'comment', 'none' 均不显示
+            } else {
+                // 是自定义角色 (自由勾选)
+                if (basePermission !== 'none') {
+                    showAdmin = true;
+                    showFunc = true;
+                }
+            }
+            
+            adminPermissions.style.display = showAdmin ? 'block' : 'none';
+            functionalPermissions.style.display = showFunc ? 'block' : 'none';
+
+            // 锁定"管理权限" (只有"所有者"才锁定)
+            adminPermissions.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.disabled = isLocked;
+            });
+            
+            // 锁定"功能权限" (只有"所有者"才锁定)
+            functionalPermissions.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.disabled = isLocked;
+            });
+        }
+
+        // 动态显示/隐藏精细化配置组
+        function updateConfigGroups(basePermission) {
+            document.querySelectorAll('.config-group').forEach(group => {
+                group.style.display = 'none';
+            });
+            const activeGroup = document.getElementById(`config-${basePermission}`);
+            if (activeGroup) {
+                activeGroup.style.display = 'block';
+            }
+        }
+
+        // --------------------------------------------------
+        // 5. 右侧 "角色成员" Tab 逻辑
+        // --------------------------------------------------
+        function updateMembersUI(data) {
+            // 锁定逻辑
+            if (data.isLocked) {
+                membersLockedOverlay.style.display = 'flex';
+                addMemberBtn.disabled = true;
+            } else {
+                membersLockedOverlay.style.display = 'none';
+                addMemberBtn.disabled = false;
+            }
+        } // <-- 修复 2: 补上缺失的 '}'
+
+        // 添加成员 (模拟)
+        addMemberBtn.addEventListener('click', () => {
+            const newMemberId = Date.now();
+            const newMemberHTML = `
+                <div class="member-item flex items-center justify-between p-3 bg-white border rounded-lg animate-pulse" id="member-${newMemberId}">
+                    <div class="flex items-center">
+                        <img src="https://placehold.co/40x40/skyblue/555?text=New" alt="avatar" class="w-10 h-10 rounded-full mr-3">
+                        <div>
+                            <div class="font-semibold">新成员</div>
+                            <div class="text-sm text-gray-500">new.member@company.com</div>
+                        </div>
+                    </div>
+                    <button class="remove-member-btn text-gray-400 hover:text-red-500 text-sm">移除</button>
+                </div>
+            `;
+            memberList.insertAdjacentHTML('beforeend', newMemberHTML);
+            // 移除动画
+            setTimeout(() => {
+                document.getElementById(`member-${newMemberId}`).classList.remove('animate-pulse');
+            }, 500);
+        });
+
+        // 移除成员 (事件委托)
+        memberList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-member-btn')) {
+                e.target.closest('.member-item').remove();
+            }
+        });
+
+
+        // --------------------------------------------------
+        // 6. 新建自定义角色
+        // --------------------------------------------------
+        // 修复 3: 移除了重复的 "6. 新建自定义角色" 标题，并完成了函数
+        addCustomRoleBtn.addEventListener('click', () => {
+            const newRoleKey = `custom_${Date.now()}`;
+            const newRoleTitle = "未命名角色";
+            
+            // 1. 更新数据库 (模拟)
+            roleData[newRoleKey] = {
+                title: newRoleTitle,
+                description: "新创建的自定义角色。",
+                basePermission: "none", // 默认无权限
+                isSystem: false,
+                isLocked: false
+            };
+            
+            // 2. 创建新 DOM 元素
+            const newRoleHTML = `
+                <li class="role-item flex justify-between items-center p-3 rounded-lg cursor-pointer" data-role-key="${newRoleKey}">
+                    <span class="role-name">${newRoleTitle}</span>
+                </li>
+            `;
+            customRoleList.insertAdjacentHTML('beforeend', newRoleHTML);
+            
+            // 3. 自动点击新角色
+            const newRoleItem = customRoleList.querySelector(`[data-role-key="${newRoleKey}"]`);
+            newRoleItem.click();
+            
+            // 4. 自动聚焦并选中标题，让用户重命名
+            roleTitle.focus();
+            document.execCommand('selectAll', false, null);
+        });
+
+        // --------------------------------------------------
+        // 7. 标签页切换 (通用)
+        // --------------------------------------------------
+        // (修复 3: 移除了重复的 "7. 标签页切换" 标题)
+        const tabContainer = document.querySelector('.flex.border-b.px-6');
+        
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`.tab-item[data-tab="${tabId}"]`).classList.add('active');
+        }
+
+        tabContainer.addEventListener('click', (e) => {
+            const tabItem = e.target.closest('.tab-item');
+            if (tabItem) {
+                switchTab(tabItem.dataset.tab);
+            }
+        });
+
+        // --------------------------------------------------
+        // 初始加载
+        // --------------------------------------------------
+        // 默认点击第一个角色 (所有者)
+        document.querySelector('.role-item[data-role-key="owner"]').click();
+
+    </script>
+</body>
+</html>
+

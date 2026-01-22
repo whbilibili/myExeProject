@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>界面设计预览</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: transparent;
+            color: #333;
+            padding: 2rem;
+        }
+
+        .section {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1e293b;
+            text-align: center;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .ui-mockup {
+            background: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            margin: 3rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ui-mockup h3 {
+            margin-bottom: 2rem;
+            color: #4f46e5;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .mockup-frame {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            padding: 0;
+            border: 2px solid rgba(226, 232, 240, 0.5);
+            margin: 2rem auto;
+            max-width: 900px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+            transition: all 0.4s ease;
+            overflow: hidden;
+        }
+
+        .mockup-frame:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 70px rgba(0,0,0,0.2);
+        }
+
+        .mockup-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 1.5rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mockup-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .mockup-content {
+            padding: 2rem;
+            text-align: left;
+        }
+
+        .progress-bar {
+            background: rgba(226, 232, 240, 0.5);
+            border-radius: 50px;
+            height: 12px;
+            margin: 0.75rem 0;
+            overflow: hidden;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-item {
+            background: rgba(241, 245, 249, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--status-color);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .feature-item:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .feature-item.enabled {
+            --status-color: #10b981;
+            background: linear-gradient(135deg, rgba(220, 252, 231, 0.8), rgba(255, 255, 255, 0.9));
+            color: #15803d;
+        }
+
+        .feature-item.disabled {
+            --status-color: #ef4444;
+            background: linear-gradient(135deg, rgba(254, 226, 226, 0.8), rgba(255, 255, 255, 0.9));
+            color: #dc2626;
+        }
+
+        .feature-item h5 {
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .feature-item button {
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .feature-item.enabled button {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+        }
+
+        .feature-item.disabled button {
+            background: #9ca3af;
+            color: white;
+        }
+
+        .member-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .member-card {
+            background: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin: 0.75rem 0;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .member-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .member-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .member-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .role-badge {
+            padding: 0.3rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .role-badge.owner { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .role-badge.editor { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .role-badge.viewer { background: linear-gradient(135deg, #10b981, #059669); }
+
+        .member-status {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid rgba(226, 232, 240, 0.5);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .subscription-info {
+            background: linear-gradient(135deg, rgba(240, 249, 255, 0.8), rgba(255, 255, 255, 0.9));
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .subscription-info h5 {
+            color: #0369a1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subscription-info p {
+            font-size: 0.9rem;
+            color: #0c4a6e;
+        }
+
+        .usage-stats {
+            margin: 1.5rem 0;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.75rem 0;
+        }
+
+        .stat-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-value {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h2><i class="fas fa-palette"></i> 管理界面设计预览</h2>
+        
+        <div class="ui-mockup">
+            <h3><i class="fas fa-globe"></i> 平台管理后台（运营方）</h3>
+            
+            <div class="mockup-frame">
+                <div class="mockup-header">
+                    <i class="fas fa-th-large"></i> 订阅计划管理
+                </div>
+                <div class="mockup-content">
+                    <div class="feature-grid">
+                        <div class="feature-item enabled">
+                            <h5><i class="fas fa-medal"></i> 基础版</h5>
+                            <p>10个智能体 • 基础节点 • 5GB存储</p>
+                            <button><i class="fas fa-edit"></i> 编辑计划</button>
+                        </div>
+                        <div class="feature-item enabled">
+                            <h5><i class="fas fa-trophy"></i> 专业版</h5>
+                            <p>100个智能体 • AI功能 • 50GB存储</p>
+                            <button><i class="fas fa-edit"></i> 编辑计划</button>
+                        </div>
+                        <div class="feature-item enabled">
+                            <h5><i class="fas fa-crown"></i> 企业版</h5>
+                            <p>无限智能体 • 企业功能 • 200GB存储</p>
+                            <button><i class="fas fa-edit"></i> 编辑计划</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ui-mockup">
+            <h3><i class="fas fa-building"></i> 租户管理后台</h3>
+            
+            <div class="mockup-frame">
+                <div class="mockup-header">
+                    <i class="fas fa-chart-bar"></i> 订阅与使用情况
+                </div>
+                <div class="mockup-content">
+                    <div class="subscription-info">
+                        <h5><i class="fas fa-star"></i> 当前订阅：专业版</h5>
+                        <p>¥299/月 | 下次续费：2024-08-15</p>
+                    </div>
+                    
+                    <h4 style="margin-bottom: 1.5rem; color: #1e293b;">资源使用概览</h4>
+                    <div class="usage-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">
+                                <i class="fas fa-robot" style="color: #3b82f6;"></i> 智能体数量
+                            </span>
+                            <span class="stat-value">75 / 100</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%;"></div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <span class="stat-label">
+                                <i class="fas fa-hdd" style="color: #f59e0b;"></i> 存储空间
+                            </span>
+                            <span class="stat-value">32 GB / 50 GB</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 64%; background: linear-gradient(135deg, #f59e0b, #d97706);"></div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <span class="stat-label">
+                                <i class="fas fa-code" style="color: #ef4444;"></i> API调用 (本月)
+                            </span>
+                            <span class="stat-value">2.5M / 10M</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 25%; background: linear-gradient(135deg, #ef4444, #dc2626);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mockup-frame">
+                <div class="mockup-header">
+                    <i class="fas fa-tools"></i> 功能权限分配
+                </div>
+                <div class="mockup-content">
+                    <div class="feature-grid">
+                        <div class="feature-item enabled">
+                            <h5><i class="fas fa-brain"></i> AI工作流节点</h5>
+                            <p>已分配: 7/10 席位</p>
+                            <button><i class="fas fa-cog"></i> 管理分配</button>
+                        </div>
+                        <div class="feature-item enabled">
+                            <h5><i class="fas fa-chart-line"></i> 高级数据分析</h5>
+                            <p>全员可用</p>
+                            <button><i class="fas fa-cog"></i> 管理分配</button>
+                        </div>
+                        <div class="feature-item disabled">
+                            <h5><i class="fas fa-plug"></i> 企业级插件开发</h5>
+                            <p>当前计划不支持</p>
+                            <button><i class="fas fa-arrow-up"></i> 升级解锁</button>
+                        </div>
+                        <div class="feature-item disabled">
+                            <h5><i class="fas fa-shield-alt"></i> SSO单点登录</h5>
+                            <p>当前计划不支持</p>
+                            <button><i class="fas fa-arrow-up"></i> 升级解锁</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ui-mockup">
+            <h3><i class="fas fa-folder-open"></i> 空间协作管理界面</h3>
+            
+            <div class="mockup-frame">
+                <div class="mockup-header">
+                    <i class="fas fa-users"></i> "客服升级项目" 成员管理
+                </div>
+                <div class="mockup-content">
+                    <div class="member-list">
+                        <div>
+                            <h5 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-user-friends"></i> 成员列表
+                            </h5>
+                            <div class="member-card">
+                                <div class="member-header">
+                                    <span class="member-name">
+                                        <i class="fas fa-crown" style="color: #dc2626;"></i>
+                                        王项目经理
+                                    </span>
+                                    <span class="role-badge owner">所有者</span>
+                                </div>
+                                <div class="member-status">
+                                    <i class="fas fa-brain" style="color: #10b981;"></i> AI功能已启用
+                                </div>
+                            </div>
+                            <div class="member-card">
+                                <div class="member-header">
+                                    <span class="member-name">
+                                        <i class="fas fa-user-edit" style="color: #3b82f6;"></i>
+                                        张工程师
+                                    </span>
+                                    <span class="role-badge editor">可编辑</span>
+                                </div>
+                                <div class="member-status">
+                                    <i class="fas fa-brain" style="color: #10b981;"></i> AI功能已启用
+                                </div>
+                            </div>
+                            <div class="member-card">
+                                <div class="member-header">
+                                    <span class="member-name">
+                                        <i class="fas fa-eye" style="color: #10b981;"></i>
+                                        李市场专员
+                                    </span>
+                                    <span class="role-badge viewer">查看与使用</span>
+                                </div>
+                                <div class="member-status">
+                                    <i class="fas fa-times" style="color: #ef4444;"></i> AI功能未启用
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-user-plus"></i> 添加协作者
+                            </h5>
+                            <div class="form-controls">
+                                <input type="text" class="form-input" placeholder="🔍 搜索用户名或邮箱...">
+                                <select class="form-input">
+                                    <option value="">请选择角色</option>
+                                    <option value="admin">管理员</option>
+                                    <option value="editor">可编辑</option>
+                                    <option value="viewer">查看与使用</option>
+                                </select>
+                                <button style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; padding: 0.75rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                                    <i class="fas fa-plus"></i> 添加成员
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

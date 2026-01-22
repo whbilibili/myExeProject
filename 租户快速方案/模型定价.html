@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型定价管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* 自定义多选下拉框样式 */
+        .custom-multiselect {
+            position: relative;
+        }
+        .multiselect-options {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+        }
+        .multiselect-options.show {
+            display: block;
+        }
+        .multiselect-tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            padding: 2px 8px;
+            margin-right: 4px;
+            margin-bottom: 4px;
+            font-size: 0.875rem;
+        }
+        .multiselect-tag button {
+            margin-left: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- 页面标题和提示 -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">模型定价管理</h1>
+            <p class="mt-2 text-gray-500">在这里集中配置、审查和调整所有大模型的商业定价策略。</p>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <!-- 搜索和筛选 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div>
+                    <label for="search-name" class="block text-sm font-medium text-gray-700">模型名称</label>
+                    <input type="text" id="search-name" placeholder="输入模型名称搜索" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
+                <!-- 模型厂商多选 -->
+                <div class="custom-multiselect">
+                    <label class="block text-sm font-medium text-gray-700">模型厂商</label>
+                    <div id="vendor-multiselect" class="mt-1 relative flex flex-wrap items-center w-full rounded-md border border-gray-300 shadow-sm bg-white p-2 min-h-[38px] cursor-pointer">
+                        <span class="text-gray-400">选择厂商</span>
+                    </div>
+                    <div id="vendor-options" class="multiselect-options mt-1">
+                        <!-- 选项将通过JS动态添加 -->
+                    </div>
+                </div>
+                <!-- 定级多选 -->
+                <div class="custom-multiselect">
+                    <label class="block text-sm font-medium text-gray-700">定级</label>
+                    <div id="tier-multiselect" class="mt-1 relative flex flex-wrap items-center w-full rounded-md border border-gray-300 shadow-sm bg-white p-2 min-h-[38px] cursor-pointer">
+                        <span class="text-gray-400">选择定级</span>
+                    </div>
+                    <div id="tier-options" class="multiselect-options mt-1">
+                       <!-- 选项将通过JS动态添加 -->
+                    </div>
+                </div>
+                <div class="flex items-end">
+                    <button id="reset-filters" class="w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        重置
+                    </button>
+                </div>
+            </div>
+
+            <!-- 批量操作按钮 -->
+            <div id="bulk-actions" class="mb-4 hidden">
+                <button id="bulk-edit-btn" class="rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    批量编辑 (<span id="selected-count">0</span>)
+                </button>
+            </div>
+
+            <!-- 模型列表 -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="p-4">
+                                <input type="checkbox" id="select-all" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">模型厂商</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">模型名称</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">输入 (每1k tokens)价格 (点)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">输出 (每1k tokens)价格 (点)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">定级</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">模型描述</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="model-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- 数据行将通过JS动态插入 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <nav id="pagination" class="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6 mt-4" aria-label="Pagination">
+                <!-- 分页信息和按钮将通过JS动态插入 -->
+            </nav>
+        </div>
+    </div>
+
+    <!-- 编辑模型弹窗 -->
+    <div id="edit-modal" class="fixed inset-0 z-10 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+            <div class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 w-full text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">编辑模型定价</h3>
+                            <div class="mt-4 space-y-4">
+                                <input type="hidden" id="edit-model-id">
+                                <div>
+                                    <label for="edit-input-price" class="block text-sm font-medium text-gray-700">输入 (每1k tokens)价格 (点)</label>
+                                    <input type="number" step="1" id="edit-input-price" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="edit-output-price" class="block text-sm font-medium text-gray-700">输出 (每1k tokens)价格 (点)</label>
+                                    <input type="number" step="1" id="edit-output-price" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="edit-tier" class="block text-sm font-medium text-gray-700">定级</label>
+                                    <select id="edit-tier" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                        <!-- 定级选项 -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <button type="button" id="save-edit-btn" class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm">保存</button>
+                    <button type="button" id="cancel-edit-btn" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 批量编辑模型弹窗 -->
+    <div id="bulk-edit-modal" class="fixed inset-0 z-10 hidden overflow-y-auto" aria-labelledby="bulk-modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:h-screen sm:align-middle" aria-hidden="true">&#8203;</span>
+            <div class="inline-block transform overflow-hidden rounded-lg bg-white text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:align-middle">
+                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900" id="bulk-modal-title">批量编辑模型</h3>
+                    <p class="text-sm text-gray-500 mt-1">将对所选模型应用更改。留空字段则不作修改。</p>
+                    <div class="mt-4 space-y-4">
+                        <div>
+                            <label for="bulk-edit-input-price" class="block text-sm font-medium text-gray-700">输入 (每1k tokens)价格 (点)</label>
+                            <input type="number" step="1" id="bulk-edit-input-price" placeholder="留空以保持不变" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="bulk-edit-output-price" class="block text-sm font-medium text-gray-700">输出 (每1k tokens)价格 (点)</label>
+                            <input type="number" step="1" id="bulk-edit-output-price" placeholder="留空以保持不变" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="bulk-edit-tier" class="block text-sm font-medium text-gray-700">定级</label>
+                            <select id="bulk-edit-tier" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option value="">选择一个新的定级</option>
+                                <!-- 定级选项 -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <button type="button" id="save-bulk-edit-btn" class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm">应用更改</button>
+                    <button type="button" id="cancel-bulk-edit-btn" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- 模拟数据 ---
+            const mockData = [
+                { id: 1, vendor: 'OpenAI', name: 'GPT-4 Turbo', inputPrice: 100, outputPrice: 300, tier: '旗舰', description: '最强大的视觉模型，具备广泛的通用知识和领域专业知识。' },
+                { id: 2, vendor: 'Anthropic', name: 'Claude 3 Opus', inputPrice: 150, outputPrice: 750, tier: '旗舰', description: '在高度复杂的任务上表现出最高水平的性能。' },
+                { id: 3, vendor: 'Google', name: 'Gemini 1.5 Pro', inputPrice: 25, outputPrice: 75, tier: '高级', description: '适用于各种任务的平衡模型，具有百万级上下文窗口。' },
+                { id: 4, vendor: 'OpenAI', name: 'GPT-3.5 Turbo', inputPrice: 5, outputPrice: 15, tier: '标准', description: '为速度和成本优化的快速模型。' },
+                { id: 5, vendor: 'Meta', name: 'Llama 3 70B', inputPrice: 26, outputPrice: 34, tier: '高级', description: '强大的开源模型，适用于对话和内容生成。' },
+                { id: 6, vendor: 'Mistral AI', name: 'Mistral Large', inputPrice: 80, outputPrice: 240, tier: '高级', description: '顶级的推理能力，支持多语言。' },
+                { id: 7, vendor: 'Anthropic', name: 'Claude 3 Sonnet', inputPrice: 30, outputPrice: 150, tier: '标准', description: '在智能和速度之间取得理想的平衡。' },
+                { id: 8, vendor: 'Google', name: 'Gemini 1.0 Pro', inputPrice: 3, outputPrice: 5, tier: '标准', description: '经济实惠，适用于扩展性强的多模态任务。' },
+                { id: 9, vendor: '零一万物', name: 'Yi-Large', inputPrice: 20, outputPrice: 20, tier: '标准', description: '国产大模型，支持长文本处理。' },
+                { id: 10, vendor: '智谱AI', name: 'GLM-4', inputPrice: 100, outputPrice: 100, tier: '高级', description: '新一代基座大模型，性能全面提升。' },
+                { id: 11, vendor: '阿里通义', name: 'Qwen-Max', inputPrice: 50, outputPrice: 50, tier: '高级', description: '通义千问系列中的最强模型。' },
+                { id: 12, vendor: '百川智能', name: 'Baichuan 4', inputPrice: 80, outputPrice: 80, tier: '高级', description: '支持搜索增强和复杂指令遵循。' }
+            ];
+
+            let models = [...mockData];
+            let currentPage = 1;
+            const itemsPerPage = 5;
+            let selectedModelIds = new Set();
+
+            const allVendors = [...new Set(models.map(m => m.vendor))];
+            const allTiers = ['旗舰', '高级', '标准'];
+
+            // --- 状态管理 ---
+            const filters = {
+                name: '',
+                vendors: [],
+                tiers: []
+            };
+
+            // --- DOM 元素获取 ---
+            const tableBody = document.getElementById('model-table-body');
+            const paginationContainer = document.getElementById('pagination');
+            const searchNameInput = document.getElementById('search-name');
+            const resetFiltersBtn = document.getElementById('reset-filters');
+            
+            const editModal = document.getElementById('edit-modal');
+            const bulkEditModal = document.getElementById('bulk-edit-modal');
+            
+            const selectAllCheckbox = document.getElementById('select-all');
+            const bulkActionsDiv = document.getElementById('bulk-actions');
+            const bulkEditBtn = document.getElementById('bulk-edit-btn');
+            const selectedCountSpan = document.getElementById('selected-count');
+
+            // --- 渲染函数 ---
+            function renderTable() {
+                const filteredModels = models.filter(model => {
+                    const nameMatch = model.name.toLowerCase().includes(filters.name.toLowerCase());
+                    const vendorMatch = filters.vendors.length === 0 || filters.vendors.includes(model.vendor);
+                    const tierMatch = filters.tiers.length === 0 || filters.tiers.includes(model.tier);
+                    return nameMatch && vendorMatch && tierMatch;
+                });
+
+                const paginatedModels = filteredModels.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+                
+                tableBody.innerHTML = '';
+                if (paginatedModels.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-500 py-4">无匹配数据</td></tr>`;
+                } else {
+                    paginatedModels.forEach(model => {
+                        const row = `
+                            <tr id="model-row-${model.id}">
+                                <td class="p-4"><input type="checkbox" data-id="${model.id}" class="row-checkbox h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${model.vendor}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${model.name}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${model.inputPrice} 点</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${model.outputPrice} 点</td>
+                                <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getTierBadgeClass(model.tier)}">${model.tier}</span></td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-gray-500 max-w-xs truncate" title="${model.description}">${model.description}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button class="edit-btn text-indigo-600 hover:text-indigo-900" data-id="${model.id}">编辑</button>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.insertAdjacentHTML('beforeend', row);
+                    });
+                }
+                
+                updateRowCheckboxes();
+                renderPagination(filteredModels.length);
+                updateBulkActionsVisibility();
+            }
+
+            function getTierBadgeClass(tier) {
+                switch (tier) {
+                    case '旗舰': return 'bg-red-100 text-red-800';
+                    case '高级': return 'bg-yellow-100 text-yellow-800';
+                    case '标准': return 'bg-green-100 text-green-800';
+                    default: return 'bg-gray-100 text-gray-800';
+                }
+            }
+
+            function renderPagination(totalItems) {
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                paginationContainer.innerHTML = '';
+                if (totalPages <= 1) return;
+
+                let paginationHTML = `
+                    <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                显示第
+                                <span class="font-medium">${(currentPage - 1) * itemsPerPage + 1}</span>
+                                到
+                                <span class="font-medium">${Math.min(currentPage * itemsPerPage, totalItems)}</span>
+                                条, 共
+                                <span class="font-medium">${totalItems}</span>
+                                条
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                                <button data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''} class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    &lt;
+                                </button>`;
+                
+                for (let i = 1; i <= totalPages; i++) {
+                     paginationHTML += `<button data-page="${i}" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold ${currentPage === i ? 'bg-indigo-600 text-white focus-visible:outline-indigo-600' : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50'} focus:z-20 focus:outline-offset-0">${i}</button>`;
+                }
+                                
+                paginationHTML += `
+                                <button data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''} class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    &gt;
+                                </button>
+                            </nav>
+                        </div>
+                    </div>`;
+                paginationContainer.innerHTML = paginationHTML;
+            }
+            
+            // --- 多选下拉框 ---
+            function setupMultiselect(containerId, optionsId, optionsArray, filterKey) {
+                const container = document.getElementById(containerId);
+                const optionsContainer = document.getElementById(optionsId);
+
+                optionsArray.forEach(option => {
+                    optionsContainer.innerHTML += `
+                        <label class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                            <input type="checkbox" value="${option}" class="mr-2">${option}
+                        </label>`;
+                });
+                
+                container.addEventListener('click', (e) => {
+                    if (e.target.closest('.multiselect-tag button')) return;
+                    optionsContainer.classList.toggle('show');
+                });
+
+                optionsContainer.addEventListener('change', (e) => {
+                    if (e.target.type === 'checkbox') {
+                        filters[filterKey] = Array.from(optionsContainer.querySelectorAll('input:checked')).map(el => el.value);
+                        updateMultiselectTags(container, optionsContainer, filterKey);
+                        currentPage = 1;
+                        renderTable();
+                    }
+                });
+            }
+
+            function updateMultiselectTags(container, optionsContainer, filterKey) {
+                 const selectedValues = filters[filterKey];
+                 const placeholder = container.querySelector('span');
+                 container.querySelectorAll('.multiselect-tag').forEach(tag => tag.remove());
+                 
+                 if (selectedValues.length > 0) {
+                    placeholder.style.display = 'none';
+                    selectedValues.forEach(value => {
+                        const tag = document.createElement('div');
+                        tag.className = 'multiselect-tag';
+                        tag.innerHTML = `${value} <button data-value="${value}">&times;</button>`;
+                        container.prepend(tag);
+                        
+                        tag.querySelector('button').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            filters[filterKey] = filters[filterKey].filter(v => v !== value);
+                            optionsContainer.querySelector(`input[value="${value}"]`).checked = false;
+                            updateMultiselectTags(container, optionsContainer, filterKey);
+                            currentPage = 1;
+                            renderTable();
+                        });
+                    });
+                 } else {
+                    placeholder.style.display = 'inline';
+                 }
+            }
+            
+            document.addEventListener('click', function(e) {
+                document.querySelectorAll('.custom-multiselect').forEach(ms => {
+                    if (!ms.contains(e.target)) {
+                        ms.querySelector('.multiselect-options').classList.remove('show');
+                    }
+                });
+            });
+
+            // --- 事件监听 ---
+            searchNameInput.addEventListener('input', () => {
+                filters.name = searchNameInput.value;
+                currentPage = 1;
+                renderTable();
+            });
+            
+            resetFiltersBtn.addEventListener('click', () => {
+                filters.name = '';
+                filters.vendors = [];
+                filters.tiers = [];
+                searchNameInput.value = '';
+                
+                document.querySelectorAll('.multiselect-options input').forEach(c => c.checked = false);
+                updateMultiselectTags(document.getElementById('vendor-multiselect'), document.getElementById('vendor-options'), 'vendors');
+                updateMultiselectTags(document.getElementById('tier-multiselect'), document.getElementById('tier-options'), 'tiers');
+
+                currentPage = 1;
+                renderTable();
+            });
+
+            paginationContainer.addEventListener('click', (e) => {
+                if (e.target.closest('button')) {
+                    const page = parseInt(e.target.closest('button').dataset.page);
+                    if (page) {
+                        currentPage = page;
+                        renderTable();
+                    }
+                }
+            });
+
+            // --- 弹窗逻辑 ---
+            function openModal(modal) {
+                modal.classList.remove('hidden');
+            }
+
+            function closeModal(modal) {
+                modal.classList.add('hidden');
+            }
+
+            // 单个编辑
+            tableBody.addEventListener('click', e => {
+                if (e.target.classList.contains('edit-btn')) {
+                    const modelId = parseInt(e.target.dataset.id);
+                    const model = models.find(m => m.id === modelId);
+                    
+                    document.getElementById('edit-model-id').value = model.id;
+                    document.getElementById('edit-input-price').value = model.inputPrice;
+                    document.getElementById('edit-output-price').value = model.outputPrice;
+                    
+                    const tierSelect = document.getElementById('edit-tier');
+                    tierSelect.innerHTML = allTiers.map(t => `<option value="${t}" ${model.tier === t ? 'selected' : ''}>${t}</option>`).join('');
+                    
+                    openModal(editModal);
+                }
+            });
+
+            document.getElementById('save-edit-btn').addEventListener('click', () => {
+                const modelId = parseInt(document.getElementById('edit-model-id').value);
+                const model = models.find(m => m.id === modelId);
+                
+                model.inputPrice = parseInt(document.getElementById('edit-input-price').value, 10);
+                model.outputPrice = parseInt(document.getElementById('edit-output-price').value, 10);
+                model.tier = document.getElementById('edit-tier').value;
+
+                closeModal(editModal);
+                renderTable();
+            });
+            
+            document.getElementById('cancel-edit-btn').addEventListener('click', () => closeModal(editModal));
+            
+            // 批量编辑
+            bulkEditBtn.addEventListener('click', () => {
+                 const tierSelect = document.getElementById('bulk-edit-tier');
+                 tierSelect.innerHTML = `<option value="">选择一个新的定级</option>` + allTiers.map(t => `<option value="${t}">${t}</option>`).join('');
+                 document.getElementById('bulk-edit-input-price').value = '';
+                 document.getElementById('bulk-edit-output-price').value = '';
+                 openModal(bulkEditModal);
+            });
+
+            document.getElementById('save-bulk-edit-btn').addEventListener('click', () => {
+                const newTier = document.getElementById('bulk-edit-tier').value;
+                const newInPrice = document.getElementById('bulk-edit-input-price').value;
+                const newOutPrice = document.getElementById('bulk-edit-output-price').value;
+
+                selectedModelIds.forEach(id => {
+                    const model = models.find(m => m.id === id);
+                    if(newTier) model.tier = newTier;
+                    if(newInPrice !== '') model.inputPrice = parseInt(newInPrice, 10);
+                    if(newOutPrice !== '') model.outputPrice = parseInt(newOutPrice, 10);
+                });
+                
+                closeModal(bulkEditModal);
+                clearSelections();
+                renderTable();
+            });
+
+            document.getElementById('cancel-bulk-edit-btn').addEventListener('click', () => closeModal(bulkEditModal));
+
+
+            // --- 选择逻辑 ---
+            selectAllCheckbox.addEventListener('change', () => {
+                const rowCheckboxes = tableBody.querySelectorAll('.row-checkbox');
+                rowCheckboxes.forEach(checkbox => {
+                    const id = parseInt(checkbox.dataset.id);
+                    checkbox.checked = selectAllCheckbox.checked;
+                    if (selectAllCheckbox.checked) {
+                        selectedModelIds.add(id);
+                    } else {
+                        selectedModelIds.delete(id);
+                    }
+                });
+                updateBulkActionsVisibility();
+            });
+
+            tableBody.addEventListener('change', e => {
+                if (e.target.classList.contains('row-checkbox')) {
+                    const id = parseInt(e.target.dataset.id);
+                    if (e.target.checked) {
+                        selectedModelIds.add(id);
+                    } else {
+                        selectedModelIds.delete(id);
+                    }
+                    updateBulkActionsVisibility();
+                }
+            });
+
+            function updateBulkActionsVisibility() {
+                const count = selectedModelIds.size;
+                selectedCountSpan.textContent = count;
+                if (count > 0) {
+                    bulkActionsDiv.classList.remove('hidden');
+                } else {
+                    bulkActionsDiv.classList.add('hidden');
+                }
+            }
+            
+            function updateRowCheckboxes() {
+                const rowCheckboxes = tableBody.querySelectorAll('.row-checkbox');
+                rowCheckboxes.forEach(checkbox => {
+                    const id = parseInt(checkbox.dataset.id);
+                    if (selectedModelIds.has(id)) {
+                        checkbox.checked = true;
+                    }
+                });
+
+                const allVisibleChecked = rowCheckboxes.length > 0 && Array.from(rowCheckboxes).every(c => c.checked);
+                selectAllCheckbox.checked = allVisibleChecked;
+            }
+
+            function clearSelections() {
+                selectedModelIds.clear();
+                selectAllCheckbox.checked = false;
+                updateBulkActionsVisibility();
+            }
+
+            // --- 初始化 ---
+            function initialize() {
+                setupMultiselect('vendor-multiselect', 'vendor-options', allVendors, 'vendors');
+                setupMultiselect('tier-multiselect', 'tier-options', allTiers, 'tiers');
+                renderTable();
+            }
+
+            initialize();
+        });
+    </script>
+
+</body>
+</html>
+

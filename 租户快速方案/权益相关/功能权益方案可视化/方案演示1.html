@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>租户化Bots平台统一权限与权益方案 - 产品架构报告</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 50px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .nav {
+            background: #f8fafc;
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a:hover, .nav a.active {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .section {
+            padding: 3rem 2rem;
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #1e293b;
+            text-align: center;
+        }
+
+        .four-pillars {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .pillar {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pillar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--color);
+        }
+
+        .pillar:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .pillar.feature { --color: #10b981; }
+        .pillar.data { --color: #3b82f6; }
+        .pillar.quota { --color: #f59e0b; }
+        .pillar.governance { --color: #ef4444; }
+
+        .pillar-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 1rem;
+            background: var(--color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .pillar h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .hierarchy-diagram {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .layer {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-left: 4px solid var(--layer-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .tenant-layer { --layer-color: #8b5cf6; }
+        .space-layer { --layer-color: #06b6d4; }
+
+        .layer-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--layer-color);
+            margin-bottom: 1rem;
+        }
+
+        .layer-items {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .layer-item {
+            background: #f1f5f9;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .roles-matrix {
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        .roles-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .roles-table th,
+        .roles-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .roles-table th {
+            background: #4f46e5;
+            color: white;
+            font-weight: 600;
+        }
+
+        .roles-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        .permission {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin: 0.1rem;
+        }
+
+        .permission.full { background: #dcfce7; color: #15803d; }
+        .permission.partial { background: #fef3c7; color: #d97706; }
+        .permission.none { background: #fee2e2; color: #dc2626; }
+
+        .flow-diagram {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .flow-step {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            position: relative;
+            border: 2px solid #e2e8f0;
+        }
+
+        .flow-step::after {
+            content: '↓';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            color: #64748b;
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .flow-step.success {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .flow-step.failure {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .user-story {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1rem 0;
+            border-left: 4px solid #6366f1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .user-story h4 {
+            color: #6366f1;
+            margin-bottom: 1rem;
+        }
+
+        .scenario {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .ui-mockup {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .mockup-frame {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 2px solid #e2e8f0;
+            margin: 1rem auto;
+            max-width: 800px;
+        }
+
+        .mockup-header {
+            background: #4f46e5;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+        }
+
+        .mockup-content {
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .feature-item {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .feature-item.enabled {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .feature-item.disabled {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 8px;
+            height: 8px;
+            margin: 0.5rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #10b981;
+            border-radius: 8px;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+            }
+            
+            .nav ul {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .four-pillars {
+                grid-template-columns: 1fr;
+            }
+            
+            .layer-items {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>租户化Bots平台</h1>
+            <p class="subtitle">统一权限与权益方案 - 产品架构报告</p>
+        </header>
+
+        <nav class="nav">
+            <ul>
+                <li><a href="#overview" class="nav-link active">整体架构</a></li>
+                <li><a href="#hierarchy" class="nav-link">权限层级</a></li>
+                <li><a href="#roles" class="nav-link">角色矩阵</a></li>
+                <li><a href="#flow" class="nav-link">校验流程</a></li>
+                <li><a href="#stories" class="nav-link">用户故事</a></li>
+                <li><a href="#ui" class="nav-link">界面设计</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <!-- 整体架构概览 -->
+            <section id="overview" class="section active">
+                <h2>🏗️ 核心设计：四权分立</h2>
+                <p style="text-align: center; font-size: 1.1rem; color: #64748b; margin-bottom: 2rem;">
+                    将传统的"权限"概念精确拆分为四个独立维度，每个维度职责清晰、互不干扰
+                </p>
+                
+                <div class="four-pillars">
+                    <div class="pillar feature">
+                        <div class="pillar-icon">🔧</div>
+                        <h3>功能权限</h3>
+                        <p><strong>回答：</strong>用户能使用什么高级工具？</p>
+                        <p><strong>管理者：</strong>租户管理员</p>
+                        <p><strong>示例：</strong>AI分析节点、企业级插件开发</p>
+                    </div>
+                    
+                    <div class="pillar data">
+                        <div class="pillar-icon">📊</div>
+                        <h3>数据权限</h3>
+                        <p><strong>回答：</strong>用户能对哪个资源做什么操作？</p>
+                        <p><strong>管理者：</strong>空间管理员</p>
+                        <p><strong>示例：</strong>编辑智能体、查看工作流</p>
+                    </div>
+                    
+                    <div class="pillar quota">
+                        <div class="pillar-icon">📈</div>
+                        <h3>资源配额</h3>
+                        <p><strong>回答：</strong>租户总共能创建多少资源？</p>
+                        <p><strong>管理者：</strong>租户管理员</p>
+                        <p><strong>示例：</strong>100个智能体、50GB存储</p>
+                    </div>
+                    
+                    <div class="pillar governance">
+                        <div class="pillar-icon">⚖️</div>
+                        <h3>治理权限</h3>
+                        <p><strong>回答：</strong>谁有资格创建空间？</p>
+                        <p><strong>管理者：</strong>租户管理员</p>
+                        <p><strong>示例：</strong>创建空间、管理组织架构</p>
+                    </div>
+                </div>
+                
+                <div style="background: #fef3c7; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+                    <h4 style="color: #d97706; margin-bottom: 1rem;">💡 核心优势</h4>
+                    <ul style="color: #92400e;">
+                        <li><strong>职责清晰：</strong>租户管理员专注商业化与治理，空间管理员专注协作与数据</li>
+                        <li><strong>权限精确：</strong>避免了传统权限系统的混乱和冲突</li>
+                        <li><strong>商业友好：</strong>支持灵活的订阅模式和功能分级售卖</li>
+                        <li><strong>用户体验：</strong>功能绑定用户身份，跨空间体验一致</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 权限层级图 -->
+            <section id="hierarchy" class="section">
+                <h2>🏢 权限层级架构</h2>
+                
+                <div class="hierarchy-diagram">
+                    <div class="layer tenant-layer">
+                        <div class="layer-title">🏢 租户层 (商业化与治理中心)</div>
+                        <div class="layer-items">
+                            <div class="layer-item">功能权限分配</div>
+                            <div class="layer-item">资源配额管理</div>
+                            <div class="layer-item">治理策略配置</div>
+                            <div class="layer-item">订阅计划管理</div>
+                        </div>
+                        <p style="margin-top: 1rem; color: #6b21a8; font-size: 0.9rem;">
+                            <strong>管理员：</strong>租户管理员 | <strong>职责：</strong>决定"谁能用什么高级功能"、"公司总共能用多少资源"
+                        </p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 1rem 0; font-size: 2rem; color: #64748b;">⬇️</div>
+                    
+                    <div class="layer space-layer">
+                        <div class="layer-title">📁 空间与资源层 (数据协作中心)</div>
+                        <div class="layer-items">
+                            <div class="layer-item">空间成员管理</div>
+                            <div class="layer-item">智能体协作权限</div>
+                            <div class="layer-item">工作流访问控制</div>
+                            <div class="layer-item">知识库权限分配</div>
+                        </div>
+                        <p style="margin-top: 1rem; color: #0891b2; font-size: 0.9rem;">
+                            <strong>管理员：</strong>空间所有者/管理员 | <strong>职责：</strong>决定"谁能访问哪个具体资源"、"能做什么操作"
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="background: #f0f9ff; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+                    <h4 style="color: #0369a1; margin-bottom: 1rem;">🔄 继承与协同机制</h4>
+                    <ul style="color: #0c4a6e;">
+                        <li><strong>上下分离：</strong>租户层决定"工具箱"，空间层决定"房间钥匙"</li>
+                        <li><strong>权限传递：</strong>空间所有者自动成为下级资源的管理员</li>
+                        <li><strong>双重校验：</strong>用户操作需同时通过功能权限和数据权限检查</li>
+                        <li><strong>冲突解决：</strong>多重权限时取最高级别，多重配额时取最严格限制</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 角色矩阵 -->
+            <section id="roles" class="section">
+                <h2>👥 角色权限矩阵</h2>
+                
+                <div class="roles-matrix">
+                    <table class="roles-table">
+                        <thead>
+                            <tr>
+                                <th>层级/角色</th>
+                                <th>所有者</th>
+                                <th>管理员</th>
+                                <th>可编辑</th>
+                                <th>可评论</th>
+                                <th>查看与使用</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>租户层面</strong></td>
+                                <td>
+                                    <span class="permission full">功能分配</span>
+                                    <span class="permission full">配额管理</span>
+                                    <span class="permission full">治理策略</span>
+                                </td>
+                                <td>
+                                    <span class="permission full">功能分配</span>
+                                    <span class="permission full">配额管理</span>
+                                    <span class="permission partial">基础治理</span>
+                                </td>
+                                <td>
+                                    <span class="permission none">无租户权限</span>
+                                </td>
+                                <td>
+                                    <span class="permission none">无租户权限</span>
+                                </td>
+                                <td>
+                                    <span class="permission none">无租户权限</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>空间层面</strong></td>
+                                <td>
+                                    <span class="permission full">空间删除</span>
+                                    <span class="permission full">成员管理</span>
+                                    <span class="permission full">创建资源</span>
+                                </td>
+                                <td>
+                                    <span class="permission partial">空间设置</span>
+                                    <span class="permission full">成员管理</span>
+                                    <span class="permission full">创建资源</span>
+                                </td>
+                                <td>
+                                    <span class="permission full">创建资源</span>
+                                    <span class="permission partial">基础编辑</span>
+                                </td>
+                                <td>
+                                    <span class="permission partial">查看使用</span>
+                                    <span class="permission partial">添加评论</span>
+                                </td>
+                                <td>
+                                    <span class="permission partial">仅查看使用</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>智能体层面</strong></td>
+                                <td>
+                                    <span class="permission full">删除智能体</span>
+                                    <span class="permission full">编排发布</span>
+                                    <span class="permission full">协作管理</span>
+                                </td>
+                                <td>
+                                    <span class="permission full">编排发布</span>
+                                    <span class="permission full">协作管理</span>
+                                </td>
+                                <td>
+                                    <span class="permission full">编排发布</span>
+                                </td>
+                                <td>
+                                    <span class="permission partial">访问使用</span>
+                                    <span class="permission partial">添加评论</span>
+                                </td>
+                                <td>
+                                    <span class="permission partial">仅访问使用</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="background: #ecfdf5; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+                    <h4 style="color: #15803d; margin-bottom: 1rem;">📋 权限说明</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div>
+                            <span class="permission full">完整权限</span>
+                            <p style="font-size: 0.9rem; color: #166534; margin-top: 0.5rem;">拥有该层级的全部操作权限</p>
+                        </div>
+                        <div>
+                            <span class="permission partial">部分权限</span>
+                            <p style="font-size: 0.9rem; color: #ca8a04; margin-top: 0.5rem;">拥有该层级的有限操作权限</p>
+                        </div>
+                        <div>
+                            <span class="permission none">无权限</span>
+                            <p style="font-size: 0.9rem; color: #dc2626; margin-top: 0.5rem;">不具备该层级的操作权限</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 校验流程 -->
+            <section id="flow" class="section">
+                <h2>🔍 权限校验决策流程</h2>
+                
+                <div class="flow-diagram">
+                    <h3 style="text-align: center; margin-bottom: 2rem; color: #4f46e5;">
+                        场景：用户尝试使用"AI分析节点"编排智能体
+                    </h3>
+                    
+                    <div class="flow-step">
+                        <h4>1️⃣ 数据权限校验</h4>
+                        <p><strong>检查：</strong>用户对该智能体是否具有"编排"权限</p>
+                        <p><strong>依据：</strong>用户在智能体上的角色（所有者/管理员/可编辑 = ✅，可评论/查看 = ❌）</p>
+                    </div>
+                    
+                    <div class="flow-step success">
+                        <h4>2️⃣ 功能权限校验</h4>
+                        <p><strong>检查：</strong>用户是否被租户管理员授予"高级工作流节点"功能</p>
+                        <p><strong>依据：</strong>租户功能分配列表中是否包含该用户</p>
+                    </div>
+                    
+                    <div class="flow-step success">
+                        <h4>3️⃣ 最终裁决</h4>
+                        <p><strong>结果：</strong>数据权限 ✅ AND 功能权限 ✅ = 操作允许</p>
+                        <p><strong>体验：</strong>用户可以看到并使用AI分析节点</p>
+                    </div>
+                </div>
+                
+                <div style="background: #fef2f2; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+                    <h4 style="color: #dc2626; margin-bottom: 1rem;">❌ 失败场景示例</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                        <div class="flow-step failure">
+                            <h5>场景A：数据权限不足</h5>
+                            <p>用户只是智能体的"查看者"</p>
+                            <p><strong>结果：</strong>无法进入编排界面</p>
+                        </div>
+                        <div class="flow-step failure">
+                            <h5>场景B：功能权限不足</h5>
+                            <p>用户是"可编辑"，但未被授予AI功能</p>
+                            <p><strong>结果：</strong>AI节点置灰不可用</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 用户故事 -->
+            <section id="stories" class="section">
+                <h2>📖 典型用户故事</h2>
+                
+                <div class="user-story">
+                    <h4>👨‍💼 角色：租户管理员（李总）</h4>
+                    <div class="scenario">
+                        <h5>📋 任务：为研发团队开通AI功能</h5>
+                        <p><strong>背景：</strong>公司刚购买了企业版订阅，包含10个AI助手席位</p>
+                        <p><strong>操作流程：</strong></p>
+                        <ol>
+                            <li>登录租户管理后台 → 功能权限分配</li>
+                            <li>选择"AI工作流节点"功能（显示：已分配 0/10 席位）</li>
+                            <li>点击"管理分配"，打开成员选择器</li>
+                            <li>从左侧"可选成员"中，搜索并选择研发团队的7名工程师</li>
+                            <li>点击"→"将他们移动到右侧"已分配成员"</li>
+                            <li>保存，系统显示：已分配 7/10 席位</li>
+                        </ol>
+                        <p><strong>结果：</strong>这7名工程师在任何他们有编辑权限的空间中，都能使用AI节点</p>
+                    </div>
+                </div>
+                
+                <div class="user-story">
+                    <h4>👩‍💻 角色：空间管理员（王项目经理）</h4>
+                    <div class="scenario">
+                        <h5>🤝 任务：为跨部门项目分配协作权限</h5>
+                        <p><strong>背景：</strong>"客服升级项目"空间需要邀请市场部同事协作</p>
+                        <p><strong>操作流程：</strong></p>
+                        <ol>
+                            <li>进入"客服升级项目"空间 → 成员管理</li>
+                            <li>点击"添加协作者"</li>
+                            <li>搜索并选择市场部的张三、李四</li>
+                            <li>为张三分配"可编辑"角色（需要他修改智能体话术）</li>
+                            <li>为李四分配"查看与使用"角色（只需要测试功能）</li>
+                            <li>保存设置</li>
+                        </ol>
+                        <p><strong>结果：</strong>张三可以编辑项目内的智能体，李四只能查看和测试。若张三被租户管理员授予了AI功能权限，他还能使用AI节点优化智能体</p>
+                    </div>
+                </div>
+                
+                <div class="user-story">
+                    <h4>👨‍🔬 角色：普通用户（张工程师）</h4>
+                    <div class="scenario">
+                        <h5>🔧 任务：使用AI功能优化工作流</h5>
+                        <p><strong>背景：</strong>张工程师被授予了AI功能，正在"数据分析项目"中创建工作流</p>
+                        <p><strong>操作流程：</strong></p>
+                        <ol>
+                            <li>进入工作流编排界面</li>
+                            <li>在节点面板中，看到"AI分析"分类（因为租户订阅了支持AI的计划 + 被分配了功能权限）</li>
+                            <li>拖拽"智能数据洞察"节点到画布</li>
+                            <li>配置节点参数，连接数据源</li>
+                            <li>测试运行，获得AI生成的分析报告</li>
+                        </ol>
+                        <p><strong>对比：</strong>如果张工程师没有AI功能权限，第2步时他看不到"AI分析"分类；如果租户订阅的是基础版，整个AI功能都不会出现</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- UI界面设计 -->
+            <section id="ui" class="section">
+                <h2>🎨 管理界面设计预览</h2>
+                
+                <div class="ui-mockup">
+                    <h3>平台管理后台（运营方）</h3>
+                    
+                    <div class="mockup-frame">
+                        <div class="mockup-header">
+                            🌐 订阅计划管理
+                        </div>
+                        <div class="mockup-content">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                <div style="border: 2px solid #f59e0b; border-radius: 8px; padding: 1rem;">
+                                    <h5 style="color: #92400e;">基础版 - ¥99/月</h5>
+                                    <ul style="font-size: 0.9rem; margin: 0.5rem 0;">
+                                        <li>✅ 10个智能体</li>
+                                        <li>✅ 基础工作流</li>
+                                        <li>❌ AI功能</li>
+                                        <li>✅ 5GB存储</li>
+                                    </ul>
+                                    <button style="background: #f59e0b; color: white; border: none; padding: 0.5rem; border-radius: 4px; width: 100%;">编辑计划</button>
+                                </div>
+                                <div style="border: 2px solid #3b82f6; border-radius: 8px; padding: 1rem;">
+                                    <h5 style="color: #1d4ed8;">专业版 - ¥299/月</h5>
+                                    <ul style="font-size: 0.9rem; margin: 0.5rem 0;">
+                                        <li>✅ 100个智能体</li>
+                                        <li>✅ 高级工作流</li>
+                                        <li>✅ AI分析功能</li>
+                                        <li>✅ 50GB存储</li>
+                                    </ul>
+                                    <button style="background: #3b82f6; color: white; border: none; padding: 0.5rem; border-radius: 4px; width: 100%;">编辑计划</button>
+                                </div>
+                                <div style="border: 2px solid #10b981; border-radius: 8px; padding: 1rem;">
+                                    <h5 style="color: #047857;">企业版 - ¥999/月</h5>
+                                    <ul style="font-size: 0.9rem; margin: 0.5rem 0;">
+                                        <li>✅ 无限智能体</li>
+                                        <li>✅ 企业级插件</li>
+                                        <li>✅ SSO登录</li>
+                                        <li>✅ 200GB存储</li>
+                                    </ul>
+                                    <button style="background: #10b981; color: white; border: none; padding: 0.5rem; border-radius: 4px; width: 100%;">编辑计划</button>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem; text-align: center;">
+                                <button style="background: #4f46e5; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600;">+ 创建新计划</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="ui-mockup">
+                    <h3>租户管理后台</h3>
+                    
+                    <div class="mockup-frame">
+                        <div class="mockup-header">
+                            📊 订阅与使用情况
+                        </div>
+                        <div class="mockup-content">
+                            <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <h5 style="color: #0369a1;">当前订阅：专业版</h5>
+                                <p style="font-size: 0.9rem; color: #0c4a6e;">¥299/月 | 下次续费：2024-08-15</p>
+                            </div>
+                            
+                            <h4>资源使用概览</h4>
+                            <div style="margin: 1rem 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.5rem 0;">
+                                    <span>智能体数量</span>
+                                    <span>75 / 100</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 75%;"></div>
+                                </div>
+                            </div>
+                            <div style="margin: 1rem 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.5rem 0;">
+                                    <span>存储空间</span>
+                                    <span>32 GB / 50 GB</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 64%;"></div>
+                                </div>
+                            </div>
+                            <div style="margin: 1rem 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.5rem 0;">
+                                    <span>API调用 (本月)</span>
+                                    <span>2.5M / 10M</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 25%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mockup-frame">
+                        <div class="mockup-header">
+                            🔧 功能权限分配
+                        </div>
+                        <div class="mockup-content">
+                            <div class="feature-grid">
+                                <div class="feature-item enabled">
+                                    <h5>AI工作流节点</h5>
+                                    <p>已分配: 7/10 席位</p>
+                                    <button style="background: #4f46e5; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">管理分配</button>
+                                </div>
+                                <div class="feature-item enabled">
+                                    <h5>高级数据分析</h5>
+                                    <p>全员可用</p>
+                                    <button style="background: #4f46e5; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">管理分配</button>
+                                </div>
+                                <div class="feature-item disabled">
+                                    <h5>企业级插件开发</h5>
+                                    <p>当前计划不支持</p>
+                                    <button style="background: #9ca3af; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px;">升级解锁</button>
+                                </div>
+                                <div class="feature-item disabled">
+                                    <h5>SSO单点登录</h5>
+                                    <p>当前计划不支持</p>
+                                    <button style="background: #9ca3af; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px;">升级解锁</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mockup-frame">
+                        <div class="mockup-header">
+                            ⚖️ 治理权限配置
+                        </div>
+                        <div class="mockup-content">
+                            <h5>空间创建权限</h5>
+                            <div style="margin: 1rem 0;">
+                                <label style="display: block; margin: 0.5rem 0;">
+                                    <input type="radio" name="workspace-policy" checked> 仅租户管理员可创建空间
+                                </label>
+                                <label style="display: block; margin: 0.5rem 0;">
+                                    <input type="radio" name="workspace-policy"> 指定用户可创建空间（当前授权：5人）
+                                </label>
+                                <label style="display: block; margin: 0.5rem 0;">
+                                    <input type="radio" name="workspace-policy"> 所有成员均可创建空间
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="ui-mockup">
+                    <h3>空间协作管理界面</h3>
+                    
+                    <div class="mockup-frame">
+                        <div class="mockup-header">
+                            👥 "客服升级项目" 成员管理
+                        </div>
+                        <div class="mockup-content">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                                <div>
+                                    <h5>👤 成员列表</h5>
+                                    <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                        <strong>王项目经理</strong> 
+                                        <span style="background: #dc2626; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">所有者</span>
+                                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">
+                                            🔧 AI功能已启用
+                                        </div>
+                                    </div>
+                                    <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                        <strong>张工程师</strong> 
+                                        <span style="background: #3b82f6; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">可编辑</span>
+                                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">
+                                            🔧 AI功能已启用
+                                        </div>
+                                    </div>
+                                    <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                        <strong>李市场专员</strong> 
+                                        <span style="background: #10b981; color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">查看与使用</span>
+                                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.25rem;">
+                                            ❌ AI功能未启用
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5>➕ 添加协作者</h5>
+                                    <input type="text" placeholder="搜索用户名或邮箱..." style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; margin: 0.5rem 0;">
+                                    <select style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; margin: 0.5rem 0;">
+                                        <option>选择角色...</option>
+                                        <option>管理员</option>
+                                        <option>可编辑</option>
+                                        <option>可评论</option>
+                                        <option>查看与使用</option>
+                                    </select>
+                                    <button style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">添加</button>
+                                    
+                                    <div style="background: #fef3c7; padding: 0.75rem; border-radius: 6px; margin-top: 1rem; font-size: 0.9rem;">
+                                        💡 <strong>提示：</strong>用户的AI功能权限由租户管理员统一分配，无法在空间层面单独开启或关闭。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: #f0f9ff; border-radius: 12px; padding: 1.5rem; margin: 2rem 0;">
+                    <h4 style="color: #0369a1; margin-bottom: 1rem;">🎯 界面设计原则</h4>
+                    <ul style="color: #0c4a6e;">
+                        <li><strong>三层分离：</strong>平台层专注计划配置，租户层专注功能和配额，空间层专注协作权限</li>
+                        <li><strong>订阅可见：</strong>租户管理员能清楚看到当前订阅包含的功能，以及哪些功能需要升级</li>
+                        <li><strong>席位管理：</strong>功能权限分配界面突出"席位"概念，帮助管理员合理分配有限资源</li>
+                        <li><strong>状态透明：</strong>在空间协作界面显示成员的功能权限状态，避免混淆</li>
+                        <li><strong>升级引导：</strong>对当前计划不支持的功能，提供清晰的升级路径</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // 导航功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.section');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 移除所有活跃状态
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    sections.forEach(s => s.classList.remove('active'));
+                    
+                    // 添加当前活跃状态
+                    this.classList.add('active');
+                    const targetId = this.getAttribute('href').substring(1);
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+
+            // 添加一些交互动画
+            const pillars = document.querySelectorAll('.pillar');
+            pillars.forEach(pillar => {
+                pillar.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                pillar.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+
+            // 模拟动态进度条
+            const progressBars = document.querySelectorAll('.progress-fill');
+            setTimeout(() => {
+                progressBars.forEach(bar => {
+                    const width = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 100);
+                });
+            }, 500);
+
+            // 为计划卡片添加交互效果
+            const planCards = document.querySelectorAll('[style*="border: 2px solid"]');
+            planCards.forEach(card => {
+                card.style.cursor = 'pointer';
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                    this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+                    this.style.transition = 'all 0.3s ease';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

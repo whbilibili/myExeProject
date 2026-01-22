@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能体成本与使用分析</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 飞书设计系统 -->
+  <link rel="stylesheet" href="./assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--spacing-6) var(--spacing-8);
+      background: #F7F8FA;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    }
+    
+    .page-header {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: var(--spacing-6) var(--spacing-7);
+      margin-bottom: var(--spacing-5);
+      box-shadow: 0 1px 2px 0 rgba(31, 35, 41, 0.05);
+      border: 1px solid rgba(31, 35, 41, 0.05);
+    }
+    
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1F2329;
+      margin: 0;
+      line-height: 28px;
+    }
+    
+    .filter-toolbar {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: var(--spacing-5) var(--spacing-6);
+      margin-bottom: var(--spacing-5);
+      box-shadow: 0 1px 2px 0 rgba(31, 35, 41, 0.05);
+      border: 1px solid rgba(31, 35, 41, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--spacing-4);
+    }
+    
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+    
+    .filter-label {
+      font-size: 14px;
+      color: #646A73;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    
+    /* 快捷导航锚点 */
+    .anchor-nav {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 12px 20px;
+      margin-bottom: var(--spacing-5);
+      box-shadow: 0 1px 2px 0 rgba(31, 35, 41, 0.05);
+      border: 1px solid rgba(31, 35, 41, 0.05);
+      position: sticky;
+      top: 16px;
+      z-index: 100;
+    }
+    
+    .anchor-nav-list {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .anchor-nav-item {
+      color: #646A73;
+      text-decoration: none;
+      font-size: 14px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 500;
+    }
+    
+    .anchor-nav-item:hover {
+      background: rgba(51, 112, 255, 0.08);
+      color: #3370FF;
+    }
+    
+    .anchor-nav-item:active {
+      transform: scale(0.98);
+    }
+    
+    /* KPI卡片网格 */
+    .kpi-grid-8 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: var(--spacing-5);
+    }
+    
+    .kpi-card {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(31, 35, 41, 0.05);
+      box-shadow: 0 1px 2px 0 rgba(31, 35, 41, 0.05);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #3370FF 0%, #5B8EFF 100%);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    
+    .kpi-card:hover {
+      border-color: rgba(51, 112, 255, 0.2);
+      box-shadow: 0 4px 12px 0 rgba(51, 112, 255, 0.12);
+      transform: translateY(-2px);
+    }
+    
+    .kpi-card:hover::before {
+      opacity: 1;
+    }
+    
+    .kpi-card:active {
+      transform: translateY(0);
+    }
+    
+    .kpi-label {
+      font-size: 13px;
+      color: #8F959E;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+    }
+    
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: #1F2329;
+      margin-bottom: 4px;
+      line-height: 1.3;
+      letter-spacing: -0.3px;
+    }
+    
+    /* KPI值特殊样式 */
+    .kpi-card:nth-child(1) .kpi-value,
+    .kpi-card:nth-child(2) .kpi-value {
+      color: #3370FF;
+    }
+    
+    .kpi-card:nth-child(3) .kpi-value,
+    .kpi-card:nth-child(4) .kpi-value {
+      color: #00B42A;
+    }
+    
+    .kpi-card:nth-child(5) .kpi-value,
+    .kpi-card:nth-child(6) .kpi-value {
+      color: #FF7D00;
+    }
+    
+    .kpi-card:nth-child(7) .kpi-value,
+    .kpi-card:nth-child(8) .kpi-value {
+      color: #F53F3F;
+    }
+    
+    .kpi-desc {
+      font-size: 12px;
+      color: #8F959E;
+      line-height: 1.4;
+      margin-top: 4px;
+    }
+    
+    /* 图表卡片 */
+    .chart-card {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 2px 0 rgba(31, 35, 41, 0.05);
+      border: 1px solid rgba(31, 35, 41, 0.05);
+      margin-bottom: 24px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .chart-card:hover {
+      box-shadow: 0 4px 12px 0 rgba(31, 35, 41, 0.08);
+    }
+    
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(31, 35, 41, 0.06);
+    }
+    
+    .chart-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1F2329;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .chart-title::before {
+      content: '';
+      width: 3px;
+      height: 16px;
+      background: #3370FF;
+      border-radius: 2px;
+    }
+    
+    .chart-container {
+      width: 100%;
+      height: 400px;
+    }
+    
+    .chart-container-large {
+      height: 420px;
+    }
+    
+    /* 明细表 */
+    .detail-table-wrapper {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 2px 0 rgba(31, 35, 41, 0.05);
+      border: 1px solid rgba(31, 35, 41, 0.05);
+      margin-bottom: var(--spacing-5);
+    }
+    
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1F2329;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      line-height: 28px;
+      position: relative;
+      padding-left: 14px;
+    }
+    
+    .section-title::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      width: 3px;
+      height: 20px;
+      background: #3370FF;
+      border-radius: 2px;
+    }
+    
+    /* 运营行动建议 */
+    .insights-section {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 2px 0 rgba(31, 35, 41, 0.05);
+      border: 1px solid rgba(31, 35, 41, 0.05);
+      margin-bottom: 24px;
+    }
+    
+    .insight-item {
+      margin-bottom: 16px;
+      padding: 20px;
+      background: #F7F8FA;
+      border-radius: 8px;
+      border-left: 3px solid #3370FF;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    
+    .insight-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .insight-item:hover {
+      background: #F2F3F5;
+      transform: translateX(4px);
+      box-shadow: 0 2px 8px rgba(51, 112, 255, 0.08);
+    }
+    
+    .insight-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1F2329;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .insight-title::before {
+      content: '💡';
+      font-size: 18px;
+      line-height: 1;
+    }
+    
+    .insight-content {
+      font-size: 14px;
+      color: #646A73;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    
+    .insight-action {
+      font-size: 13px;
+      color: #3370FF;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(51, 112, 255, 0.08);
+      border-radius: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .insight-action:hover {
+      background: rgba(51, 112, 255, 0.12);
+      color: #1F5ADB;
+    }
+    
+    .insight-action::before {
+      content: '→';
+      font-weight: bold;
+      font-size: 14px;
+    }
+    
+    .tooltip-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #E5E6EB;
+      color: #8F959E;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: help;
+      transition: all 0.2s;
+      margin-left: 4px;
+      font-style: normal;
+    }
+    
+    .tooltip-icon:hover {
+      background: #3370FF;
+      color: #FFFFFF;
+      transform: scale(1.1);
+    }
+    
+    /* 指标切换器 */
+    .metric-switcher {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    /* Element Plus 飞书风格覆盖 */
+    .el-tabs__nav-wrap::after {
+      background-color: rgba(31, 35, 41, 0.06);
+      height: 1px;
+    }
+    
+    .el-tabs__active-bar {
+      background-color: #3370FF;
+      height: 2px;
+      border-radius: 1px;
+    }
+    
+    .el-tabs__item {
+      font-size: 14px;
+      font-weight: 500;
+      color: #646A73;
+      padding: 0 20px;
+      height: 48px;
+      line-height: 48px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .el-tabs__item:hover {
+      color: #3370FF;
+    }
+    
+    .el-tabs__item.is-active {
+      color: #3370FF;
+      font-weight: 600;
+    }
+    
+    .el-button--text {
+      color: #3370FF;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .el-button--text:hover {
+      background-color: rgba(51, 112, 255, 0.08);
+      color: #1F5ADB;
+    }
+    
+    .el-button--text:active {
+      background-color: rgba(51, 112, 255, 0.12);
+    }
+    
+    .el-table {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid rgba(31, 35, 41, 0.06);
+    }
+    
+    .el-table th.el-table__cell {
+      background-color: #F7F8FA;
+      color: #1F2329;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(31, 35, 41, 0.06);
+    }
+    
+    .el-table td.el-table__cell {
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(31, 35, 41, 0.06);
+    }
+    
+    .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+      background-color: #FAFBFC;
+    }
+    
+    .el-table__row:hover > td.el-table__cell {
+      background-color: rgba(51, 112, 255, 0.04) !important;
+    }
+    
+    .el-pagination {
+      font-weight: 500;
+      margin-top: 20px;
+    }
+    
+    .el-pagination.is-background .el-pager li:not(.is-disabled).is-active {
+      background-color: #3370FF;
+      color: #FFFFFF;
+    }
+    
+    .el-pagination.is-background .el-pager li:not(.is-disabled):hover {
+      color: #3370FF;
+    }
+    
+    .el-select .el-input__wrapper {
+      box-shadow: 0 0 0 1px rgba(31, 35, 41, 0.08) inset;
+      border-radius: 8px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .el-select .el-input__wrapper:hover {
+      box-shadow: 0 0 0 1px rgba(51, 112, 255, 0.3) inset;
+    }
+    
+    .el-select .el-input.is-focus .el-input__wrapper {
+      box-shadow: 0 0 0 1px #3370FF inset;
+    }
+    
+    .el-date-editor.el-input__wrapper {
+      box-shadow: 0 0 0 1px rgba(31, 35, 41, 0.08) inset;
+      border-radius: 8px;
+    }
+    
+    .el-date-editor.el-input__wrapper:hover {
+      box-shadow: 0 0 0 1px rgba(51, 112, 255, 0.3) inset;
+    }
+    
+    .el-button {
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .el-button--primary {
+      background-color: #3370FF;
+      border-color: #3370FF;
+    }
+    
+    .el-button--primary:hover {
+      background-color: #1F5ADB;
+      border-color: #1F5ADB;
+    }
+    
+    .el-button--default {
+      background-color: #FFFFFF;
+      border-color: rgba(31, 35, 41, 0.08);
+      color: #1F2329;
+    }
+    
+    .el-button--default:hover {
+      background-color: #F7F8FA;
+      border-color: rgba(31, 35, 41, 0.12);
+    }
+    
+    /* 气泡图配置面板 */
+    .bubble-settings-panel {
+      background: #F7F8FA;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 20px;
+      border: 1px solid rgba(31, 35, 41, 0.06);
+    }
+    
+    .settings-row {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+    
+    .settings-row:last-child {
+      margin-bottom: 0;
+    }
+    
+    .settings-item {
+      flex: 1;
+    }
+    
+    .settings-item label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #646A73;
+      margin-bottom: 12px;
+    }
+    
+    .slider-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .slider-label {
+      font-size: 12px;
+      color: #86909C;
+      min-width: 40px;
+    }
+    
+    .slider-value {
+      font-size: 12px;
+      color: #3370FF;
+      font-weight: 500;
+      margin-top: 8px;
+      text-align: center;
+    }
+    
+    .el-slider {
+      flex: 1;
+    }
+    
+    .el-dialog {
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    .el-dialog__header {
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(31, 35, 41, 0.06);
+    }
+    
+    .el-dialog__title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1F2329;
+    }
+    
+    .el-dialog__body {
+      padding: 24px;
+    }
+    
+    .el-checkbox__input.is-checked .el-checkbox__inner {
+      background-color: #3370FF;
+      border-color: #3370FF;
+    }
+    
+    .el-checkbox__input.is-checked + .el-checkbox__label {
+      color: #1F2329;
+      font-weight: 500;
+    }
+    
+    .el-checkbox__label {
+      font-size: 14px;
+      color: #646A73;
+    }
+    
+    .el-tag {
+      border-radius: 6px;
+      font-weight: 500;
+      border: none;
+    }
+    
+    .el-tag--success {
+      background-color: rgba(0, 180, 42, 0.1);
+      color: #00B42A;
+    }
+    
+    .el-tag--info {
+      background-color: rgba(51, 112, 255, 0.1);
+      color: #3370FF;
+    }
+    
+    .el-tag--warning {
+      background-color: rgba(255, 125, 0, 0.1);
+      color: #FF7D00;
+    }
+    
+    /* 响应式 */
+    @media (max-width: 1600px) {
+      .kpi-grid-8 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    
+    @media (max-width: 1200px) {
+      .kpi-grid-8 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      body {
+        padding: var(--spacing-4);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .kpi-grid-8 {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* 锚点区域 */
+    .anchor-section {
+      scroll-margin-top: 100px;
+    }
+    
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* 加载动画 */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .anchor-section {
+      animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* 卡片入场动画 */
+    .kpi-card {
+      animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+    }
+    
+    .kpi-card:nth-child(1) { animation-delay: 0.03s; }
+    .kpi-card:nth-child(2) { animation-delay: 0.06s; }
+    .kpi-card:nth-child(3) { animation-delay: 0.09s; }
+    .kpi-card:nth-child(4) { animation-delay: 0.12s; }
+    .kpi-card:nth-child(5) { animation-delay: 0.15s; }
+    .kpi-card:nth-child(6) { animation-delay: 0.18s; }
+    .kpi-card:nth-child(7) { animation-delay: 0.21s; }
+    .kpi-card:nth-child(8) { animation-delay: 0.24s; }
+    
+    /* 卡片阴影效果优化 */
+    .chart-card,
+    .detail-table-wrapper,
+    .insights-section {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* 页面加载时的淡入效果 */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    
+    body {
+      animation: fadeIn 0.3s ease-out;
+    }
+    
+    /* 美化滚动条 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #F7F8FA;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #C9CDD4;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #86909C;
+    }
+    
+    /* 自定义滚动条 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #F7F8FA;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #C9CDD4;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #A8ABB2;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <h1 class="page-title">📊 智能体成本与使用分析</h1>
+    </div>
+    
+    <!-- 全局筛选器 -->
+    <div class="filter-toolbar">
+      <div class="filter-group">
+        <span class="filter-label">时间范围：</span>
+        <el-select v-model="timeRange" @change="handleTimeRangeChange" style="width: 180px;">
+          <el-option label="今天" value="today" />
+          <el-option label="最近7天" value="7days" />
+          <el-option label="最近一个月" value="30days" />
+          <el-option label="最近180天" value="180days" />
+          <el-option label="最近一年" value="365days" />
+          <el-option label="自定义范围" value="custom" />
+        </el-select>
+        
+        <el-date-picker
+          v-if="timeRange === 'custom'"
+          v-model="customDateRange"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          @change="handleTimeRangeChange"
+          style="width: 400px; margin-left: var(--spacing-3);"
+        />
+      </div>
+      
+      <div class="filter-group">
+        <span class="filter-label">租户：</span>
+        <el-select
+          v-model="selectedTenants"
+          multiple
+          collapse-tags
+          collapse-tags-tooltip
+          placeholder="全部租户"
+          style="width: 300px;"
+          @change="handleTenantChange"
+        >
+          <el-option
+            v-for="tenant in tenantList"
+            :key="tenant.id"
+            :label="tenant.name"
+            :value="tenant.id"
+          />
+        </el-select>
+      </div>
+      
+      <div class="filter-group">
+        <el-button @click="handleRefresh" :loading="loading">
+          刷新
+        </el-button>
+        <el-button @click="handleExport">
+          导出
+        </el-button>
+      </div>
+    </div>
+    
+    <!-- 快捷导航锚点 -->
+    <div class="anchor-nav">
+      <div class="anchor-nav-list">
+        <a href="#kpi-section" class="anchor-nav-item" @click.prevent="scrollToAnchor('kpi-section')">关键指标</a>
+        <a href="#top10-section" class="anchor-nav-item" @click.prevent="scrollToAnchor('top10-section')">Top10趋势</a>
+        <a href="#cost-analysis-section" class="anchor-nav-item" @click.prevent="scrollToAnchor('cost-analysis-section')">成本使用分析</a>
+        <a href="#distribution-section" class="anchor-nav-item" @click.prevent="scrollToAnchor('distribution-section')">群体分布</a>
+        <a href="#detail-table-section" class="anchor-nav-item" @click.prevent="scrollToAnchor('detail-table-section')">详细数据表</a>
+      </div>
+    </div>
+    
+    <!-- 智能体关键指标 -->
+    <div id="kpi-section" class="anchor-section">
+      <h2 class="section-title">📈 智能体关键指标</h2>
+      <div class="kpi-grid-8">
+        <div class="kpi-card" v-for="kpi in agentKPIs" :key="kpi.key">
+          <div class="kpi-label">
+            {{ kpi.label }}
+            <el-tooltip :content="kpi.tooltip" placement="top">
+              <span class="tooltip-icon">i</span>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ kpi.value }}</div>
+          <div class="kpi-desc" v-if="kpi.desc">{{ kpi.desc }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Top10趋势分析 -->
+    <div id="top10-section" class="anchor-section">
+      <h2 class="section-title">🏆 Top10趋势分析</h2>
+      
+      <div class="chart-card">
+        <el-tabs v-model="top10ActiveTab" @tab-change="handleTop10TabChange">
+          <!-- Token消耗Top10 -->
+          <el-tab-pane label="Token消耗 Top10" name="tokens">
+            <div class="chart-header" style="margin-top: var(--spacing-4);">
+              <div class="chart-title">智能体Token消耗 Top10 & 趋势分析</div>
+              <div style="display: flex; gap: var(--spacing-2);">
+                <el-button v-if="Download" text :icon="Download" @click="exportTop10Data('tokens')">导出</el-button>
+                <el-button v-else text @click="exportTop10Data('tokens')">导出</el-button>
+                <el-button v-if="Setting" text :icon="Setting" @click="showChartSettings = true">设置</el-button>
+                <el-button v-else text @click="showChartSettings = true">设置</el-button>
+              </div>
+            </div>
+            <div class="chart-container-large" id="token-top10-chart"></div>
+            <el-table :data="tokenTop10Table" style="margin-top: var(--spacing-4);" stripe border>
+              <el-table-column type="index" label="排行" width="80" />
+              <el-table-column prop="name" label="智能体名称" />
+              <el-table-column prop="totalTokens" label="总Token消耗">
+                <template #default="{ row }">
+                  {{ Utils.formatToken(row.totalTokens) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="creator" label="创建人" />
+            </el-table>
+          </el-tab-pane>
+          
+          <!-- 费用消耗Top10 -->
+          <el-tab-pane label="费用消耗 Top10" name="cost">
+            <div class="chart-header" style="margin-top: var(--spacing-4);">
+              <div class="chart-title">智能体费用消耗 Top10 & 趋势分析</div>
+              <div style="display: flex; gap: var(--spacing-2);">
+                <el-button v-if="Download" text :icon="Download" @click="exportTop10Data('cost')">导出</el-button>
+                <el-button v-else text @click="exportTop10Data('cost')">导出</el-button>
+                <el-button v-if="Setting" text :icon="Setting" @click="showChartSettings = true">设置</el-button>
+                <el-button v-else text @click="showChartSettings = true">设置</el-button>
+              </div>
+            </div>
+            <div class="chart-container-large" id="cost-top10-chart"></div>
+            <el-table :data="costTop10Table" style="margin-top: var(--spacing-4);" stripe border>
+              <el-table-column type="index" label="排行" width="80" />
+              <el-table-column prop="name" label="智能体名称" />
+              <el-table-column prop="totalCost" label="总费用消耗(￥)">
+                <template #default="{ row }">
+                  {{ Utils.formatCurrency(row.totalCost) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="creator" label="创建人" />
+            </el-table>
+          </el-tab-pane>
+          
+          <!-- 调用次数Top10 -->
+          <el-tab-pane label="调用次数 Top10" name="calls">
+            <div class="chart-header" style="margin-top: var(--spacing-4);">
+              <div class="chart-title">智能体调用次数 Top10 & 趋势分析</div>
+              <div style="display: flex; gap: var(--spacing-2);">
+                <el-button v-if="Download" text :icon="Download" @click="exportTop10Data('calls')">导出</el-button>
+                <el-button v-else text @click="exportTop10Data('calls')">导出</el-button>
+                <el-button v-if="Setting" text :icon="Setting" @click="showChartSettings = true">设置</el-button>
+                <el-button v-else text @click="showChartSettings = true">设置</el-button>
+              </div>
+            </div>
+            <div class="chart-container-large" id="calls-top10-chart"></div>
+            <el-table :data="callsTop10Table" style="margin-top: var(--spacing-4);" stripe border>
+              <el-table-column type="index" label="排行" width="80" />
+              <el-table-column prop="name" label="智能体名称" />
+              <el-table-column prop="totalCalls" label="总调用次数">
+                <template #default="{ row }">
+                  {{ Utils.formatNumber(row.totalCalls) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="creator" label="创建人" />
+            </el-table>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </div>
+    
+    <!-- 成本使用分析 -->
+    <div id="cost-analysis-section" class="anchor-section">
+      <h2 class="section-title">💰 成本使用分析</h2>
+      
+      <!-- 四象限图 -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">智能体成本 vs. 使用情况（四象限图）</div>
+          <div class="metric-switcher">
+            <el-button size="small" @click="showBubbleSettings = !showBubbleSettings" type="primary" plain>
+              ⚙️ 气泡设置
+            </el-button>
+            <el-button size="small" @click="toggleQuadrantLogScale('x')">
+              {{ quadrantLogScaleX ? 'X轴线性' : 'X轴对数' }}
+            </el-button>
+            <el-button size="small" @click="toggleQuadrantLogScale('y')">
+              {{ quadrantLogScaleY ? 'Y轴线性' : 'Y轴对数' }}
+            </el-button>
+          </div>
+        </div>
+        
+        <!-- 气泡图配置面板 -->
+        <div v-if="showBubbleSettings" class="bubble-settings-panel">
+          <div class="settings-row">
+            <div class="settings-item">
+              <label>气泡大小范围：</label>
+              <div class="slider-wrapper">
+                <span class="slider-label">最小</span>
+                <el-slider v-model="bubbleSizeRange" :min="10" :max="100" :step="5" range show-stops @change="renderQuadrantChart" />
+                <span class="slider-label">最大</span>
+              </div>
+              <div class="slider-value">{{ bubbleSizeRange[0] }} - {{ bubbleSizeRange[1] }}px</div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-item">
+              <label>颜色透明度范围：</label>
+              <div class="slider-wrapper">
+                <span class="slider-label">最浅</span>
+                <el-slider v-model="bubbleOpacityRange" :min="0.1" :max="1" :step="0.05" range :format-tooltip="(val) => (val * 100).toFixed(0) + '%'" @change="renderQuadrantChart" />
+                <span class="slider-label">最深</span>
+              </div>
+              <div class="slider-value">{{ (bubbleOpacityRange[0] * 100).toFixed(0) }}% - {{ (bubbleOpacityRange[1] * 100).toFixed(0) }}%</div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-item">
+              <label>气泡大小映射字段：</label>
+              <el-select v-model="bubbleSizeField" @change="renderQuadrantChart" style="width: 200px;">
+                <el-option label="活跃用户数" value="userCount" />
+                <el-option label="总费用" value="cost" />
+                <el-option label="调用次数" value="callCount" />
+                <el-option label="Token消耗" value="tokens" />
+              </el-select>
+            </div>
+            <div class="settings-item">
+              <label>颜色深浅映射字段：</label>
+              <el-select v-model="bubbleColorField" @change="renderQuadrantChart" style="width: 200px;">
+                <el-option label="总费用" value="cost" />
+                <el-option label="活跃用户数" value="userCount" />
+                <el-option label="调用次数" value="callCount" />
+                <el-option label="Token消耗" value="tokens" />
+              </el-select>
+            </div>
+          </div>
+        </div>
+        
+        <div style="padding: 0 20px 10px; font-size: 12px; color: #86909C; line-height: 1.6;">
+          💡 <strong>分析提示：</strong> 图表以中位数为分界线划分为四个象限。第四象限（右下角）为"明星应用"（高调用+低成本），值得推广；第二象限（左上角）为"成本黑洞"（低调用+高成本），需要优化。点击"气泡设置"可调整气泡大小和颜色深浅。
+        </div>
+        <div class="chart-container-large" id="quadrant-chart"></div>
+      </div>
+    </div>
+    
+    <!-- 群体分布 -->
+    <div id="distribution-section" class="anchor-section">
+      <h2 class="section-title">📊 群体分布</h2>
+      
+      <!-- 核心指标分布直方图 -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">智能体核心指标分布</div>
+          <div class="metric-switcher">
+            <span class="filter-label">指标：</span>
+            <el-select v-model="histogramMetric" @change="updateHistogram" style="width: 180px;">
+              <el-option label="智能体费用消耗" value="cost" />
+              <el-option label="智能体Token消耗" value="tokens" />
+              <el-option label="智能体调用次数" value="calls" />
+              <el-option label="智能体用户数" value="users" />
+            </el-select>
+          </div>
+        </div>
+        <div style="padding: 0 20px 10px; font-size: 12px; color: #86909C; line-height: 1.6;">
+          💡 <strong>分析提示：</strong> 此图表展示智能体在选定指标上的分布情况。通过观察分布形态，可以判断是否存在"长尾效应"（大部分智能体集中在低值区间）或"头部集中"（少数智能体占据大部分资源）。
+        </div>
+        <div class="chart-container-large" id="histogram-chart"></div>
+      </div>
+      
+      <!-- 官方vs用户智能体对比 -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">官方 vs. 用户智能体 - 成本与效率对比</div>
+          <div class="metric-switcher">
+            <span class="filter-label">指标：</span>
+            <el-select v-model="boxplotMetric" @change="updateBoxplot" style="width: 200px;">
+              <el-option label="费用消耗" value="cost" />
+              <el-option label="每次调用的成本" value="avgCostPerCall" />
+              <el-option label="调用次数" value="calls" />
+              <el-option label="每次调用的Token数" value="avgTokensPerCall" />
+            </el-select>
+            <el-button size="small" @click="toggleLogScale">
+              {{ useLogScale ? '线性尺度' : '对数尺度' }}
+            </el-button>
+          </div>
+        </div>
+        <div style="padding: 0 20px 10px; font-size: 12px; color: #86909C; line-height: 1.6;">
+          💡 <strong>分析提示：</strong> 箱线图展示两个群体的分布差异。箱体表示50%的数据范围（Q1-Q3），中位数线显示数据集中趋势。红色圆点为异常值，点击可查看详情。当数据极度分散时，建议切换到对数尺度以便更好地观察。
+        </div>
+        <div class="chart-container-large" id="boxplot-chart"></div>
+      </div>
+    </div>
+    
+    <!-- 详细数据表 -->
+    <div id="detail-table-section" class="anchor-section">
+      <div class="detail-table-wrapper">
+        <div class="table-header">
+          <h2 class="section-title" style="margin-bottom: 0;">📋 智能体详细数据表</h2>
+          <el-button @click="showColumnDialog = true">自定义列</el-button>
+        </div>
+        
+        <el-table
+          :data="tableData"
+          style="width: 100%"
+          v-loading="loading"
+          stripe
+          border
+          :default-sort="{ prop: 'cost', order: 'descending' }"
+          @row-click="handleRowClick"
+          @row-mouse-enter="handleRowHover"
+          @row-mouse-leave="handleRowLeave"
+        >
+          <el-table-column
+            v-for="col in visibleColumns"
+            :key="col.prop"
+            :prop="col.prop"
+            :label="col.label"
+            :width="col.width"
+            :sortable="col.sortable !== false"
+          >
+            <template #default="{ row }">
+              <span v-if="col.formatter" v-html="col.formatter(row)"></span>
+              <span v-else>{{ row[col.prop] }}</span>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="操作" width="100" fixed="right">
+            <template #default="{ row }">
+              <el-button link type="primary" size="small" @click.stop="drillDown(row)">查看详情</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :total="filteredAgentData.length"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handlePageChange"
+          @current-change="handlePageChange"
+          style="margin-top: var(--spacing-4);"
+        />
+      </div>
+    </div>
+    
+    <!-- 运营行动建议 -->
+    <div class="insights-section">
+      <h2 class="section-title">🎯 运营行动建议</h2>
+      
+      <div class="insight-item">
+        <div class="insight-title">识别成本黑洞</div>
+        <div class="insight-content">
+          在【详细数据表】中，按 总花费 (￥) 降序排序。查看前 5 名。看它们的 花费最多模型 列。如果都是 GPT-4，再看 平均每次调用成本。
+        </div>
+        <div class="insight-action">行动：找到这些智能体的 创建者，讨论是否有必要使用昂贵模型，或能否优化 Prompt。</div>
+      </div>
+      
+      <div class="insight-item">
+        <div class="insight-title">发现"坏"智能体</div>
+        <div class="insight-content">
+          在【详细数据表】中，按 调用成功率 (%) 升序排序。查看所有成功率低于 90% 的智能体。
+        </div>
+        <div class="insight-action">行动：联系 创建者 修复这些有问题的智能体，它们在浪费调用次数（可能也在花钱）并导致用户体验下降。</div>
+      </div>
+      
+      <div class="insight-item">
+        <div class="insight-title">找到明星应用</div>
+        <div class="insight-content">
+          在【四象限图】中，寻找"明星应用"（右下角：高调用, 低成本）。
+        </div>
+        <div class="insight-action">行动：总结这些应用的共同点，并在公司内部分享最佳实践。</div>
+      </div>
+      
+      <div class="insight-item">
+        <div class="insight-title">定位潜在滥用</div>
+        <div class="insight-content">
+          在【详细数据表】中，按 人均对话轮次 降序排序。如果某个智能体的 活跃用户数 很少（比如1-2个），但 人均对话轮次 极高。
+        </div>
+        <div class="insight-action">行动：这可能是一个自动化脚本在刷量。联系 创建者 确认其行为是否符合预期。</div>
+      </div>
+    </div>
+    
+    <!-- 自定义列对话框 -->
+    <el-dialog v-model="showColumnDialog" title="自定义列" width="600px">
+      <div style="margin-bottom: var(--spacing-4);">
+        <el-checkbox v-model="checkAll" :indeterminate="isIndeterminate" @change="handleCheckAllChange">全选</el-checkbox>
+      </div>
+      <el-checkbox-group v-model="selectedColumns" @change="handleColumnChange">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-3);">
+          <el-checkbox v-for="col in allColumns" :key="col.prop" :label="col.prop">
+            {{ col.label }}
+          </el-checkbox>
+        </div>
+      </el-checkbox-group>
+      <template #footer>
+        <el-button @click="showColumnDialog = false">取消</el-button>
+        <el-button type="primary" @click="saveColumnSettings">确定</el-button>
+      </template>
+    </el-dialog>
+  </div>
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <script src="https://unpkg.com/@element-plus/icons-vue@2/dist/index.iife.js"></script>
+  
+  <!-- ECharts -->
+  <script src="https://unpkg.com/echarts@5.4.3/dist/echarts.min.js"></script>
+  
+  <!-- 工具函数 -->
+  <script src="./assets/js/utils.js"></script>
+  
+  <!-- Mock数据 -->
+  <script src="./assets/js/mock-data.js"></script>
+  
+  <!-- 图表配置 -->
+  <script src="./assets/js/charts.js"></script>
+  
+  <!-- 主应用 -->
+  <script src="./assets/js/agent-cost-analysis.js"></script>
+</body>
+</html>
+

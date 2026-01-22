@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户详情 - 张三</title>
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+  <div class="page-container" id="user-detail-page">
+    <!-- 页面头部 -->
+    <header class="page-header">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">系统管理</span>
+        <span class="breadcrumb-item">用户管理</span>
+        <span class="breadcrumb-item">用户详情</span>
+      </div>
+    </header>
+
+    <!-- 页面内容 -->
+    <main class="page-content">
+      <!-- 用户详情头部 -->
+      <div class="detail-header">
+        <div class="detail-header-top">
+          <div class="detail-header-left">
+            <a href="user-list.html" class="back-btn">
+              <span>←</span>
+              <span>返回</span>
+            </a>
+            <h2 class="detail-user-name">张三</h2>
+            <span class="badge badge-success">正常</span>
+          </div>
+          <div class="detail-header-right">
+            <button class="btn btn-secondary">
+              <span>✏️</span>
+              <span>编辑</span>
+            </button>
+            <button class="btn btn-secondary" onclick="toggleUserStatus()">
+              <span>🔒</span>
+              <span>禁用</span>
+            </button>
+            <button class="btn btn-secondary">
+              <span>🔑</span>
+              <span>重置密码</span>
+            </button>
+            <button class="btn btn-danger">
+              <span>🗑️</span>
+              <span>注销</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="detail-info-grid">
+          <div class="detail-info-item">
+            <span class="detail-info-label">用户ID</span>
+            <span class="detail-info-value">
+              USR-001
+              <span class="copy-icon" onclick="copyToClipboard('USR-001')">📋</span>
+            </span>
+          </div>
+          <div class="detail-info-item">
+            <span class="detail-info-label">绑定手机</span>
+            <span class="detail-info-value">
+              13800138000
+              <span class="copy-icon" onclick="copyToClipboard('13800138000')">📋</span>
+            </span>
+          </div>
+          <div class="detail-info-item">
+            <span class="detail-info-label">绑定邮箱</span>
+            <span class="detail-info-value">
+              zhangsan@example.com
+              <span class="copy-icon" onclick="copyToClipboard('zhangsan@example.com')">📋</span>
+            </span>
+          </div>
+          <div class="detail-info-item">
+            <span class="detail-info-label">绑定MIS</span>
+            <span class="detail-info-value">
+              MIS-12345
+              <span class="copy-icon" onclick="copyToClipboard('MIS-12345')">📋</span>
+            </span>
+          </div>
+          <div class="detail-info-item">
+            <span class="detail-info-label">创建时间</span>
+            <span class="detail-info-value">2024-01-15 10:30:00</span>
+          </div>
+          <div class="detail-info-item">
+            <span class="detail-info-label">最后登录时间</span>
+            <span class="detail-info-value">2025-10-08 14:25:30</span>
+          </div>
+          <div class="detail-info-item">
+            <span class="detail-info-label">账号金额</span>
+            <span class="detail-info-value" style="color: var(--primary-color); font-weight: 600;">
+              15,280 w币
+            </span>
+          </div>
+          <div class="detail-info-item">
+            <span class="detail-info-label">归属租户</span>
+            <span class="detail-info-value">
+              腾讯科技、阿里巴巴、字节跳动
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 全局筛选器 -->
+      <div class="global-filters">
+        <div class="global-filters-left">
+          <div class="global-filter-item">
+            <span class="global-filter-label">时间范围：</span>
+            <select class="select" style="width: 200px;" id="global-date-range">
+              <option value="last7days">最近7天</option>
+              <option value="last30days" selected>最近30天</option>
+              <option value="last90days">最近90天</option>
+              <option value="thisMonth">本月</option>
+              <option value="lastMonth">上月</option>
+              <option value="custom">自定义</option>
+            </select>
+          </div>
+          <div class="global-filter-item">
+            <span class="global-filter-label">租户：</span>
+            <select class="select" style="width: 200px;" id="global-tenant">
+              <option value="all" selected>全部租户</option>
+              <option value="TNT-001">腾讯科技</option>
+              <option value="TNT-002">阿里巴巴</option>
+              <option value="TNT-003">字节跳动</option>
+            </select>
+          </div>
+        </div>
+        <div style="color: var(--text-secondary); font-size: var(--font-size-sm);">
+          当前分析周期：<strong>2025-09-10 至 2025-10-10</strong>
+        </div>
+      </div>
+
+      <!-- 主标签页 -->
+      <div class="tabs">
+        <div class="tabs-nav">
+          <div class="tab-item active" data-tab="data-overview">数据总览</div>
+          <div class="tab-item" data-tab="consumption-analysis">消费分析</div>
+          <div class="tab-item" data-tab="usage-analysis">使用分析</div>
+          <div class="tab-item" data-tab="consumption-details">消费明细</div>
+          <div class="tab-item" data-tab="asset-inventory">资产明细</div>
+          <div class="tab-item" data-tab="tenant-membership">加入的租户</div>
+        </div>
+      </div>
+
+      <!-- 标签页内容 -->
+      <div class="tab-content active" id="data-overview">
+        <!-- KPI指标卡 -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">总消耗积分</span>
+              <div class="kpi-icon">💰</div>
+            </div>
+            <div class="kpi-value">12,580</div>
+            <div class="kpi-subtitle">选定周期内总消耗</div>
+            <div class="kpi-trend up">
+              <span>↑</span>
+              <span>12.5%</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Token消耗总量</span>
+              <div class="kpi-icon" style="background: #f6ffed; color: var(--success-color);">🔢</div>
+            </div>
+            <div class="kpi-value">10.3M</div>
+            <div class="kpi-subtitle">输入: 8.2M / 输出: 2.1M</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">云设备消耗总时长</span>
+              <div class="kpi-icon" style="background: #fffbe6; color: var(--warning-color);">⏱️</div>
+            </div>
+            <div class="kpi-value">4,800</div>
+            <div class="kpi-subtitle">云电脑: 3600 min / 云手机: 1200 min</div>
+          </div>
+
+          <div class="kpi-card tooltip">
+            <div class="kpi-header">
+              <span class="kpi-label">总创建资产</span>
+              <div class="kpi-icon" style="background: #fff2f0; color: var(--danger-color);">📦</div>
+            </div>
+            <div class="kpi-value">25</div>
+            <div class="kpi-subtitle">选定周期内创建</div>
+            <span class="tooltip-text">智能体: 5, 工作流: 12, 知识库: 3, 工具库: 5</span>
+          </div>
+        </div>
+
+        <!-- 资源分析子标签 -->
+        <div class="sub-tabs">
+          <div class="sub-tabs-nav">
+            <button class="sub-tab-item active" data-subtab="data-overview-points">积分</button>
+            <button class="sub-tab-item" data-subtab="data-overview-token">Token</button>
+            <button class="sub-tab-item" data-subtab="data-overview-device">设备时长</button>
+          </div>
+        </div>
+
+        <!-- 积分子标签页 -->
+        <div class="sub-tab-content active" id="data-overview-points">
+          <!-- 积分指标卡 -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+            <div class="card" style="padding: var(--spacing-lg);">
+              <div class="kpi-label">日均消耗</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">419</div>
+              <div class="kpi-subtitle">积分/天</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg);">
+              <div class="kpi-label">最高单日消耗</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">687</div>
+              <div class="kpi-subtitle">积分</div>
+            </div>
+          </div>
+
+          <!-- 积分图表 -->
+          <div class="chart-grid">
+            <div class="chart-card" style="grid-column: span 2;">
+              <div class="chart-header">
+                <h3 class="chart-title">积分消耗趋势</h3>
+                <div class="chart-btn-group">
+                  <button class="chart-btn active" data-chart="points-trend" data-granularity="daily">按日</button>
+                  <button class="chart-btn" data-chart="points-trend" data-granularity="weekly">按周</button>
+                  <button class="chart-btn" data-chart="points-trend" data-granularity="monthly">按月</button>
+                </div>
+              </div>
+              <div id="points-trend-chart" class="chart-container"></div>
+            </div>
+          </div>
+
+          <div class="chart-grid-small" style="margin-top: var(--spacing-lg);">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">积分消耗构成</h3>
+              </div>
+              <div id="points-composition-chart" class="chart-container-sm"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">按租户消耗排行</h3>
+              </div>
+              <div id="tenant-ranking-chart" class="chart-container-sm"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Token子标签页 -->
+        <div class="sub-tab-content" id="data-overview-token">
+          <!-- Token指标卡 -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+            <div class="card" style="padding: var(--spacing-lg);">
+              <div class="kpi-label">最常用模型</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">GPT-4o</div>
+              <div class="kpi-subtitle">3.85M Token</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg);">
+              <div class="kpi-label">输入/输出比</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">3.9</div>
+              <div class="kpi-subtitle">输入 ÷ 输出</div>
+            </div>
+          </div>
+
+          <!-- Token图表 -->
+          <div class="chart-grid">
+            <div class="chart-card" style="grid-column: span 2;">
+              <div class="chart-header">
+                <h3 class="chart-title">Token消耗趋势</h3>
+                <div class="chart-btn-group">
+                  <button class="chart-btn active" data-chart="token-trend" data-granularity="daily">按日</button>
+                  <button class="chart-btn" data-chart="token-trend" data-granularity="weekly">按周</button>
+                  <button class="chart-btn" data-chart="token-trend" data-granularity="monthly">按月</button>
+                </div>
+              </div>
+              <div id="token-trend-chart" class="chart-container"></div>
+            </div>
+          </div>
+
+          <div class="chart-grid-small" style="margin-top: var(--spacing-lg);">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">输入/输出分布</h3>
+              </div>
+              <div id="token-io-chart" class="chart-container-sm"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">按模型消耗分布</h3>
+              </div>
+              <div id="model-distribution-chart" class="chart-container-sm"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 设备时长子标签页 -->
+        <div class="sub-tab-content" id="data-overview-device">
+          <!-- 设备时长指标卡 -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
+            <div class="card" style="padding: var(--spacing-lg);">
+              <div class="kpi-label">总会话次数</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">200</div>
+              <div class="kpi-subtitle">次</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg);">
+              <div class="kpi-label">平均会话时长</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">24</div>
+              <div class="kpi-subtitle">分钟/次</div>
+            </div>
+          </div>
+
+          <!-- 设备时长图表 -->
+          <div class="chart-grid">
+            <div class="chart-card" style="grid-column: span 2;">
+              <div class="chart-header">
+                <h3 class="chart-title">设备时长消耗趋势</h3>
+                <div class="chart-btn-group">
+                  <button class="chart-btn active" data-chart="device-trend" data-granularity="daily">按日</button>
+                  <button class="chart-btn" data-chart="device-trend" data-granularity="weekly">按周</button>
+                  <button class="chart-btn" data-chart="device-trend" data-granularity="monthly">按月</button>
+                </div>
+              </div>
+              <div id="device-trend-chart" class="chart-container"></div>
+            </div>
+          </div>
+
+          <div class="chart-grid-small" style="margin-top: var(--spacing-lg);">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">设备时长消耗分布</h3>
+              </div>
+              <div id="device-distribution-chart" class="chart-container-sm"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">会话时长分布</h3>
+              </div>
+              <div id="session-distribution-chart" class="chart-container-sm"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 消费分析标签页 -->
+      <div class="tab-content" id="consumption-analysis">
+        <div class="info-banner">
+          <span class="info-banner-icon">ℹ️</span>
+          <div class="info-banner-text">
+            此页面是您用户的<strong>"积分账单"</strong>。这里汇总了所有导致积分消耗的资源（Token、超额设备时长）的详细分析图表与流水明细。
+          </div>
+        </div>
+
+        <!-- 第一部分：积分总览 -->
+        <div class="card" style="padding: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
+          <h2 class="card-title" style="margin-bottom: var(--spacing-lg);">积分总览</h2>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-xl);">
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">总消耗积分</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">12,580</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">日均消耗</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">419</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">最高单日消耗</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">687</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">消费资源种类数</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">3</div>
+            </div>
+          </div>
+
+          <div class="chart-grid">
+            <div class="chart-card" style="grid-column: span 2;">
+              <div class="chart-header">
+                <h3 class="chart-title">积分消耗趋势</h3>
+              </div>
+              <div id="consumption-points-trend" class="chart-container"></div>
+            </div>
+          </div>
+
+          <div class="chart-grid-small" style="margin-top: var(--spacing-lg);">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">积分消耗构成</h3>
+              </div>
+              <div id="consumption-points-composition" class="chart-container-sm"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">按租户消耗排行</h3>
+              </div>
+              <div id="consumption-tenant-ranking" class="chart-container-sm"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 第二部分：Token消费分析 -->
+        <div class="card" style="padding: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
+          <h2 class="card-title" style="margin-bottom: var(--spacing-lg);">Token 消费分析</h2>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-xl);">
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">总消耗积分 (Token)</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">7,548</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">总消耗Token</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">10.3M</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">平均成本</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">0.73</div>
+              <div class="kpi-subtitle">积分/1K Token</div>
+            </div>
+          </div>
+
+          <div class="chart-grid">
+            <div class="chart-card" style="grid-column: span 2;">
+              <div class="chart-header">
+                <h3 class="chart-title">Token消耗趋势</h3>
+              </div>
+              <div id="consumption-token-trend" class="chart-container"></div>
+            </div>
+          </div>
+
+          <div class="chart-grid-small" style="margin-top: var(--spacing-lg);">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">输入/输出分布</h3>
+              </div>
+              <div id="consumption-token-io" class="chart-container-sm"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">按模型消耗分布</h3>
+              </div>
+              <div id="consumption-model-distribution" class="chart-container-sm"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 第三部分：云电脑设备时长消费分析 -->
+        <div class="card" style="padding: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
+          <h2 class="card-title" style="margin-bottom: var(--spacing-lg);">云电脑设备时长消费分析</h2>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-xl);">
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">总消耗积分 (抵扣)</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">3,145</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">总使用时长</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">3,600</div>
+              <div class="kpi-subtitle">分钟</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">总抵扣时长</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">1,200</div>
+              <div class="kpi-subtitle">分钟</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">平均会话时长</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">28</div>
+              <div class="kpi-subtitle">分钟</div>
+            </div>
+          </div>
+
+          <div class="chart-grid">
+            <div class="chart-card" style="grid-column: span 2;">
+              <div class="chart-header">
+                <h3 class="chart-title">设备时长消耗趋势</h3>
+              </div>
+              <div id="consumption-desktop-trend" class="chart-container"></div>
+            </div>
+          </div>
+
+          <div class="chart-grid-small" style="margin-top: var(--spacing-lg);">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">分时段使用分析</h3>
+              </div>
+              <div id="consumption-desktop-hourly" class="chart-container-sm"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 第四部分：云手机设备时长消费分析 -->
+        <div class="card" style="padding: var(--spacing-xl);">
+          <h2 class="card-title" style="margin-bottom: var(--spacing-lg);">云手机设备时长消费分析</h2>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-xl);">
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">总消耗积分 (抵扣)</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">1,887</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">总使用时长</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">1,200</div>
+              <div class="kpi-subtitle">分钟</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">总抵扣时长</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">400</div>
+              <div class="kpi-subtitle">分钟</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg); background: var(--bg-hover);">
+              <div class="kpi-label">平均会话时长</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">15</div>
+              <div class="kpi-subtitle">分钟</div>
+            </div>
+          </div>
+
+          <div class="chart-grid">
+            <div class="chart-card" style="grid-column: span 2;">
+              <div class="chart-header">
+                <h3 class="chart-title">设备时长消耗趋势</h3>
+              </div>
+              <div id="consumption-mobile-trend" class="chart-container"></div>
+            </div>
+          </div>
+
+          <div class="chart-grid-small" style="margin-top: var(--spacing-lg);">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">分时段使用分析</h3>
+              </div>
+              <div id="consumption-mobile-hourly" class="chart-container-sm"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 使用分析标签页 -->
+      <div class="tab-content" id="usage-analysis">
+        <div class="info-banner">
+          <span class="info-banner-icon">ℹ️</span>
+          <div class="info-banner-text">
+            此页面专注于分析用户的<strong>平台活动与资产创造</strong>。您可以在此深入探索用户创建了哪些资产（如智能体、工作流），以及这些资产的使用频率和关联消耗。
+          </div>
+        </div>
+
+        <!-- 资源类型筛选器 -->
+        <div class="card" style="padding: var(--spacing-lg); margin-bottom: var(--spacing-lg);">
+          <div class="filter-item">
+            <label class="filter-label">资源类型</label>
+            <select class="select" id="resource-type-filter" style="max-width: 300px;">
+              <option value="agents" selected>智能体</option>
+              <option value="workflows">工作流</option>
+              <option value="tool-libraries">工具库</option>
+              <option value="tools">工具</option>
+              <option value="knowledge-bases">知识库</option>
+              <option value="spaces">空间</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 智能体分析 -->
+        <div class="usage-content active" id="usage-agents">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-xl);">
+            <div class="card" style="padding: var(--spacing-lg);">
+              <div class="kpi-label">创建总数</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">5</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg);">
+              <div class="kpi-label">总调用次数</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">5,120</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg);">
+              <div class="kpi-label">关联消耗Token</div>
+              <div class="kpi-value" style="font-size: var(--font-size-2xl);">10.2M</div>
+            </div>
+            <div class="card" style="padding: var(--spacing-lg);">
+              <div class="kpi-label">最活跃智能体</div>
+              <div class="kpi-value" style="font-size: var(--font-size-lg);">翻译助手</div>
+            </div>
+          </div>
+
+          <div class="chart-grid">
+            <div class="chart-card" style="grid-column: span 2;">
+              <div class="chart-header">
+                <h3 class="chart-title">创建与调用趋势</h3>
+              </div>
+              <div id="usage-agents-trend" class="chart-container"></div>
+            </div>
+          </div>
+
+          <div class="chart-grid-small" style="margin-top: var(--spacing-lg);">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">各智能体Token消耗排行</h3>
+              </div>
+              <div id="usage-agents-ranking" class="chart-container-sm"></div>
+            </div>
+          </div>
+
+          <!-- 智能体资产列表 -->
+          <div class="card" style="margin-top: var(--spacing-lg);">
+            <div class="card-header">
+              <h3 class="card-title">智能体资产列表</h3>
+            </div>
+            <div class="card-body" style="padding: 0;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>智能体ID</th>
+                    <th>名称</th>
+                    <th>创建时间</th>
+                    <th>所属租户</th>
+                    <th>状态</th>
+                    <th>累计调用次数</th>
+                    <th>累计消耗Token</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="agents-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 消费明细标签页 -->
+      <div class="tab-content" id="consumption-details">
+        <!-- 高级筛选器 -->
+        <div class="filter-section">
+          <div class="filter-grid">
+            <div class="filter-item">
+              <label class="filter-label">资源类型</label>
+              <select class="select">
+                <option value="all">全部</option>
+                <option value="token">Token</option>
+                <option value="agent">智能体</option>
+                <option value="workflow">工作流</option>
+                <option value="desktop">云电脑设备时长</option>
+                <option value="mobile">云手机设备时长</option>
+              </select>
+            </div>
+            
+            <div class="filter-item">
+              <label class="filter-label">行为</label>
+              <input type="text" class="input" placeholder="模糊搜索行为">
+            </div>
+            
+            <div class="filter-item">
+              <label class="filter-label">变动类型</label>
+              <select class="select">
+                <option value="all">全部</option>
+                <option value="consume">消耗</option>
+                <option value="refund">返还</option>
+              </select>
+            </div>
+            
+            <div class="filter-item" style="align-self: flex-end;">
+              <button class="btn btn-primary">搜索</button>
+            </div>
+            
+            <div class="filter-item" style="align-self: flex-end;">
+              <button class="btn btn-secondary">导出CSV</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 消费明细表格 -->
+        <div class="table-container">
+          <div class="card-header">
+            <h3 class="card-title">消费明细流水</h3>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>资源类型</th>
+                <th>行为</th>
+                <th>变动类型</th>
+                <th>用量</th>
+                <th>消耗积分</th>
+                <th>计费租户</th>
+              </tr>
+            </thead>
+            <tbody id="consumption-details-tbody"></tbody>
+          </table>
+          
+          <div class="pagination">
+            <div class="pagination-info">
+              显示 <strong>1-20</strong> 条，共 <strong>100</strong> 条记录
+            </div>
+            <div class="pagination-controls">
+              <button class="pagination-btn" disabled>上一页</button>
+              <button class="pagination-btn active">1</button>
+              <button class="pagination-btn">2</button>
+              <button class="pagination-btn">3</button>
+              <button class="pagination-btn">4</button>
+              <button class="pagination-btn">5</button>
+              <button class="pagination-btn">下一页</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 资产明细标签页 -->
+      <div class="tab-content" id="asset-inventory">
+        <div class="info-banner">
+          <span class="info-banner-icon">ℹ️</span>
+          <div class="info-banner-text">
+            数据为 <strong>T+1</strong> 更新。最后更新时间：<strong>2025-10-10 02:00:00</strong>
+            <button class="btn btn-sm btn-primary" style="margin-left: var(--spacing-md);">手动刷新</button>
+          </div>
+        </div>
+
+        <!-- 资产子标签页 -->
+        <div class="sub-tabs">
+          <div class="sub-tabs-nav">
+            <button class="sub-tab-item active" data-subtab="asset-agents">智能体</button>
+            <button class="sub-tab-item" data-subtab="asset-workflows">工作流</button>
+            <button class="sub-tab-item" data-subtab="asset-tools">工具</button>
+            <button class="sub-tab-item" data-subtab="asset-tool-libraries">工具库</button>
+            <button class="sub-tab-item" data-subtab="asset-knowledge-bases">知识库</button>
+            <button class="sub-tab-item" data-subtab="asset-spaces">空间</button>
+          </div>
+        </div>
+
+        <!-- 智能体资产 -->
+        <div class="sub-tab-content active" id="asset-agents">
+          <div class="filter-section">
+            <div class="filter-grid">
+              <div class="filter-item">
+                <label class="filter-label">名称搜索</label>
+                <input type="text" class="input" placeholder="搜索智能体名称">
+              </div>
+              <div class="filter-item">
+                <label class="filter-label">状态</label>
+                <select class="select">
+                  <option value="all">全部</option>
+                  <option value="published">已发布</option>
+                  <option value="draft">草稿</option>
+                  <option value="deleted">已删除</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>名称</th>
+                  <th>运行次数</th>
+                  <th>用户数</th>
+                  <th>状态</th>
+                  <th>创建人</th>
+                  <th>最后更新时间</th>
+                  <th>最后运行时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="asset-agents-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 其他资产标签页类似结构省略... -->
+      </div>
+
+      <!-- 加入的租户标签页 -->
+      <div class="tab-content" id="tenant-membership">
+        <!-- 操作栏 -->
+        <div class="card" style="padding: var(--spacing-lg); margin-bottom: var(--spacing-lg);">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--spacing-lg); flex-wrap: wrap;">
+            <div style="display: flex; gap: var(--spacing-md);">
+              <button class="btn btn-primary" onclick="showModal('add-tenant-modal')">
+                <span>➕</span>
+                <span>添加到租户</span>
+              </button>
+              <button class="btn btn-danger" id="batch-remove-btn" disabled>
+                <span>🗑️</span>
+                <span>批量移出租户</span>
+              </button>
+            </div>
+            <div class="filter-item" style="margin: 0;">
+              <input type="text" class="input" placeholder="搜索租户名称、租户ID" style="width: 300px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- 租户列表 -->
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">
+                  <input type="checkbox" id="select-all-tenants">
+                </th>
+                <th>租户ID</th>
+                <th>租户名称</th>
+                <th>加入时间</th>
+                <th>租户版本</th>
+                <th>创建人</th>
+                <th>创建时间</th>
+                <th>所有者</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="user-tenants-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 添加到租户模态框 -->
+  <div class="modal-overlay" id="add-tenant-modal">
+    <div class="modal" style="width: 600px; max-height: 80vh;">
+      <div class="modal-header">
+        <h3 class="modal-title">添加到租户</h3>
+        <button class="modal-close" onclick="hideModal('add-tenant-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="filter-item">
+          <label class="filter-label">搜索租户</label>
+          <input type="text" class="input" placeholder="按租户名称/ID搜索">
+        </div>
+        
+        <div style="margin-top: var(--spacing-lg); max-height: 400px; overflow-y: auto;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 50px;"></th>
+                <th>租户ID</th>
+                <th>租户名称</th>
+                <th>所有者</th>
+              </tr>
+            </thead>
+            <tbody id="available-tenants-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('add-tenant-modal')">取消</button>
+        <button class="btn btn-primary" onclick="confirmAddToTenants()">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/mock-data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // 渲染智能体列表
+    function renderAgentsList() {
+      const tbody = document.getElementById('agents-tbody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = mockAgents.map(agent => `
+        <tr>
+          <td>${agent.id}</td>
+          <td><strong>${agent.name}</strong></td>
+          <td>${agent.lastUpdated}</td>
+          <td>腾讯科技</td>
+          <td><span class="badge ${getStatusClass(agent.status)}">${agent.status}</span></td>
+          <td>${agent.runs.toLocaleString()}</td>
+          <td>${formatNumber(agent.tokens)}</td>
+          <td><button class="btn btn-text btn-sm">查看详情</button></td>
+        </tr>
+      `).join('');
+    }
+
+    // 渲染资产智能体列表
+    function renderAssetAgentsList() {
+      const tbody = document.getElementById('asset-agents-tbody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = mockAgents.map(agent => `
+        <tr>
+          <td><strong>${agent.name}</strong></td>
+          <td>${agent.runs.toLocaleString()}</td>
+          <td>${agent.users.toLocaleString()}</td>
+          <td><span class="badge ${getStatusClass(agent.status)}">${agent.status}</span></td>
+          <td>${agent.creator}</td>
+          <td>${agent.lastUpdated}</td>
+          <td>${agent.lastRun}</td>
+          <td><button class="btn btn-text btn-sm">查看详情</button></td>
+        </tr>
+      `).join('');
+    }
+
+    // 渲染消费明细
+    function renderConsumptionDetails() {
+      const tbody = document.getElementById('consumption-details-tbody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = mockConsumptionDetails.slice(0, 20).map(detail => `
+        <tr>
+          <td>${detail.date}</td>
+          <td>${detail.resourceType}</td>
+          <td>${detail.action}</td>
+          <td><span class="badge ${detail.changeType === '消耗' ? 'badge-warning' : 'badge-success'}">${detail.changeType}</span></td>
+          <td>${detail.usage}</td>
+          <td><strong style="color: ${detail.points > 0 ? 'var(--danger-color)' : 'var(--success-color)'}">${detail.points > 0 ? '-' : '+'}${Math.abs(detail.points)}</strong></td>
+          <td>${detail.tenant}</td>
+        </tr>
+      `).join('');
+    }
+
+    // 渲染用户租户列表
+    function renderUserTenants() {
+      const tbody = document.getElementById('user-tenants-tbody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = mockUserTenants.map(tenant => `
+        <tr>
+          <td>
+            <input type="checkbox" ${tenant.isOwner ? 'disabled' : ''} class="tenant-checkbox" data-tenant-id="${tenant.id}">
+          </td>
+          <td>${tenant.id}</td>
+          <td>
+            <div class="avatar-group">
+              <div class="avatar">${getAvatarText(tenant.name)}</div>
+              <span class="avatar-name">${tenant.name}</span>
+            </div>
+          </td>
+          <td>${tenant.joinedTime}</td>
+          <td><span class="badge badge-info">${tenant.plan}</span></td>
+          <td>${tenant.creator}</td>
+          <td>${tenant.createdTime}</td>
+          <td>${tenant.owner}</td>
+          <td>
+            <button class="btn btn-text btn-sm ${tenant.isOwner ? '' : ''}" 
+                    ${tenant.isOwner ? 'disabled title="用户是该租户的所有者，不可移除"' : ''}
+                    onclick="removeTenant('${tenant.id}')">
+              移出租户
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      // 全选功能
+      const selectAllCheckbox = document.getElementById('select-all-tenants');
+      const checkboxes = document.querySelectorAll('.tenant-checkbox:not(:disabled)');
+      
+      if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', (e) => {
+          checkboxes.forEach(cb => cb.checked = e.target.checked);
+          updateBatchRemoveButton();
+        });
+      }
+
+      checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateBatchRemoveButton);
+      });
+    }
+
+    // 更新批量移出按钮状态
+    function updateBatchRemoveButton() {
+      const checkedBoxes = document.querySelectorAll('.tenant-checkbox:checked');
+      const batchBtn = document.getElementById('batch-remove-btn');
+      if (batchBtn) {
+        batchBtn.disabled = checkedBoxes.length === 0;
+      }
+    }
+
+    // 移出租户
+    function removeTenant(tenantId) {
+      const tenant = mockUserTenants.find(t => t.id === tenantId);
+      showConfirmDialog(
+        '移出租户',
+        `确认要将用户从租户 "${tenant.name}" 中移出吗？`,
+        () => {
+          showSuccessMessage('已成功移出租户');
+          renderUserTenants();
+        }
+      );
+    }
+
+    // 渲染可用租户列表
+    function renderAvailableTenants() {
+      const tbody = document.getElementById('available-tenants-tbody');
+      if (!tbody) return;
+      
+      const userTenantIds = mockUserTenants.map(t => t.id);
+      
+      tbody.innerHTML = mockTenants.map(tenant => {
+        const isJoined = userTenantIds.includes(tenant.id);
+        return `
+          <tr>
+            <td>
+              <input type="checkbox" ${isJoined ? 'checked disabled' : ''} value="${tenant.id}">
+            </td>
+            <td>${tenant.id}</td>
+            <td>${tenant.name}</td>
+            <td>${tenant.owner}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 确认添加到租户
+    function confirmAddToTenants() {
+      showSuccessMessage('已成功添加到租户');
+      hideModal('add-tenant-modal');
+      renderUserTenants();
+    }
+
+    // 页面加载时初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      renderAgentsList();
+      renderAssetAgentsList();
+      renderConsumptionDetails();
+      renderUserTenants();
+      renderAvailableTenants();
+
+      // 资源类型切换
+      const resourceTypeFilter = document.getElementById('resource-type-filter');
+      if (resourceTypeFilter) {
+        resourceTypeFilter.addEventListener('change', (e) => {
+          // 这里可以添加切换不同资源类型的逻辑
+          console.log('切换资源类型:', e.target.value);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+
+

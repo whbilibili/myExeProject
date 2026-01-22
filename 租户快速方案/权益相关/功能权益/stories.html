@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户故事场景</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: transparent;
+            color: #333;
+            padding: 2rem;
+        }
+
+        .section {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1e293b;
+            text-align: center;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .user-story {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin: 2rem 0;
+            border-left: 6px solid #6366f1;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-story::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1), transparent);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+
+        .user-story:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .user-story h4 {
+            color: #6366f1;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .user-story.platform h4 {
+            color: #dc2626;
+        }
+
+        .user-story.tenant h4 {
+            color: #8b5cf6;
+        }
+
+        .user-story.space h4 {
+            color: #06b6d4;
+        }
+
+        .user-story.user h4 {
+            color: #10b981;
+        }
+
+        .scenario {
+            background: rgba(248, 250, 252, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .scenario h5 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .scenario ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .scenario li {
+            margin: 0.5rem 0;
+            padding-left: 0.5rem;
+        }
+
+        .scenario p {
+            margin: 0.5rem 0;
+            color: #64748b;
+        }
+
+        .result {
+            background: rgba(240, 253, 244, 0.8);
+            color: #166534;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            font-weight: 600;
+        }
+
+        .comparison {
+            background: rgba(254, 243, 199, 0.8);
+            color: #92400e;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h2><i class="fas fa-book-open"></i> 典型用户故事</h2>
+        
+        <div class="user-story platform">
+            <h4><i class="fas fa-globe" style="color: #dc2626;"></i> 角色：平台运营方（产品经理）</h4>
+            <div class="scenario">
+                <h5><i class="fas fa-plus-circle"></i> 任务：设计新的订阅计划</h5>
+                <p><strong>背景：</strong>市场反馈需要一个介于专业版和企业版之间的计划</p>
+                <p><strong>操作流程：</strong></p>
+                <ol>
+                    <li><i class="fas fa-sign-in-alt"></i> 登录平台管理后台 → 订阅计划管理</li>
+                    <li><i class="fas fa-edit"></i> 点击"创建新计划"，命名为"团队版"</li>
+                    <li><i class="fas fa-cogs"></i> 配置功能包：启用"AI工作流节点"，禁用"企业级插件开发"</li>
+                    <li><i class="fas fa-chart-bar"></i> 设置资源配额：50个智能体、100GB存储、1000万API调用/月</li>
+                    <li><i class="fas fa-dollar-sign"></i> 定价：299元/月/租户</li>
+                    <li><i class="fas fa-rocket"></i> 发布计划，对所有新注册租户可见</li>
+                </ol>
+                <div class="result">新的"团队版"计划上线，为中型客户提供了更合适的选择</div>
+            </div>
+        </div>
+        
+        <div class="user-story tenant">
+            <h4><i class="fas fa-user-tie" style="color: #8b5cf6;"></i> 角色：租户管理员（李总）</h4>
+            <div class="scenario">
+                <h5><i class="fas fa-robot"></i> 任务：为研发团队开通AI功能</h5>
+                <p><strong>背景：</strong>公司刚订阅了"专业版"计划，包含AI分析功能和10个相关席位</p>
+                <p><strong>操作流程：</strong></p>
+                <ol>
+                    <li><i class="fas fa-sign-in-alt"></i> 登录租户管理后台 → 功能权限分配</li>
+                    <li><i class="fas fa-search"></i> 选择"AI工作流节点"功能（显示：已分配 0/10 席位）</li>
+                    <li><i class="fas fa-users-cog"></i> 点击"管理分配"，打开成员选择器</li>
+                    <li><i class="fas fa-search-plus"></i> 从左侧"可选成员"中，搜索并选择研发团队的7名工程师</li>
+                    <li><i class="fas fa-arrow-right"></i> 点击"→"将他们移动到右侧"已分配成员"</li>
+                    <li><i class="fas fa-save"></i> 保存，系统显示：已分配 7/10 席位</li>
+                </ol>
+                <div class="result">这7名工程师在任何他们有编辑权限的空间中，都能使用AI节点</div>
+            </div>
+        </div>
+        
+        <div class="user-story space">
+            <h4><i class="fas fa-user-friends" style="color: #06b6d4;"></i> 角色：空间管理员（王项目经理）</h4>
+            <div class="scenario">
+                <h5><i class="fas fa-handshake"></i> 任务：为跨部门项目分配协作权限</h5>
+                <p><strong>背景：</strong>"客服升级项目"空间需要邀请市场部同事协作</p>
+                <p><strong>操作流程：</strong></p>
+                <ol>
+                    <li><i class="fas fa-folder-open"></i> 进入"客服升级项目"空间 → 成员管理</li>
+                    <li><i class="fas fa-user-plus"></i> 点击"添加协作者"</li>
+                    <li><i class="fas fa-search"></i> 搜索并选择市场部的张三、李四</li>
+                    <li><i class="fas fa-edit"></i> 为张三分配"可编辑"角色（需要他修改智能体话术）</li>
+                    <li><i class="fas fa-eye"></i> 为李四分配"查看与使用"角色（只需要测试功能）</li>
+                    <li><i class="fas fa-save"></i> 保存设置</li>
+                </ol>
+                <div class="result">张三可以编辑项目内的智能体，李四只能查看和测试。若张三被租户管理员授予了AI功能权限，他还能使用AI节点优化智能体</div>
+            </div>
+        </div>
+        
+        <div class="user-story user">
+            <h4><i class="fas fa-user" style="color: #10b981;"></i> 角色：普通用户（张工程师）</h4>
+            <div class="scenario">
+                <h5><i class="fas fa-brain"></i> 任务：使用AI功能优化工作流</h5>
+                <p><strong>背景：</strong>张工程师被授予了AI功能，正在"数据分析项目"中创建工作流</p>
+                <p><strong>操作流程：</strong></p>
+                <ol>
+                    <li><i class="fas fa-project-diagram"></i> 进入工作流编排界面</li>
+                    <li><i class="fas fa-robot"></i> 在节点面板中，看到"AI分析"分类（因为租户订阅了支持AI的计划 + 被分配了功能权限）</li>
+                    <li><i class="fas fa-magic"></i> 拖拽"智能数据洞察"节点到画布</li>
+                    <li><i class="fas fa-cog"></i> 配置节点参数，连接数据源</li>
+                    <li><i class="fas fa-play"></i> 测试运行，获得AI生成的分析报告</li>
+                </ol>
+                <div class="comparison">如果张工程师没有AI功能权限，第2步时他看不到"AI分析"分类；如果租户订阅的是基础版，整个AI功能都不会出现</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

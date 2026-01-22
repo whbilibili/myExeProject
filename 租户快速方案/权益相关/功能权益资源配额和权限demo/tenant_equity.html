@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>租户权益</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': { '500': '#3b82f6', '600': '#2563eb', '700': '#1d4ed8' },
+                        'slate': {
+                            '50': '#f8fafc', '100': '#f1f5f9', '200': '#e2e8f0', '300': '#cbd5e1', '400': '#94a3b8',
+                            '500': '#64748b', '600': '#475569', '700': '#334155', '800': '#1e293b', '900': '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://rsms.me/inter/inter.css');
+        html, body { font-family: 'Inter', sans-serif; height: 100%; margin: 0; padding: 0; }
+        body {
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .tab-btn.active {
+            border-color: #3b82f6; /* primary-500 */
+            color: #2563eb; /* primary-600 */
+            font-weight: 600;
+        }
+        .tab-btn:not(.active) {
+            border-color: transparent;
+        }
+    </style>
+</head>
+<body class="flex flex-col">
+
+    <div class="p-8 pb-0 flex-shrink-0">
+        <!-- Header -->
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">租户权益</h1>
+            <p class="text-slate-500">查看您当前的订阅计划详情，或浏览所有可用的升级选项。</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mt-6 border-b border-slate-200">
+            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                <button id="tab-current" class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    当前订阅计划
+                </button>
+                <button id="tab-all" class="tab-btn text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    全部计划
+                </button>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Tab Content -->
+    <div id="content-area" class="flex-grow p-8 pt-6">
+        <div id="content-current" class="h-full">
+            <iframe src="权益页面.html" class="w-full h-full border-none rounded-lg bg-white shadow-sm"></iframe>
+        </div>
+        <div id="content-all" class="hidden h-full">
+            <div class="h-full border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center flex flex-col justify-center items-center bg-white">
+                <div class="mx-auto w-16 h-16 flex items-center justify-center bg-slate-100 rounded-full mb-4">
+                    <i class="fas fa-cubes text-primary-500 text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-semibold text-slate-800 mb-2">浏览全部计划</h2>
+                <p class="text-slate-500 max-w-md mx-auto">
+                    此功能正在建设中。未来，您将能在这里比较不同订阅计划的功能和价格，并轻松完成升级。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabCurrentBtn = document.getElementById('tab-current');
+            const tabAllBtn = document.getElementById('tab-all');
+            const contentCurrent = document.getElementById('content-current');
+            const contentAll = document.getElementById('content-all');
+
+            function showTab(tabName) {
+                if (tabName === 'current') {
+                    contentCurrent.classList.remove('hidden');
+                    contentAll.classList.add('hidden');
+                    tabCurrentBtn.classList.add('active');
+                    tabAllBtn.classList.remove('active');
+                } else if (tabName === 'all') {
+                    contentCurrent.classList.add('hidden');
+                    contentAll.classList.remove('hidden');
+                    tabCurrentBtn.classList.remove('active');
+                    tabAllBtn.classList.add('active');
+                }
+            }
+
+            tabCurrentBtn.addEventListener('click', () => showTab('current'));
+            tabAllBtn.addEventListener('click', () => showTab('all'));
+
+            // Initial state
+            showTab('current');
+        });
+    </script>
+</body>
+</html> 

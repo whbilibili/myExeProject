@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源配额管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': { '50': '#eff6ff', '100': '#dbeafe', '200': '#bfdbfe', '300': '#93c5fd', '400': '#60a5fa', '500': '#3b82f6', '600': '#2563eb', '700': '#1d4ed8', '800': '#1e40af', '900': '#1e3a8a' },
+                        'slate': { '50': '#f8fafc', '100': '#f1f5f9', '200': '#e2e8f0', '300': '#cbd5e1', '400': '#94a3b8', '500': '#64748b', '600': '#475569', '700': '#334155', '800': '#1e293b', '900': '#0f172a' },
+                        'amber': { '400': '#fbbf24', '500': '#f59e0b' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://rsms.me/inter/inter.css');
+        html { font-family: 'Inter', sans-serif; }
+        body { background-color: #0f172a; color: #cbd5e1; overflow-y: auto; }
+        
+        .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; opacity: 0; }
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .modal-backdrop { transition: opacity 0.3s ease; }
+        .modal-panel { transition: all 0.3s ease; }
+        .modal-hidden { opacity: 0; pointer-events: none; }
+        .modal-visible { opacity: 1; pointer-events: auto; }
+        .modal-hidden .modal-panel { transform: translateY(20px) scale(0.98); opacity: 0; }
+        .modal-visible .modal-panel { transform: translateY(0) scale(1); opacity: 1; }
+        
+        /* Custom styles for the slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track {
+            height: 6px; cursor: pointer; background: #334155; border-radius: 3px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%;
+            background: #3b82f6; cursor: pointer; margin-top: -6px;
+            box-shadow: 0 0 0 2px #0f172a, 0 0 5px #3b82f6;
+        }
+        .strategy-radio:checked + label { border-color: #3b82f6; background-color: #1e293b; }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header & Mode Toggle -->
+        <div class="animate-fade-in-up flex justify-between items-start mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-2">资源配额管理</h1>
+                <p class="text-slate-400">洞察租户资源使用情况，或为部门/空间分配具体配额。</p>
+            </div>
+            <div class="bg-slate-800 p-1 rounded-lg flex space-x-1">
+                <button id="mode-monitor-btn" class="mode-btn bg-primary-600 text-white px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-200"><i class="fas fa-chart-line mr-2"></i>监控模式</button>
+                <button id="mode-allocate-btn" class="mode-btn text-slate-300 hover:bg-slate-700 px-4 py-1.5 rounded-md text-sm font-semibold transition-all duration-200"><i class="fas fa-sliders-h mr-2"></i>分配模式</button>
+            </div>
+        </div>
+
+        <!-- Monitoring Mode Container -->
+        <div id="monitoring-mode-container">
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 animate-fade-in-up" style="animation-delay: 100ms;">
+                    <p class="text-sm text-slate-400 flex items-center"><i class="fas fa-database mr-2 text-primary-400"></i>云存储空间</p>
+                    <p class="text-3xl font-bold text-white mt-2">352.8 <span class="text-lg text-slate-400">/ 500 GB</span></p>
+                    <div class="w-full bg-slate-700 rounded-full h-2 mt-3"><div class="bg-primary-500 h-2 rounded-full" style="width: 70.56%"></div></div>
+                </div>
+                 <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 animate-fade-in-up" style="animation-delay: 200ms;">
+                    <p class="text-sm text-slate-400 flex items-center"><i class="fas fa-coins mr-2 text-amber-400"></i>积分</p>
+                    <p class="text-3xl font-bold text-white mt-2">12.7M <span class="text-lg text-slate-400">/ 20M 点</span></p>
+                    <div class="w-full bg-slate-700 rounded-full h-2 mt-3"><div class="bg-amber-500 h-2 rounded-full" style="width: 63.5%"></div></div>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 animate-fade-in-up" style="animation-delay: 300ms;">
+                    <p class="text-sm text-slate-400 flex items-center"><i class="fas fa-bolt mr-2 text-yellow-400"></i>API 调用次数</p>
+                    <p class="text-3xl font-bold text-white mt-2">83.2 K <span class="text-lg text-slate-400">/ 100 K</span></p>
+                    <div class="w-full bg-slate-700 rounded-full h-2 mt-3"><div class="bg-yellow-500 h-2 rounded-full" style="width: 83.2%"></div></div>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 animate-fade-in-up" style="animation-delay: 400ms;">
+                    <p class="text-sm text-slate-400 flex items-center"><i class="fas fa-cogs mr-2 text-green-400"></i>自动化流程运行</p>
+                    <p class="text-3xl font-bold text-white mt-2">31.5 K <span class="text-lg text-slate-400">/ 50 K</span></p>
+                    <div class="w-full bg-slate-700 rounded-full h-2 mt-3"><div class="bg-green-500 h-2 rounded-full" style="width: 63%"></div></div>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-8 animate-fade-in-up" style="animation-delay: 500ms;">
+                <h3 class="text-lg font-semibold text-white mb-4">云存储使用趋势 (近30天)</h3>
+                <div class="relative h-72">
+                    <canvas id="storageTrendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 animate-fade-in-up" style="animation-delay: 600ms;">
+                     <h3 class="text-lg font-semibold text-white mb-4">各部门积分使用量 (本月)</h3>
+                    <div class="relative h-72">
+                        <canvas id="deptUsageChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 animate-fade-in-up" style="animation-delay: 700ms;">
+                    <h3 class="text-lg font-semibold text-white mb-4">空间存储消耗 Top 5</h3>
+                    <table class="w-full text-sm text-left text-slate-300">
+                        <thead class="text-xs text-slate-400 uppercase bg-slate-700/50">
+                            <tr>
+                                <th scope="col" class="px-4 py-3">空间名称</th>
+                                <th scope="col" class="px-4 py-3">所属部门</th>
+                                <th scope="col" class="px-4 py-3 text-right">使用量 (GB)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-consumers-table">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Allocation Mode Container -->
+        <div id="allocation-mode-container" class="hidden">
+            <!-- Allocation Strategy Selector -->
+            <div class="bg-slate-800/50 p-6 rounded-2xl mb-8 border border-slate-700">
+                <h3 class="text-lg font-semibold text-white">配额分配策略</h3>
+                <p class="text-sm text-slate-400 mt-1 mb-4">请选择一种策略来管理您租户的资源。更改策略可能会影响现有配置。</p>
+                <div class="flex space-x-4">
+                    <input type="radio" id="strategy-dept" name="allocation_strategy" value="by_department" class="hidden strategy-radio" checked>
+                    <label for="strategy-dept" class="flex-1 p-4 border-2 border-slate-600 rounded-lg cursor-pointer transition-all">
+                        <p class="font-semibold text-white"><i class="fas fa-sitemap mr-2"></i>按部门分配</p>
+                        <p class="text-xs text-slate-400 mt-1">将配额分配给部门，该部门下的所有空间共享此配额池。</p>
+                    </label>
+                    <input type="radio" id="strategy-space" name="allocation_strategy" value="by_workspace" class="hidden strategy-radio">
+                    <label for="strategy-space" class="flex-1 p-4 border-2 border-slate-600 rounded-lg cursor-pointer transition-all">
+                        <p class="font-semibold text-white"><i class="fas fa-th-large mr-2"></i>按空间分配</p>
+                        <p class="text-xs text-slate-400 mt-1">为每个空间独立设置配额上限，提供最精细的控制。</p>
+                    </label>
+                </div>
+            </div>
+            <div id="quota-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Quota cards for allocation will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Allocation Modal -->
+    <div id="allocation-modal" class="modal-hidden fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] bg-slate-900 bg-opacity-80 backdrop-blur-sm modal-backdrop">
+        <div class="modal-panel bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col" style="height: 80vh;">
+            <div class="flex items-start justify-between p-6 border-b border-slate-700">
+                <div><h2 id="modal-title" class="text-xl font-bold text-white">管理配额分配</h2><p id="modal-subtitle" class="text-sm text-slate-400 mt-1"></p></div>
+                <button id="close-alloc-modal-btn" class="p-2 -mr-2 text-slate-500 hover:text-white hover:bg-slate-700 rounded-full transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex-1 p-6 overflow-y-auto">
+                <div class="bg-slate-900/50 rounded-lg p-4 mb-6">
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div><p class="text-xs text-slate-400 uppercase tracking-wider">租户总额</p><p id="metric-total" class="text-2xl font-bold text-white mt-1"></p></div>
+                        <div><p class="text-xs text-slate-400 uppercase tracking-wider">已分配</p><p id="metric-allocated" class="text-2xl font-bold text-primary-400 mt-1"></p></div>
+                        <div><p class="text-xs text-slate-400 uppercase tracking-wider">未分配</p><p id="metric-unallocated" class="text-2xl font-bold text-green-400 mt-1"></p></div>
+                    </div>
+                    <div id="alloc-dashboard-footer" class="text-center mt-3 h-4"></div>
+                </div>
+                <div id="allocation-list" class="space-y-4"></div>
+            </div>
+            <div class="flex items-center justify-between p-6 border-t border-slate-700">
+                <button id="reset-alloc-btn" class="px-5 py-2.5 text-sm font-semibold text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"><i class="fas fa-undo mr-2"></i>重置</button>
+                <div class="flex items-center space-x-4">
+                    <button id="cancel-alloc-btn" class="px-5 py-2.5 text-sm font-semibold text-slate-300 hover:text-white bg-transparent hover:bg-slate-700 rounded-lg transition-colors">取消</button>
+                    <button id="save-alloc-btn" class="px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 disabled:bg-primary-900 disabled:text-slate-400 disabled:cursor-not-allowed rounded-lg transition-colors">保存更改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Purchase Modal -->
+    <div id="purchase-modal" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900 bg-opacity-80 backdrop-blur-sm modal-backdrop">
+        <div class="modal-panel bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col">
+            <div class="flex items-center justify-between p-6 border-b border-slate-700"><h2 id="purchase-modal-title" class="text-xl font-bold text-white"></h2><button id="close-purchase-modal-btn" class="p-2 -mr-2 text-slate-500 hover:text-white hover:bg-slate-700 rounded-full transition-colors"><i class="fas fa-times"></i></button></div>
+            <div id="purchase-modal-body" class="p-6"></div>
+            <div class="flex items-center justify-end p-6 border-t border-slate-700 space-x-4 bg-slate-800/50 rounded-b-2xl">
+                <button id="cancel-purchase-btn" class="px-5 py-2.5 text-sm font-semibold text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">取消</button>
+                <button id="confirm-purchase-btn" class="px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors"><i class="fas fa-check mr-2"></i>确认购买</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // --- MOCK DATA ---
+        const mockDepartments = [ { id: 1, name: '产品研发部' }, { id: 2, name: '市场营销部' }, { id: 3, name: '客户支持部' }, { id: 4, name: '综合管理部' }];
+        const mockWorkspaces = [
+            { id: 1, name: '天狼星项目', deptId: 1 }, { id: 2, name: '猎户座项目', deptId: 1 },
+            { id: 3, name: '市场活动 Q3', deptId: 2 }, { id: 4, name: '官网重构', deptId: 2 },
+            { id: 5, name: '客户支持知识库', deptId: 3 }, { id: 6, name: '默认空间', deptId: 4 }
+        ];
+        let mockQuotas = [
+            { id: 'storage', name: '云存储空间', unit: 'GB', total: 500, pricePerUnit: 10, icon: 'fa-database text-primary-400', color: 'primary', alloc_by_dept: { '1': 200, '2': 100, '3': 50 }, alloc_by_space: { '1': 150, '2': 50, '3': 80, '5': 50 } },
+            { id: 'credits', name: '积分', unit: '点', total: 20000000, pricePerUnit: 0.001, icon: 'fa-coins text-amber-400', color: 'amber', alloc_by_dept: { '1': 10000000, '2': 5000000 }, alloc_by_space: { '1': 8000000, '2': 2000000, '3': 4000000 } },
+            { id: 'api_calls', name: 'API 调用次数', unit: 'K/月', total: 100, pricePerUnit: 1, icon: 'fa-bolt text-yellow-400', color: 'yellow', alloc_by_dept: { '1': 50, '2': 30, '4': 10 }, alloc_by_space: { '1': 40, '3': 30, '5': 20 } },
+            { id: 'automations', name: '自动化流程运行', unit: 'K/月', total: 50, pricePerUnit: 5, icon: 'fa-cogs text-green-400', color: 'green', alloc_by_dept: { '1': 25, '2': 15 }, alloc_by_space: {} },
+        ];
+        let mockUsage = {
+            storage: { total: 352.8, by_dept: { '1': 201.5, '2': 98.3, '3': 45, '4': 8}, by_space: { '1': 151, '2': 50.5, '3': 95, '5': 48, '6': 7.8 } },
+            credits: { total: 12700000, by_dept: { '1': 8500000, '2': 1200000, '3': 3000000 }, by_space: {} }
+        };
+
+        // --- STATE & DOM ---
+        let state = { currentQuota: null, tempAllocations: {}, allocationStrategy: 'by_department', currentMode: 'monitor', currentPurchase: {} };
+        const DOMElements = {
+            monitorContainer: document.getElementById('monitoring-mode-container'),
+            allocateContainer: document.getElementById('allocation-mode-container'),
+            modeMonitorBtn: document.getElementById('mode-monitor-btn'),
+            modeAllocateBtn: document.getElementById('mode-allocate-btn'),
+            quotaListContainer: document.getElementById('quota-list'),
+            allocModal: document.getElementById('allocation-modal'),
+            purchaseModal: document.getElementById('purchase-modal'),
+            allocationList: document.getElementById('allocation-list'),
+        };
+        let charts = { storageTrend: null, deptUsage: null };
+
+        // --- UTILS ---
+        const formatNumber = (num) => {
+             if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+             if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+             return num.toLocaleString('en-US');
+        };
+        const formatFullNumber = (num) => num.toLocaleString('en-US');
+        const getTotalAllocated = (allocations) => Object.values(allocations).reduce((sum, val) => sum + (Number(val) || 0), 0);
+        
+        // --- MONITORING MODE ---
+        function renderMonitoringMode() {
+            renderCharts();
+        }
+
+        function renderCharts() {
+            if (charts.storageTrend) charts.storageTrend.destroy();
+            if (charts.deptUsage) charts.deptUsage.destroy();
+
+            document.querySelector('#monitoring-mode-container .grid:first-of-type').innerHTML = mockQuotas.map((q, i) => {
+                const usage = mockUsage[q.id]?.total || 0;
+                const percentage = q.total > 0 ? (usage / q.total) * 100 : 0;
+                return `<div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 animate-fade-in-up" style="animation-delay: ${100*(i+1)}ms;">
+                    <p class="text-sm text-slate-400 flex items-center"><i class="fas ${q.icon} mr-2"></i>${q.name}</p>
+                    <p class="text-3xl font-bold text-white mt-2">${formatNumber(usage)} <span class="text-lg text-slate-400">/ ${formatNumber(q.total)} ${q.unit}</span></p>
+                    <div class="w-full bg-slate-700 rounded-full h-2 mt-3"><div class="bg-${q.color}-500 h-2 rounded-full" style="width: ${percentage}%"></div></div>
+                </div>`;
+            }).join('');
+            
+            charts.storageTrend = new Chart(document.getElementById('storageTrendChart').getContext('2d'), { type: 'line', data: { labels: Array.from({length: 30}, (_, i) => new Date(Date.now() - (29-i)*86400000).toLocaleDateString('zh-CN', {month:'2-digit', day:'2-digit'})), datasets: [{ label: '存储 (GB)', data: Array.from({length: 30}, (_, i) => 200 + i * 5 + Math.random() * 20), borderColor: '#3b82f6', tension: 0.3, backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false, ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } }, plugins: { legend: { display: false } } } });
+            
+            charts.deptUsage = new Chart(document.getElementById('deptUsageChart').getContext('2d'), { type: 'bar', data: { labels: mockDepartments.map(d => d.name), datasets: [{ label: '积分 (点)', data: mockDepartments.map(d => mockUsage.credits.by_dept[d.id] || 0), backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(251, 191, 36, 0.8)', 'rgba(52, 211, 153, 0.8)', 'rgba(168, 85, 247, 0.8)'] }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' } } }, plugins: { legend: { display: false } } } });
+            
+            document.getElementById('top-consumers-table').innerHTML = Object.entries(mockUsage.storage.by_space).sort(([,a],[,b]) => b-a).slice(0,5).map(([spaceId, usage]) => { const ws = mockWorkspaces.find(w => w.id == spaceId); const dept = mockDepartments.find(d => d.id === ws.deptId); return `<tr class="border-b border-slate-700/50 hover:bg-slate-700/50"><td class="px-4 py-3 font-medium text-white">${ws.name}</td><td class="px-4 py-3">${dept.name}</td><td class="px-4 py-3 text-right">${formatFullNumber(usage)}</td></tr>`; }).join('');
+        }
+
+        // --- ALLOCATION MODE ---
+        function renderAllocationMode() {
+            const allocKey = state.allocationStrategy === 'by_department' ? 'alloc_by_dept' : 'alloc_by_space';
+            DOMElements.quotaListContainer.innerHTML = mockQuotas.map((quota, i) => {
+                const totalAllocated = getTotalAllocated(quota[allocKey]);
+                const percentage = quota.total > 0 ? (totalAllocated / quota.total) * 100 : 0;
+                let buttonHtml = `<button data-quota-id="${quota.id}" class="manage-btn flex-1 text-center px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors">管理分配</button>`;
+                if (percentage > 95) { buttonHtml += `<button data-quota-id="${quota.id}" class="purchase-btn flex-1 text-center px-4 py-2 bg-primary-600 hover:bg-primary-500 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap">增加配额</button>`; }
+                return `<div class="bg-slate-800 rounded-2xl p-6 flex flex-col justify-between border border-slate-700 animate-fade-in-up" style="animation-delay: ${100*i}ms;">
+                        <div>
+                            <div class="flex items-start justify-between"><h3 class="text-lg font-bold text-white">${quota.name}</h3><p class="text-sm text-slate-400">${formatNumber(quota.total)} ${quota.unit}</p></div>
+                             <div class="mt-4 text-sm"><p>已分配: <span class="font-semibold text-white">${formatNumber(totalAllocated)} ${quota.unit}</span> (${Math.round(percentage)}%)</p><p>未分配: <span class="font-semibold text-green-400">${formatFullNumber(quota.total - totalAllocated)} ${quota.unit}</span></p></div>
+                        </div>
+                        <div class="mt-6 flex gap-x-3">${buttonHtml}</div>
+                    </div>`;
+            }).join('');
+            DOMElements.quotaListContainer.querySelectorAll('.manage-btn').forEach(btn => btn.addEventListener('click', (e) => openAllocModal(e.currentTarget.dataset.quotaId)));
+            DOMElements.quotaListContainer.querySelectorAll('.purchase-btn').forEach(btn => btn.addEventListener('click', (e) => openPurchaseModal(e.currentTarget.dataset.quotaId)));
+        }
+        
+        function renderAllocationList() {
+            if (!state.currentQuota) return;
+            const items = state.allocationStrategy === 'by_department' ? mockDepartments : mockWorkspaces;
+            
+            DOMElements.allocationList.innerHTML = items.map(item => {
+                const value = state.tempAllocations[item.id] || 0;
+                return `<div class="bg-slate-700/50 p-4 rounded-lg"><div class="flex justify-between items-center mb-2"><label class="font-medium text-white">${item.name}</label><div class="flex items-center space-x-2"><input type="number" data-id="${item.id}" value="${value}" min="0" max="${state.currentQuota.total}" class="alloc-input w-36 text-right bg-slate-900 border border-slate-600 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"><span class="text-sm text-slate-400">${state.currentQuota.unit}</span></div></div><input type="range" data-id="${item.id}" value="${value}" min="0" max="${state.currentQuota.total}" step="${state.currentQuota.unit === 'GB' ? 1 : 1000}" class="alloc-slider w-full"></div>`;
+            }).join('');
+            DOMElements.allocationList.querySelectorAll('.alloc-input, .alloc-slider').forEach(input => input.addEventListener('input', handleAllocInputChange));
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            if (!state.currentQuota) return;
+            const total = state.currentQuota.total;
+            const allocated = getTotalAllocated(state.tempAllocations);
+            const unallocated = total - allocated;
+            
+            document.getElementById('metric-total').textContent = `${formatFullNumber(total)} ${state.currentQuota.unit}`;
+            document.getElementById('metric-allocated').textContent = `${formatFullNumber(allocated)} ${state.currentQuota.unit}`;
+            document.getElementById('metric-unallocated').textContent = `${formatFullNumber(unallocated)} ${state.currentQuota.unit}`;
+
+            const footerEl = document.getElementById('alloc-dashboard-footer');
+            if (unallocated < 0) {
+                document.getElementById('metric-unallocated').classList.replace('text-green-400', 'text-red-500');
+                footerEl.innerHTML = `<p class="text-red-400 text-xs">分配总量已超出租户总额 ${formatFullNumber(Math.abs(unallocated))} ${state.currentQuota.unit}!</p>`;
+                document.getElementById('save-alloc-btn').disabled = true;
+            } else if (unallocated === 0) {
+                 footerEl.innerHTML = `<button id="purchase-more-btn" class="text-xs text-primary-400 hover:underline">配额不足？点击购买更多</button>`;
+                 footerEl.querySelector('#purchase-more-btn').addEventListener('click', () => openPurchaseModal(state.currentQuota.id));
+                 document.getElementById('save-alloc-btn').disabled = false;
+            } else {
+                document.getElementById('metric-unallocated').classList.replace('text-red-500', 'text-green-400');
+                footerEl.innerHTML = '&nbsp;';
+                document.getElementById('save-alloc-btn').disabled = false;
+            }
+        }
+
+        // --- MODAL & EVENT HANDLERS ---
+        function openAllocModal(quotaId) {
+            state.currentQuota = mockQuotas.find(q => q.id === quotaId);
+            if (!state.currentQuota) return;
+            const allocKey = state.allocationStrategy === 'by_department' ? 'alloc_by_dept' : 'alloc_by_space';
+            state.tempAllocations = JSON.parse(JSON.stringify(state.currentQuota[allocKey]));
+            document.getElementById('modal-title').textContent = `管理 "${state.currentQuota.name}" 分配`;
+            document.getElementById('modal-subtitle').textContent = `分配策略: ${state.allocationStrategy === 'by_department' ? '按部门' : '按空间'}`;
+            renderAllocationList();
+            DOMElements.allocModal.classList.add('modal-visible');
+            DOMElements.allocModal.classList.remove('modal-hidden');
+        }
+        function closeAllocModal() { DOMElements.allocModal.classList.replace('modal-visible', 'modal-hidden'); }
+        function handleAllocInputChange(e) {
+            const id = e.target.dataset.id, value = Number(e.target.value);
+            if (e.target.type === 'range') DOMElements.allocationList.querySelector(`input[type=number][data-id='${id}']`).value = value;
+            else DOMElements.allocationList.querySelector(`input[type=range][data-id='${id}']`).value = value;
+            state.tempAllocations[id] = value;
+            updateDashboard();
+        }
+        function saveAllocChanges() {
+            const quotaIndex = mockQuotas.findIndex(q => q.id === state.currentQuota.id);
+            if (quotaIndex === -1) return;
+            const allocKey = state.allocationStrategy === 'by_department' ? 'alloc_by_dept' : 'alloc_by_space';
+            mockQuotas[quotaIndex][allocKey] = state.tempAllocations;
+            closeAllocModal();
+            renderAllocationMode();
+        }
+        function openPurchaseModal(quotaId) {
+            state.currentQuota = mockQuotas.find(q => q.id === quotaId);
+            if (!state.currentQuota) return;
+            state.currentPurchase = { quotaId, quantity: state.currentQuota.unit === '点' ? 100000 : 10 };
+            document.getElementById('purchase-modal-title').textContent = `购买 ${state.currentQuota.name}`;
+            const body = document.getElementById('purchase-modal-body');
+            body.innerHTML = `<p class="text-slate-400 mb-4">当前总额: ${formatFullNumber(state.currentQuota.total)} ${state.currentQuota.unit}。请选择您想增加的数量。</p>
+                <div class="flex items-center justify-center space-x-4 my-6"><input id="quantity-input" type="number" value="${state.currentPurchase.quantity}" class="w-32 h-12 text-center text-2xl font-bold bg-slate-900 border border-slate-600 rounded-lg"> <span class="text-lg text-slate-300">${state.currentQuota.unit}</span></div>
+                <div class="text-center"><p class="text-sm text-slate-400">预计费用</p><p id="total-cost" class="text-3xl font-bold text-primary-400 mt-1">¥${formatFullNumber(state.currentPurchase.quantity * state.currentQuota.pricePerUnit)}</p></div>`;
+            body.querySelector('#quantity-input').addEventListener('input', e => {
+                state.currentPurchase.quantity = Number(e.target.value) || 0;
+                document.getElementById('total-cost').textContent = `¥${formatFullNumber(state.currentPurchase.quantity * state.currentQuota.pricePerUnit)}`;
+            });
+            DOMElements.purchaseModal.classList.replace('modal-hidden', 'modal-visible');
+        }
+        function closePurchaseModal() { DOMElements.purchaseModal.classList.replace('modal-visible', 'modal-hidden'); }
+        function handlePurchase() {
+            const quota = mockQuotas.find(q => q.id === state.currentPurchase.quotaId);
+            if (!quota) return;
+            quota.total += state.currentPurchase.quantity;
+            closePurchaseModal();
+            if (state.currentMode === 'monitor') {
+                renderCharts();
+            }
+            if (state.currentMode === 'allocate') {
+                renderAllocationMode();
+                if (DOMElements.allocModal.classList.contains('modal-visible')) {
+                    state.currentQuota = quota;
+                    updateDashboard();
+                }
+            }
+        }
+        
+        function switchMode(mode) {
+            if (state.currentMode === mode) return;
+            state.currentMode = mode;
+            const isMonitor = mode === 'monitor';
+            DOMElements.monitorContainer.classList.toggle('hidden', !isMonitor);
+            DOMElements.allocateContainer.classList.toggle('hidden', isMonitor);
+            DOMElements.modeMonitorBtn.classList.toggle('bg-primary-600', isMonitor);
+            DOMElements.modeMonitorBtn.classList.toggle('text-white', isMonitor);
+            DOMElements.modeAllocateBtn.classList.toggle('bg-primary-600', !isMonitor);
+            DOMElements.modeAllocateBtn.classList.toggle('text-white', !isMonitor);
+            if (isMonitor) { renderMonitoringMode(); } else { renderAllocationMode(); }
+        }
+
+        // --- INITIALIZATION ---
+        renderMonitoringMode();
+        DOMElements.modeMonitorBtn.addEventListener('click', () => switchMode('monitor'));
+        DOMElements.modeAllocateBtn.addEventListener('click', () => switchMode('allocate'));
+        document.querySelectorAll('input[name="allocation_strategy"]').forEach(radio => radio.addEventListener('change', (e) => {
+            state.allocationStrategy = e.target.value;
+            renderAllocationMode();
+        }));
+        document.getElementById('close-alloc-modal-btn').addEventListener('click', closeAllocModal);
+        document.getElementById('cancel-alloc-btn').addEventListener('click', closeAllocModal);
+        document.getElementById('save-alloc-btn').addEventListener('click', saveAllocChanges);
+        document.getElementById('reset-alloc-btn').addEventListener('click', () => renderAllocationList());
+        document.getElementById('close-purchase-modal-btn').addEventListener('click', closePurchaseModal);
+        document.getElementById('cancel-purchase-btn').addEventListener('click', closePurchaseModal);
+        document.getElementById('confirm-purchase-btn').addEventListener('click', handlePurchase);
+    });
+    </script>
+</body>
+</html>

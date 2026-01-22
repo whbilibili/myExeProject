@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/Browser-user/browser-use" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cursor-pm" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/nocode-3c3144945bd24111" vcs="Git" />
   </component>
 </project>

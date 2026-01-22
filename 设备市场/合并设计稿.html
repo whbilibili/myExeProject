@@ -1,0 +1,3152 @@
+<!--
+ * @Author: wanghong52 wanghong52@meituan.com
+ * @Date: 2025-06-09 12:00:42
+ * @LastEditors: wanghong52 wanghong52@meituan.com
+ * @LastEditTime: 2025-06-16 14:10:12
+ * @FilePath: /设备市场/合并设计稿.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>应用管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #2d3748;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* 左侧导航栏 */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo {
+            padding: 0 30px 30px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .logo h2 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-menu {
+            padding: 0 15px;
+        }
+
+        .nav-item {
+            padding: 16px 20px;
+            margin: 8px 0;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            color: #4c51bf;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            transform: translateX(4px);
+        }
+
+        .nav-item-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* 右侧主内容区 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        /* 顶部主Tab区域 */
+        .main-tabs {
+            padding: 30px 40px 0;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .main-tab-list {
+            display: flex;
+            gap: 40px;
+        }
+
+        .main-tab {
+            padding: 16px 0;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 16px;
+            position: relative;
+        }
+
+        .main-tab:hover {
+            color: #4c51bf;
+        }
+
+        .main-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .main-tab.active::before {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        /* 内容区域 */
+        .content-area {
+            flex: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+        }
+
+        /* 设备控制区域 */
+        .device-header {
+            margin-bottom: 30px;
+        }
+
+        .device-controls {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .device-select, .region-select, .device-search {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            color: #2d3748;
+        }
+
+        .device-select:focus, .region-select:focus, .device-search:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .connect-btn, .settings-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .connect-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .settings-btn {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .settings-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* 设备分类 */
+        .device-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .category-section {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .category-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .device-card {
+            background: white;
+            border: 2px solid transparent;
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .device-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .device-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .device-card:hover::before {
+            opacity: 1;
+        }
+
+        .device-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .device-info {
+            position: relative;
+            z-index: 1;
+        }
+
+        .device-info h4 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .device-type {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .device-version {
+            display: block;
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* 分段控制器 */
+        .segment-control {
+            display: flex;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            padding: 6px;
+            margin-bottom: 30px;
+            width: fit-content;
+        }
+
+        .segment-item {
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .segment-item.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        /* 搜索栏 */
+        .search-bar {
+            margin-bottom: 30px;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 16px 24px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* 卡片布局 - App市场 */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .app-card {
+            background: white;
+            border: 2px solid transparent;
+            border-radius: 20px;
+            padding: 28px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .app-card:hover {
+            border-color: #667eea;
+            transform: translateY(-6px);
+            box-shadow: 0 12px 50px rgba(102, 126, 234, 0.25);
+        }
+
+        .app-card:hover::before {
+            opacity: 1;
+        }
+
+        .app-card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-right: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 20px;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .app-info h3 {
+            font-size: 18px;
+            color: #2d3748;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .app-tags {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tag {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+        }
+
+        .tag.platform {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .tag.source {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .app-meta {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .view-details-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .view-details-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 表格布局 - 我上传的包 */
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            gap: 20px;
+        }
+
+        .search-bar-inline {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .search-input-inline {
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+        }
+
+        .search-input-inline:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+            flex-shrink: 0;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .packages-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+
+        .packages-table th,
+        .packages-table td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        }
+
+        .packages-table th {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .packages-table td {
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .packages-table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #64748b;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .action-btn.delete {
+            border-color: #f56565;
+            color: #f56565;
+        }
+
+        .action-btn.delete:hover {
+            background: #f56565;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .container {
+                padding: 15px;
+                gap: 15px;
+            }
+            
+            .sidebar {
+                width: 260px;
+            }
+            
+            .content-area {
+                padding: 25px 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 20px 0;
+            }
+            
+            .main-tab-list {
+                gap: 20px;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+            
+            .device-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .card-grid, .device-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            
+            .search-bar-inline {
+                max-width: none;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
+
+        /* 应用详情页样式 */
+        .detail-header {
+            margin-bottom: 30px;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .back-link:hover {
+            color: #5a67d8;
+            transform: translateX(-4px);
+        }
+
+        .app-detail-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(226, 232, 240, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .app-detail-left {
+            flex: 1;
+        }
+
+        .app-detail-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .app-detail-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .detail-label {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #2d3748;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .app-detail-right {
+            flex-shrink: 0;
+            margin-left: 40px;
+        }
+
+        .detail-search-bar {
+            width: 300px;
+        }
+
+        .search-input-detail {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+        }
+
+        .search-input-detail:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .detail-table-container {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .detail-table th,
+        .detail-table td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        }
+
+        .detail-table th {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .detail-table td {
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .detail-table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .download-btn {
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #667eea;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .download-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .app-detail-info {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .app-detail-right {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .detail-search-bar {
+                width: 100%;
+            }
+        }
+
+        /* 上传新包弹窗样式 */
+        .upload-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .upload-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .upload-modal {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .upload-modal-overlay.show .upload-modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .upload-modal-header {
+            padding: 24px 30px 16px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            flex-shrink: 0;
+        }
+
+        .upload-modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-modal-body {
+            padding: 24px 30px;
+            flex: 1;
+            overflow-y: auto;
+            /* 自定义滚动条样式 */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+        }
+
+        .upload-modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .upload-modal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .upload-modal-body::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 3px;
+        }
+
+        .upload-modal-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: #f56565;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            color: #2d3748;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: #a0aec0;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 60px;
+            max-height: 80px;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #e2e8f0;
+            border-radius: 12px;
+            padding: 24px 20px;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            transform: scale(1.02);
+        }
+
+        .file-upload-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-upload-icon {
+            font-size: 28px;
+            color: #667eea;
+        }
+
+        .file-upload-text {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .file-upload-hint {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .selected-file {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid #667eea;
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .selected-file-icon {
+            font-size: 18px;
+            color: #667eea;
+        }
+
+        .selected-file-info {
+            flex: 1;
+        }
+
+        .selected-file-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .selected-file-size {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .remove-file-btn {
+            background: none;
+            border: none;
+            color: #f56565;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .remove-file-btn:hover {
+            background: rgba(245, 101, 101, 0.1);
+        }
+
+        .upload-modal-footer {
+            padding: 16px 30px 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            border-top: 1px solid rgba(226, 232, 240, 0.5);
+            flex-shrink: 0;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+        }
+
+        .modal-btn-cancel {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .modal-btn-cancel:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .modal-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .modal-btn-confirm:disabled {
+            background: #a0aec0;
+            color: white;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .upload-modal {
+                width: 95%;
+                margin: 10px;
+                max-height: 95vh;
+            }
+            
+            .upload-modal-header, .upload-modal-body, .upload-modal-footer {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+            
+            .upload-modal-header {
+                padding-top: 20px;
+                padding-bottom: 12px;
+            }
+            
+            .upload-modal-body {
+                padding-top: 20px;
+                padding-bottom: 20px;
+            }
+            
+            .upload-modal-footer {
+                flex-direction: column-reverse;
+                padding-bottom: 20px;
+            }
+            
+            .modal-btn {
+                width: 100%;
+            }
+            
+            .form-group {
+                gap: 4px;
+            }
+            
+            .upload-form {
+                gap: 16px;
+            }
+            
+            .file-upload-area {
+                padding: 20px 16px;
+            }
+        }
+
+        /* 特别小屏幕优化 */
+        @media (max-height: 700px) {
+            .upload-modal {
+                max-height: 95vh;
+            }
+            
+            .upload-modal-header {
+                padding: 16px 30px 12px;
+            }
+            
+            .upload-modal-body {
+                padding: 16px 30px;
+            }
+            
+            .upload-modal-footer {
+                padding: 12px 30px 16px;
+            }
+            
+            .upload-form {
+                gap: 14px;
+            }
+            
+            .form-group {
+                gap: 4px;
+            }
+            
+            .form-textarea {
+                min-height: 50px;
+                max-height: 60px;
+            }
+            
+            .file-upload-area {
+                padding: 16px 20px;
+            }
+            
+            .upload-modal-title {
+                font-size: 20px;
+            }
+        }
+
+        /* 删除确认弹窗样式 */
+        .delete-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .delete-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .delete-modal {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .delete-modal-overlay.show .delete-modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .delete-modal-header {
+            padding: 30px 30px 20px;
+            text-align: center;
+        }
+
+        .delete-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            color: #e53e3e;
+        }
+
+        .delete-modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .delete-modal-message {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .package-name-highlight {
+            color: #e53e3e;
+            font-weight: 600;
+        }
+
+        .delete-modal-footer {
+            padding: 20px 30px 30px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .delete-btn-cancel {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .delete-btn-cancel:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .delete-btn-confirm {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(229, 62, 62, 0.3);
+        }
+
+        .delete-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(229, 62, 62, 0.4);
+        }
+
+        /* 编辑包弹窗样式（复用上传弹窗样式，只需要调整标题颜色） */
+        .edit-modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .delete-modal {
+                width: 95%;
+                margin: 20px;
+            }
+            
+            .delete-modal-header, .delete-modal-footer {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+            
+            .delete-modal-footer {
+                flex-direction: column-reverse;
+            }
+            
+            .modal-btn {
+                width: 100%;
+            }
+        }
+
+        /* 设备使用明细抽屉样式 */
+        .device-drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .device-drawer-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .device-drawer {
+            position: fixed;
+            top: 0;
+            right: -1200px;
+            width: 1200px;
+            height: 100vh;
+            background: white;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            z-index: 1001;
+        }
+
+        .device-drawer-overlay.show .device-drawer {
+            right: 0;
+        }
+
+        .device-drawer-header {
+            padding: 24px 40px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .device-drawer-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 0;
+        }
+
+        .drawer-close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #64748b;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .drawer-close-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .device-drawer-tabs {
+            display: flex;
+            background: rgba(102, 126, 234, 0.05);
+            padding: 0 40px;
+            flex-shrink: 0;
+        }
+
+        .drawer-tab {
+            padding: 16px 24px;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .drawer-tab:hover {
+            color: #4c51bf;
+        }
+
+        .drawer-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .device-drawer-body {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-filters {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .drawer-search-input, .drawer-select, .drawer-date-input {
+            padding: 10px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            color: #2d3748;
+        }
+
+        .drawer-search-input {
+            width: 200px;
+        }
+
+        .drawer-select {
+            width: 120px;
+        }
+
+        .drawer-date-input {
+            width: 140px;
+        }
+
+        .drawer-search-input:focus, .drawer-select:focus, .drawer-date-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .device-detail-table-container {
+            flex: 1;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+
+        .device-detail-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .device-detail-table th,
+        .device-detail-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+            font-size: 13px;
+        }
+
+        .device-detail-table th {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            font-weight: 700;
+            color: #2d3748;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .device-detail-table td {
+            color: #2d3748;
+        }
+
+        .device-detail-table tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .device-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .device-status.online {
+            background: rgba(72, 187, 120, 0.2);
+            color: #2f855a;
+        }
+
+        .device-status.offline {
+            background: rgba(160, 174, 192, 0.2);
+            color: #4a5568;
+        }
+
+        .device-type-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .device-type-badge.browser {
+            background: rgba(102, 126, 234, 0.2);
+            color: #5a67d8;
+        }
+
+        .device-type-badge.premium {
+            background: rgba(237, 137, 54, 0.2);
+            color: #dd6b20;
+        }
+
+        .device-type-badge.normal {
+            background: rgba(160, 174, 192, 0.2);
+            color: #4a5568;
+        }
+
+        .drawer-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 16px 0;
+            border-top: 1px solid rgba(226, 232, 240, 0.5);
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #64748b;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .pagination-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .pagination-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 用户头像样式 */
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .action-btn-small {
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #64748b;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-right: 4px;
+        }
+
+        .action-btn-small:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .action-btn-small.danger:hover {
+            border-color: #f56565;
+            color: #f56565;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .device-drawer {
+                width: 90vw;
+                right: -90vw;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .device-drawer {
+                width: 100vw;
+                right: -100vw;
+            }
+            
+            .device-drawer-body {
+                padding: 20px;
+            }
+            
+            .drawer-filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .drawer-search-input, .drawer-select, .drawer-date-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <div class="logo">
+                <h2>🤖 AUTOMAN</h2>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item">
+                    <span class="nav-item-icon">🏠</span>
+                    <span>首页</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-item-icon">🛍️</span>
+                    <span>应用市场</span>
+                </div>
+                <div class="nav-item active">
+                    <span class="nav-item-icon">🎯</span>
+                    <span>设备市场</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-item-icon">🤖</span>
+                    <span>智能助理</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧主内容区 -->
+        <div class="main-content">
+            <!-- 顶部主Tab -->
+            <div class="main-tabs">
+                <div class="main-tab-list">
+                    <div class="main-tab" data-tab="mobile">📱 手机</div>
+                    <div class="main-tab active" data-tab="cloud">☁️ 云电脑</div>
+                    <div class="main-tab" data-tab="local">💻 本地设备</div>
+                    <div class="main-tab" data-tab="appmarket">🛍️ App市场</div>
+                </div>
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="content-area">
+                <!-- 手机内容 -->
+                <div id="mobile-content" class="tab-content hidden">
+                    <div class="device-header">
+                        <div class="device-controls">
+                            <select class="device-select">
+                                <option>请选择系统版本</option>
+                                <option>Android 13</option>
+                                <option>Android 12</option>
+                                <option>iOS 16</option>
+                            </select>
+                            <select class="region-select">
+                                <option>空闲中</option>
+                                <option>使用中</option>
+                            </select>
+                            <input type="text" class="device-search" placeholder="请输入设备名称或型号">
+                            <button class="connect-btn">接入本地设备</button>
+                            <button class="settings-btn">使用设备帮助</button>
+                        </div>
+                    </div>
+
+                    <div class="device-categories">
+                        <div class="category-section">
+                            <h3 class="category-title">📱 移动设备</h3>
+                            <div class="device-grid">
+                                <div class="device-card">
+                                    <div class="device-icon">📱</div>
+                                    <div class="device-info">
+                                        <h4>iPhone 14 Pro</h4>
+                                        <span class="device-type">iOS设备</span>
+                                        <span class="device-version">iOS 16.2</span>
+                                    </div>
+                                </div>
+                                <div class="device-card">
+                                    <div class="device-icon">📱</div>
+                                    <div class="device-info">
+                                        <h4>小米13 Pro</h4>
+                                        <span class="device-type">Android设备</span>
+                                        <span class="device-version">Android 13</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 云电脑内容 -->
+                <div id="cloud-content" class="tab-content">
+                    <div class="device-header">
+                        <div class="device-controls">
+                            <select class="device-select">
+                                <option>请选择系统版本</option>
+                                <option>Windows 11</option>
+                                <option>macOS Ventura</option>
+                                <option>Ubuntu 22.04</option>
+                            </select>
+                            <select class="region-select">
+                                <option>空闲中</option>
+                                <option>使用中</option>
+                            </select>
+                            <input type="text" class="device-search" placeholder="请输入设备名称或型号">
+                            <button class="connect-btn">接入本地设备</button>
+                            <button class="settings-btn">使用设备明细</button>
+                        </div>
+                    </div>
+
+                    <div class="device-categories">
+                        <!-- 云浏览器 -->
+                        <div class="category-section">
+                            <h3 class="category-title">🌐 云浏览器</h3>
+                            <div class="device-grid">
+                                <div class="device-card">
+                                    <div class="device-icon">🌐</div>
+                                    <div class="device-info">
+                                        <h4>Chrome</h4>
+                                        <span class="device-type">Browser</span>
+                                        <span class="device-version">引擎版本：v1.6.80</span>
+                                    </div>
+                                </div>
+                                <div class="device-card">
+                                    <div class="device-icon">🌐</div>
+                                    <div class="device-info">
+                                        <h4>Chrome</h4>
+                                        <span class="device-type">Browser</span>
+                                        <span class="device-version">引擎版本：v1.6.79</span>
+                                    </div>
+                                </div>
+                                <div class="device-card">
+                                    <div class="device-icon">🦊</div>
+                                    <div class="device-info">
+                                        <h4>Firefox</h4>
+                                        <span class="device-type">Browser</span>
+                                        <span class="device-version">引擎版本：v1.6.80</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 办公软件 -->
+                        <div class="category-section">
+                            <h3 class="category-title">📄 办公软件</h3>
+                            <div class="device-grid">
+                                <div class="device-card">
+                                    <div class="device-icon">📐</div>
+                                    <div class="device-info">
+                                        <h4>CAD</h4>
+                                        <span class="device-type">Software</span>
+                                        <span class="device-version">当前版本：v1.6.80</span>
+                                    </div>
+                                </div>
+                                <div class="device-card">
+                                    <div class="device-icon">📊</div>
+                                    <div class="device-info">
+                                        <h4>Office</h4>
+                                        <span class="device-type">Productivity Suite</span>
+                                        <span class="device-version">当前版本：v3.21.54</span>
+                                    </div>
+                                </div>
+                                <div class="device-card">
+                                    <div class="device-icon">💬</div>
+                                    <div class="device-info">
+                                        <h4>微信</h4>
+                                        <span class="device-type">社交应用</span>
+                                        <span class="device-version">当前版本：v8.0.59</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 远程桌面 -->
+                        <div class="category-section">
+                            <h3 class="category-title">🖥️ 远程桌面</h3>
+                            <div class="device-grid">
+                                <div class="device-card">
+                                    <div class="device-icon">🐧</div>
+                                    <div class="device-info">
+                                        <h4>Ubuntu Desktop</h4>
+                                        <span class="device-type">远程桌面</span>
+                                        <span class="device-version">当前版本：5.9</span>
+                                    </div>
+                                </div>
+                                <div class="device-card">
+                                    <div class="device-icon">🐧</div>
+                                    <div class="device-info">
+                                        <h4>Ubuntu Desktop</h4>
+                                        <span class="device-version">当前版本：5.8</span>
+                                    </div>
+                                </div>
+                                <div class="device-card">
+                                    <div class="device-icon">🪟</div>
+                                    <div class="device-info">
+                                        <h4>Windows</h4>
+                                        <span class="device-type">操作系统</span>
+                                        <span class="device-version">当前版本：v3.6.98</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 本地设备内容 -->
+                <div id="local-content" class="tab-content hidden">
+                    <div class="device-header">
+                        <div class="device-controls">
+                            <select class="device-select">
+                                <option>请选择系统版本</option>
+                                <option>Windows 11</option>
+                                <option>Windows 10</option>
+                                <option>Ubuntu 22.04</option>
+                            </select>
+                            <select class="region-select">
+                                <option>空闲中</option>
+                                <option>使用中</option>
+                            </select>
+                            <input type="text" class="device-search" placeholder="请输入设备名称或型号">
+                            <button class="connect-btn">接入本地设备</button>
+                            <button class="settings-btn">使用设备帮助</button>
+                        </div>
+                    </div>
+
+                    <div class="device-categories">
+                        <div class="category-section">
+                            <h3 class="category-title">☁️ 云端桌面</h3>
+                            <div class="device-grid">
+                                <div class="device-card">
+                                    <div class="device-icon">🖥️</div>
+                                    <div class="device-info">
+                                        <h4>Windows 云桌面</h4>
+                                        <span class="device-type">云电脑</span>
+                                        <span class="device-version">Windows 11</span>
+                                    </div>
+                                </div>
+                                <div class="device-card">
+                                    <div class="device-icon">🖥️</div>
+                                    <div class="device-info">
+                                        <h4>Ubuntu 云桌面</h4>
+                                        <span class="device-type">云电脑</span>
+                                        <span class="device-version">Ubuntu 22.04</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- App市场内容 -->
+                <div id="appmarket-content" class="tab-content hidden">
+                    <!-- 分段控制器 -->
+                    <div class="segment-control">
+                        <div class="segment-item active" data-segment="market">App市场</div>
+                        <div class="segment-item" data-segment="uploads">我上传的包</div>
+                    </div>
+
+                    <!-- 搜索栏 - 只在App市场页面显示 -->
+                    <div class="search-bar" id="market-search-bar">
+                        <input type="text" class="search-input" placeholder="搜索应用名称、描述、创建者..." id="search-input">
+                    </div>
+
+                    <!-- App市场内容 -->
+                    <div id="market-content" class="segment-content">
+                        <div class="card-grid">
+                            <!-- 美团应用卡片 -->
+                            <div class="app-card" data-app="meituan">
+                                <div class="app-card-header">
+                                    <div class="app-icon">美</div>
+                                    <div class="app-info">
+                                        <h3>美团 (Android)</h3>
+                                    </div>
+                                </div>
+                                <div class="app-tags">
+                                    <span class="tag platform">Android</span>
+                                    <span class="tag source">司内来源</span>
+                                </div>
+                                <div class="app-meta">
+                                    最新版本: 10.2.0<br>
+                                    最近更新: N/A<br>
+                                    创建者: Bots官方
+                                </div>
+                                <a href="#" class="view-details-btn">查看版本列表 →</a>
+                            </div>
+
+                            <!-- 京东应用卡片 -->
+                            <div class="app-card" data-app="jingdong">
+                                <div class="app-card-header">
+                                    <div class="app-icon">京</div>
+                                    <div class="app-info">
+                                        <h3>京东 (Android)</h3>
+                                    </div>
+                                </div>
+                                <div class="app-tags">
+                                    <span class="tag platform">Android</span>
+                                    <span class="tag source">司外来源</span>
+                                </div>
+                                <div class="app-meta">
+                                    最新版本: 6.5.3<br>
+                                    最近更新: N/A<br>
+                                    创建者: Bots官方 (引入)
+                                </div>
+                                <a href="#" class="view-details-btn">查看版本列表 →</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 应用详情页 -->
+                    <div id="app-detail-content" class="segment-content hidden">
+                        <!-- 返回导航 -->
+                        <div class="detail-header">
+                            <a href="#" class="back-link" id="back-to-market">
+                                < 返回App市场
+                            </a>
+                        </div>
+
+                        <!-- 应用详情信息 -->
+                        <div class="app-detail-info">
+                            <div class="app-detail-left">
+                                <h2 class="app-detail-title" id="detail-app-title">美团 (Android)</h2>
+                                <div class="app-detail-meta">
+                                    <div class="detail-item">
+                                        <span class="detail-label">集合多种生活服务，便捷购买统一配送。</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">创建者: </span>
+                                        <span class="detail-value">Bots官方</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">来源: </span>
+                                        <span class="detail-value">司内来源</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="app-detail-right">
+                                <div class="detail-search-bar">
+                                    <input type="text" class="search-input-detail" placeholder="搜索包名称、版本号、PackageID...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 版本列表表格 -->
+                        <div class="detail-table-container">
+                            <table class="detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>版本号</th>
+                                        <th>包描述</th>
+                                        <th>PACKAGEID</th>
+                                        <th>PACKAGEURL</th>
+                                        <th>环境</th>
+                                        <th>上传者</th>
+                                        <th>上传时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detail-table-body">
+                                    <tr>
+                                        <td>10.2.0</td>
+                                        <td></td>
+                                        <td>📋</td>
+                                        <td>📋</td>
+                                        <td>线上环境</td>
+                                        <td>Bots官方</td>
+                                        <td></td>
+                                        <td>
+                                            <button class="download-btn">⬇</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 我上传的包内容 -->
+                    <div id="uploads-content" class="segment-content hidden">
+                        <div class="table-header">
+                            <div class="search-bar-inline">
+                                <input type="text" class="search-input-inline" placeholder="搜索包名称、版本号、PackageID..." id="search-input-uploads">
+                            </div>
+                            <button class="upload-btn">
+                                <span>+</span>
+                                上传新包
+                            </button>
+                        </div>
+
+                        <table class="packages-table">
+                            <thead>
+                                <tr>
+                                    <th>包名称</th>
+                                    <th>版本号</th>
+                                    <th>版本描述</th>
+                                    <th>PACKAGEID</th>
+                                    <th>PACKAGEURL</th>
+                                    <th>环境</th>
+                                    <th>上传时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>我的Excel助手</td>
+                                    <td>1.0.1</td>
+                                    <td>修复了数据处理bug</td>
+                                    <td>📋</td>
+                                    <td>📋</td>
+                                    <td>线下环境</td>
+                                    <td>2024-01-15</td>
+                                    <td><span class="status-badge status-pending">待审批</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn">⬇</button>
+                                            <button class="action-btn">✏️</button>
+                                            <button class="action-btn delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 上传新包弹窗 -->
+    <div class="upload-modal-overlay" id="upload-modal">
+        <div class="upload-modal">
+            <div class="upload-modal-header">
+                <h3 class="upload-modal-title">上传新包</h3>
+            </div>
+            <div class="upload-modal-body">
+                <form class="upload-form" id="upload-form">
+                    <div class="form-group">
+                        <label class="form-label required">包名称</label>
+                        <input type="text" class="form-input" id="package-name" placeholder="例如：我的Excel助手" required>
+                        <div class="form-hint">为您的包起一个容易理解的名称。</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">环境</label>
+                        <select class="form-select" id="environment" required>
+                            <option value="线上环境">线上环境</option>
+                            <option value="线下环境">线下环境</option>
+                            <option value="测试环境">测试环境</option>
+                        </select>
+                        <div class="form-hint">选择此包适用的部署环境。</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">应用包文件</label>
+                        <div class="file-upload-area" id="file-upload-area">
+                            <input type="file" class="file-upload-input" id="package-file" accept=".apk,.ipa,.zip,.pkg" required>
+                            <div class="file-upload-content" id="file-upload-content">
+                                <div class="file-upload-icon">📁</div>
+                                <div class="file-upload-text">选择文件</div>
+                                <div class="file-upload-hint">或拖拽任何文件</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">版本号</label>
+                        <input type="text" class="form-input" id="version" placeholder="例如：1.0.0 或 24.3.12" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">包描述</label>
+                        <textarea class="form-textarea" id="description" placeholder="简要说明此包的更新内容..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="upload-modal-footer">
+                <button type="button" class="modal-btn modal-btn-cancel" id="cancel-upload">取消</button>
+                <button type="submit" class="modal-btn modal-btn-confirm" id="confirm-upload" form="upload-form">确认上传</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div class="delete-modal-overlay" id="delete-modal">
+        <div class="delete-modal">
+            <div class="delete-modal-header">
+                <div class="delete-icon">⚠️</div>
+                <h3 class="delete-modal-title">删除包确认</h3>
+                <p class="delete-modal-message">
+                    您确定要删除包 <span class="package-name-highlight" id="delete-package-name"></span> 吗？此操作不可恢复。
+                </p>
+            </div>
+            <div class="delete-modal-footer">
+                <button type="button" class="modal-btn delete-btn-cancel" id="cancel-delete">取消</button>
+                <button type="button" class="modal-btn delete-btn-confirm" id="confirm-delete">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑包弹窗 -->
+    <div class="upload-modal-overlay" id="edit-modal">
+        <div class="upload-modal">
+            <div class="upload-modal-header">
+                <h3 class="edit-modal-title">编辑包</h3>
+            </div>
+            <div class="upload-modal-body">
+                <form class="upload-form" id="edit-form">
+                    <div class="form-group">
+                        <label class="form-label required">包名称</label>
+                        <input type="text" class="form-input" id="edit-package-name" placeholder="例如：我的Excel助手" required>
+                        <div class="form-hint">为您的包起一个容易理解的名称。</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">环境</label>
+                        <select class="form-select" id="edit-environment" required>
+                            <option value="线上环境">线上环境</option>
+                            <option value="线下环境">线下环境</option>
+                            <option value="测试环境">测试环境</option>
+                        </select>
+                        <div class="form-hint">选择此包适用的部署环境。</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">版本号</label>
+                        <input type="text" class="form-input" id="edit-version" placeholder="例如：1.0.0 或 24.3.12" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">包描述</label>
+                        <textarea class="form-textarea" id="edit-description" placeholder="简要说明此包的更新内容..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="upload-modal-footer">
+                <button type="button" class="modal-btn modal-btn-cancel" id="cancel-edit">取消</button>
+                <button type="submit" class="modal-btn modal-btn-confirm" id="confirm-edit" form="edit-form">保存修改</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设备使用明细抽屉 -->
+    <div class="device-drawer-overlay" id="device-drawer-overlay">
+        <div class="device-drawer">
+            <div class="device-drawer-header">
+                <h3 class="device-drawer-title">设备使用明细</h3>
+                <button class="drawer-close-btn" id="drawer-close-btn">✕</button>
+            </div>
+            
+            <div class="device-drawer-tabs">
+                <div class="drawer-tab active" data-drawer-tab="list">设备列表</div>
+                <div class="drawer-tab" data-drawer-tab="stats">设备统计</div>
+            </div>
+            
+            <div class="device-drawer-body">
+                <!-- 设备列表内容 -->
+                <div id="device-list-content" class="drawer-tab-content">
+                    <div class="drawer-filters">
+                        <input type="text" class="drawer-search-input" placeholder="按设备IP搜索" id="ip-search">
+                        <select class="drawer-select" id="status-filter">
+                            <option value="">按状态搜索</option>
+                            <option value="online">在线</option>
+                            <option value="offline">错误</option>
+                            <option value="idle">空闲</option>
+                        </select>
+                        <input type="text" class="drawer-search-input" placeholder="按操作人搜索" id="user-search">
+                        <input type="date" class="drawer-date-input" placeholder="按时间搜索" id="time-search">
+                    </div>
+                    
+                    <div class="device-detail-table-container">
+                        <table class="device-detail-table">
+                            <thead>
+                                <tr>
+                                    <th>设备IP</th>
+                                    <th>类型</th>
+                                    <th>状态</th>
+                                    <th>设备id</th>
+                                    <th>镜像</th>
+                                    <th>占用时长 min</th>
+                                    <th>释放原因</th>
+                                    <th>开始占用时间</th>
+                                    <th>使用人</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>10.186.29.78</td>
+                                    <td><span class="device-type-badge browser">容器</span></td>
+                                    <td><span class="device-status online">在线</span></td>
+                                    <td>df89004</td>
+                                    <td>chrome浏览器</td>
+                                    <td>12</td>
+                                    <td>-</td>
+                                    <td>2025-03-18 09:32</td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">岳</div>
+                                            岳兴亮
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn-small">查看详情</button>
+                                        <button class="action-btn-small danger">强制释放</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>10.34.154.222</td>
+                                    <td><span class="device-type-badge browser">容器</span></td>
+                                    <td><span class="device-status online">在线</span></td>
+                                    <td>df89013</td>
+                                    <td>chrome浏览器</td>
+                                    <td>8</td>
+                                    <td>-</td>
+                                    <td>2025-04-25 17:48</td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">岳</div>
+                                            岳兴亮
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn-small">查看详情</button>
+                                        <button class="action-btn-small danger">强制释放</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>10.234.69.102</td>
+                                    <td><span class="device-type-badge premium">服务器</span></td>
+                                    <td><span class="device-status online">在线</span></td>
+                                    <td>df89002</td>
+                                    <td>chrome浏览器</td>
+                                    <td>9</td>
+                                    <td>-</td>
+                                    <td>2025-02-07 14:20</td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">岳</div>
+                                            岳兴亮
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn-small">查看详情</button>
+                                        <button class="action-btn-small danger">强制释放</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>10.234.57.56</td>
+                                    <td><span class="device-type-badge premium">服务器</span></td>
+                                    <td><span class="device-status offline">错误</span></td>
+                                    <td>df89235</td>
+                                    <td>chrome浏览器</td>
+                                    <td>24</td>
+                                    <td>超时释放</td>
+                                    <td>2025-07-19 13:57</td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">岳</div>
+                                            岳兴亮
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn-small">查看详情</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>10.34.154.12</td>
+                                    <td><span class="device-type-badge browser">容器</span></td>
+                                    <td><span class="device-status offline">错误</span></td>
+                                    <td>df89078</td>
+                                    <td>Ubuntu桌面</td>
+                                    <td>3</td>
+                                    <td>关闭设备</td>
+                                    <td>2025-03-18 09:32</td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">岳</div>
+                                            岳兴亮
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn-small">查看详情</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>10.175.34.224</td>
+                                    <td><span class="device-type-badge browser">容器</span></td>
+                                    <td><span class="device-status offline">错误</span></td>
+                                    <td>df89023</td>
+                                    <td>Windows桌面</td>
+                                    <td>1</td>
+                                    <td>关闭设备</td>
+                                    <td>2025-04-25 17:48</td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">岳</div>
+                                            岳兴亮
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="action-btn-small">查看详情</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="drawer-pagination">
+                        <div class="pagination-info">共 524 条</div>
+                        <div class="pagination-controls">
+                            <button class="pagination-btn" disabled>&lt;</button>
+                            <button class="pagination-btn active">1</button>
+                            <button class="pagination-btn">2</button>
+                            <button class="pagination-btn">3</button>
+                            <button class="pagination-btn">4</button>
+                            <button class="pagination-btn">5</button>
+                            <span>...</span>
+                            <button class="pagination-btn">53</button>
+                            <button class="pagination-btn">&gt;</button>
+                            <select class="drawer-select" style="margin-left: 12px;">
+                                <option>10 条/页</option>
+                                <option>20 条/页</option>
+                                <option>50 条/页</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 设备统计内容 -->
+                <div id="device-stats-content" class="drawer-tab-content hidden">
+                    <div style="padding: 40px; text-align: center; color: #64748b;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">设备统计</div>
+                        <div>统计图表功能正在开发中...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 应用数据
+        const appData = {
+            meituan: {
+                title: '美团 (Android)',
+                description: '集合多种生活服务，便捷购买统一配送。',
+                creator: 'Bots官方',
+                source: '司内来源',
+                versions: [
+                    {
+                        version: '10.2.0',
+                        description: '',
+                        packageId: '📋',
+                        packageUrl: '📋',
+                        environment: '线上环境',
+                        uploader: 'Bots官方',
+                        uploadTime: ''
+                    }
+                ]
+            },
+            jingdong: {
+                title: '京东 (Android)',
+                description: '综合性购物平台，品质保证。',
+                creator: 'Bots官方 (引入)',
+                source: '司外来源',
+                versions: [
+                    {
+                        version: '6.5.3',
+                        description: '',
+                        packageId: '📋',
+                        packageUrl: '📋',
+                        environment: '线上环境',
+                        uploader: 'Bots官方',
+                        uploadTime: ''
+                    }
+                ]
+            }
+        };
+
+        // 主Tab切换
+        document.querySelectorAll('.main-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 移除所有active类
+                document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+
+                // 激活当前tab
+                this.classList.add('active');
+                const targetTab = this.dataset.tab;
+                document.getElementById(targetTab + '-content').classList.remove('hidden');
+
+                // 如果切换到App市场，重置为市场视图
+                if (targetTab === 'appmarket') {
+                    showMarketView();
+                }
+
+                // 更新搜索框placeholder
+                updateSearchPlaceholder(targetTab);
+            });
+        });
+
+        // 分段控制器切换
+        document.querySelectorAll('.segment-item').forEach(segment => {
+            segment.addEventListener('click', function() {
+                // 移除所有active类
+                document.querySelectorAll('.segment-item').forEach(s => s.classList.remove('active'));
+                document.querySelectorAll('.segment-content').forEach(c => c.classList.add('hidden'));
+
+                // 激活当前segment
+                this.classList.add('active');
+                const targetSegment = this.dataset.segment;
+                document.getElementById(targetSegment + '-content').classList.remove('hidden');
+
+                // 控制搜索框显示/隐藏
+                const marketSearchBar = document.getElementById('market-search-bar');
+                if (targetSegment === 'uploads') {
+                    marketSearchBar.classList.add('hidden');
+                } else {
+                    marketSearchBar.classList.remove('hidden');
+                }
+
+                // 更新搜索框placeholder
+                updateSearchPlaceholder('appmarket', targetSegment);
+            });
+        });
+
+        // 应用卡片点击事件
+        document.querySelectorAll('.app-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                const appId = this.dataset.app;
+                if (appId && appData[appId]) {
+                    showAppDetail(appData[appId]);
+                }
+            });
+        });
+
+        // 返回App市场
+        document.getElementById('back-to-market').addEventListener('click', function(e) {
+            e.preventDefault();
+            showMarketView();
+        });
+
+        // 显示App市场视图
+        function showMarketView() {
+            // 重置分段控制器到App市场
+            document.querySelectorAll('.segment-item').forEach(s => s.classList.remove('active'));
+            document.querySelector('.segment-item[data-segment="market"]').classList.add('active');
+            
+            // 显示相应内容
+            document.querySelectorAll('.segment-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('market-content').classList.remove('hidden');
+            
+            // 显示搜索框和分段控制器
+            document.getElementById('market-search-bar').classList.remove('hidden');
+            document.querySelector('.segment-control').classList.remove('hidden');
+        }
+
+        // 显示应用详情
+        function showAppDetail(app) {
+            // 隐藏所有segment内容
+            document.querySelectorAll('.segment-content').forEach(c => c.classList.add('hidden'));
+            
+            // 隐藏搜索框和分段控制器
+            document.getElementById('market-search-bar').classList.add('hidden');
+            document.querySelector('.segment-control').classList.add('hidden');
+            
+            // 显示详情页
+            document.getElementById('app-detail-content').classList.remove('hidden');
+            
+            // 更新详情页内容
+            document.getElementById('detail-app-title').textContent = app.title;
+            
+            // 更新详情信息
+            const metaContainer = document.querySelector('.app-detail-meta');
+            metaContainer.innerHTML = `
+                <div class="detail-item">
+                    <span class="detail-label">${app.description}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">创建者: </span>
+                    <span class="detail-value">${app.creator}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">来源: </span>
+                    <span class="detail-value">${app.source}</span>
+                </div>
+            `;
+            
+            // 更新版本表格
+            const tbody = document.getElementById('detail-table-body');
+            tbody.innerHTML = app.versions.map(version => `
+                <tr>
+                    <td>${version.version}</td>
+                    <td>${version.description}</td>
+                    <td>${version.packageId}</td>
+                    <td>${version.packageUrl}</td>
+                    <td>${version.environment}</td>
+                    <td>${version.uploader}</td>
+                    <td>${version.uploadTime}</td>
+                    <td>
+                        <button class="download-btn">⬇</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 更新搜索框placeholder函数
+        function updateSearchPlaceholder(mainTab, segment = null) {
+            const searchInput = document.getElementById('search-input');
+            const searchInputUploads = document.getElementById('search-input-uploads');
+            const deviceSearch = document.querySelector('.device-search');
+
+            if (mainTab === 'mobile') {
+                if (deviceSearch) deviceSearch.placeholder = '请输入手机设备名称或型号';
+            } else if (mainTab === 'cloud') {
+                if (deviceSearch) deviceSearch.placeholder = '请输入云电脑名称或配置';
+            } else if (mainTab === 'local') {
+                if (deviceSearch) deviceSearch.placeholder = '请输入设备名称或型号';
+            } else if (mainTab === 'appmarket') {
+                if (segment === 'uploads') {
+                    if (searchInputUploads) {
+                        searchInputUploads.placeholder = '搜索包名称、版本号、PackageID...';
+                    }
+                } else {
+                    if (searchInput) {
+                        searchInput.placeholder = '搜索应用名称、描述、创建者...';
+                    }
+                }
+            }
+        }
+
+        // 初始化时设置默认为App市场
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSearchPlaceholder('appmarket');
+        });
+
+        // 上传新包弹窗功能
+        const uploadModal = document.getElementById('upload-modal');
+        const uploadBtn = document.querySelector('.upload-btn');
+        const cancelUploadBtn = document.getElementById('cancel-upload');
+        const confirmUploadBtn = document.getElementById('confirm-upload');
+        const uploadForm = document.getElementById('upload-form');
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const fileUploadInput = document.getElementById('package-file');
+        const fileUploadContent = document.getElementById('file-upload-content');
+
+        // 显示上传弹窗
+        uploadBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showUploadModal();
+        });
+
+        // 隐藏上传弹窗
+        cancelUploadBtn.addEventListener('click', function() {
+            hideUploadModal();
+        });
+
+        // 点击遮罩层关闭弹窗
+        uploadModal.addEventListener('click', function(e) {
+            if (e.target === uploadModal) {
+                hideUploadModal();
+            }
+        });
+
+        // 显示弹窗函数
+        function showUploadModal() {
+            uploadModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 隐藏弹窗函数
+        function hideUploadModal() {
+            uploadModal.classList.remove('show');
+            document.body.style.overflow = '';
+            resetUploadForm();
+        }
+
+        // 重置表单函数
+        function resetUploadForm() {
+            uploadForm.reset();
+            resetFileUpload();
+        }
+
+        // 文件上传区域交互
+        fileUploadArea.addEventListener('click', function() {
+            fileUploadInput.click();
+        });
+
+        fileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        });
+
+        fileUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+        });
+
+        fileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelection(files[0]);
+            }
+        });
+
+        fileUploadInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                handleFileSelection(e.target.files[0]);
+            }
+        });
+
+        // 处理文件选择
+        function handleFileSelection(file) {
+            const maxSize = 100 * 1024 * 1024; // 100MB
+            
+            if (file.size > maxSize) {
+                alert('文件大小不能超过100MB');
+                return;
+            }
+
+            displaySelectedFile(file);
+        }
+
+        // 显示已选择的文件
+        function displaySelectedFile(file) {
+            const fileSize = formatFileSize(file.size);
+            
+            fileUploadContent.innerHTML = `
+                <div class="selected-file">
+                    <div class="selected-file-icon">📄</div>
+                    <div class="selected-file-info">
+                        <div class="selected-file-name">${file.name}</div>
+                        <div class="selected-file-size">${fileSize}</div>
+                    </div>
+                    <button type="button" class="remove-file-btn" onclick="resetFileUpload()">✕</button>
+                </div>
+            `;
+        }
+
+        // 重置文件上传区域
+        function resetFileUpload() {
+            fileUploadInput.value = '';
+            fileUploadContent.innerHTML = `
+                <div class="file-upload-icon">📁</div>
+                <div class="file-upload-text">选择文件</div>
+                <div class="file-upload-hint">或拖拽任何文件</div>
+            `;
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 表单提交处理
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+            const packageName = document.getElementById('package-name').value;
+            const environment = document.getElementById('environment').value;
+            const version = document.getElementById('version').value;
+            const description = document.getElementById('description').value;
+            const file = fileUploadInput.files[0];
+
+            // 验证必填字段
+            if (!packageName || !environment || !version || !file) {
+                alert('请填写所有必填字段并选择文件');
+                return;
+            }
+
+            // 这里可以添加实际的上传逻辑
+            console.log('上传包信息:', {
+                packageName,
+                environment,
+                version,
+                description,
+                file: file.name
+            });
+
+            // 模拟上传成功
+            alert('包上传成功！');
+            hideUploadModal();
+        });
+
+        // ESC键关闭弹窗
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && uploadModal.classList.contains('show')) {
+                hideUploadModal();
+            }
+        });
+
+        // 删除和编辑功能
+        const deleteModal = document.getElementById('delete-modal');
+        const editModal = document.getElementById('edit-modal');
+        const cancelDeleteBtn = document.getElementById('cancel-delete');
+        const confirmDeleteBtn = document.getElementById('confirm-delete');
+        const cancelEditBtn = document.getElementById('cancel-edit');
+        const confirmEditBtn = document.getElementById('confirm-edit');
+        const editForm = document.getElementById('edit-form');
+
+        // 当前操作的包数据
+        let currentPackageData = {};
+
+        // 初始化操作按钮事件
+        function initializeActionButtons() {
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    const row = this.closest('tr');
+                    const packageName = row.cells[0].textContent;
+                    const version = row.cells[1].textContent;
+                    const description = row.cells[2].textContent;
+                    const environment = row.cells[5].textContent;
+
+                    currentPackageData = {
+                        row: row,
+                        name: packageName,
+                        version: version,
+                        description: description,
+                        environment: environment
+                    };
+
+                    if (this.textContent.includes('🗑️')) {
+                        // 删除按钮
+                        showDeleteModal();
+                    } else if (this.textContent.includes('✏️')) {
+                        // 编辑按钮
+                        showEditModal();
+                    }
+                });
+            });
+        }
+
+        // 显示删除确认弹窗
+        function showDeleteModal() {
+            document.getElementById('delete-package-name').textContent = `'${currentPackageData.name}'`;
+            deleteModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 隐藏删除确认弹窗
+        function hideDeleteModal() {
+            deleteModal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // 显示编辑弹窗
+        function showEditModal() {
+            // 预填充表单数据
+            document.getElementById('edit-package-name').value = currentPackageData.name;
+            document.getElementById('edit-version').value = currentPackageData.version;
+            document.getElementById('edit-description').value = currentPackageData.description;
+            document.getElementById('edit-environment').value = currentPackageData.environment;
+            
+            editModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 隐藏编辑弹窗
+        function hideEditModal() {
+            editModal.classList.remove('show');
+            document.body.style.overflow = '';
+            editForm.reset();
+        }
+
+        // 删除包确认
+        confirmDeleteBtn.addEventListener('click', function() {
+            // 从表格中移除该行
+            currentPackageData.row.remove();
+            
+            // 显示成功消息
+            alert('包已成功删除！');
+            
+            hideDeleteModal();
+        });
+
+        // 取消删除
+        cancelDeleteBtn.addEventListener('click', function() {
+            hideDeleteModal();
+        });
+
+        // 点击遮罩层关闭删除弹窗
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === deleteModal) {
+                hideDeleteModal();
+            }
+        });
+
+        // 取消编辑
+        cancelEditBtn.addEventListener('click', function() {
+            hideEditModal();
+        });
+
+        // 点击遮罩层关闭编辑弹窗
+        editModal.addEventListener('click', function(e) {
+            if (e.target === editModal) {
+                hideEditModal();
+            }
+        });
+
+        // 编辑表单提交
+        editForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newName = document.getElementById('edit-package-name').value;
+            const newVersion = document.getElementById('edit-version').value;
+            const newDescription = document.getElementById('edit-description').value;
+            const newEnvironment = document.getElementById('edit-environment').value;
+
+            // 验证必填字段
+            if (!newName || !newVersion || !newEnvironment) {
+                alert('请填写所有必填字段');
+                return;
+            }
+
+            // 更新表格中的数据
+            currentPackageData.row.cells[0].textContent = newName;
+            currentPackageData.row.cells[1].textContent = newVersion;
+            currentPackageData.row.cells[2].textContent = newDescription;
+            currentPackageData.row.cells[5].textContent = newEnvironment;
+
+            // 这里可以添加实际的更新逻辑
+            console.log('更新包信息:', {
+                oldName: currentPackageData.name,
+                newName,
+                newVersion,
+                newDescription,
+                newEnvironment
+            });
+
+            alert('包信息已成功更新！');
+            hideEditModal();
+        });
+
+        // ESC键关闭所有弹窗
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (uploadModal.classList.contains('show')) {
+                    hideUploadModal();
+                }
+                if (deleteModal.classList.contains('show')) {
+                    hideDeleteModal();
+                }
+                if (editModal.classList.contains('show')) {
+                    hideEditModal();
+                }
+            }
+        });
+
+        // 页面加载完成后初始化操作按钮
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSearchPlaceholder('appmarket');
+            initializeActionButtons();
+        });
+
+        // 设备使用明细抽屉功能
+        const deviceDrawerOverlay = document.getElementById('device-drawer-overlay');
+        const drawerCloseBtn = document.getElementById('drawer-close-btn');
+        
+        // 初始化设备明细按钮事件
+        function initializeDeviceDetailButtons() {
+            document.querySelectorAll('.settings-btn').forEach(btn => {
+                if (btn.textContent.includes('使用设备明细')) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        showDeviceDrawer();
+                    });
+                }
+            });
+        }
+
+        // 显示设备明细抽屉
+        function showDeviceDrawer() {
+            deviceDrawerOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            
+            // 设置默认时间为今天
+            const today = new Date();
+            document.getElementById('time-search').value = today.toISOString().split('T')[0];
+        }
+
+        // 隐藏设备明细抽屉
+        function hideDeviceDrawer() {
+            deviceDrawerOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // 抽屉关闭按钮事件
+        drawerCloseBtn.addEventListener('click', function() {
+            hideDeviceDrawer();
+        });
+
+        // 点击遮罩层关闭抽屉
+        deviceDrawerOverlay.addEventListener('click', function(e) {
+            if (e.target === deviceDrawerOverlay) {
+                hideDeviceDrawer();
+            }
+        });
+
+        // 抽屉内tab切换
+        document.querySelectorAll('.drawer-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 移除所有active类
+                document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.drawer-tab-content').forEach(c => c.classList.add('hidden'));
+
+                // 激活当前tab
+                this.classList.add('active');
+                const targetTab = this.dataset.drawerTab;
+                document.getElementById(`device-${targetTab}-content`).classList.remove('hidden');
+            });
+        });
+
+        // ESC键关闭抽屉
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (uploadModal.classList.contains('show')) {
+                    hideUploadModal();
+                }
+                if (deleteModal.classList.contains('show')) {
+                    hideDeleteModal();
+                }
+                if (editModal.classList.contains('show')) {
+                    hideEditModal();
+                }
+                if (deviceDrawerOverlay.classList.contains('show')) {
+                    hideDeviceDrawer();
+                }
+            }
+        });
+
+        // 设备明细搜索功能
+        function initializeDeviceSearch() {
+            const ipSearchInput = document.getElementById('ip-search');
+            const statusFilter = document.getElementById('status-filter');
+            const userSearchInput = document.getElementById('user-search');
+            const timeSearchInput = document.getElementById('time-search');
+
+            // IP搜索
+            ipSearchInput.addEventListener('input', function() {
+                filterDeviceTable();
+            });
+
+            // 状态筛选
+            statusFilter.addEventListener('change', function() {
+                filterDeviceTable();
+            });
+
+            // 操作人搜索
+            userSearchInput.addEventListener('input', function() {
+                filterDeviceTable();
+            });
+
+            // 时间搜索
+            timeSearchInput.addEventListener('change', function() {
+                filterDeviceTable();
+            });
+        }
+
+        // 设备表格筛选函数
+        function filterDeviceTable() {
+            const ipSearch = document.getElementById('ip-search').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            const userSearch = document.getElementById('user-search').value.toLowerCase();
+            const timeSearch = document.getElementById('time-search').value;
+
+            const tableRows = document.querySelectorAll('.device-detail-table tbody tr');
+
+            tableRows.forEach(row => {
+                const ip = row.cells[0].textContent.toLowerCase();
+                const status = row.cells[2].textContent.toLowerCase();
+                const user = row.cells[8].textContent.toLowerCase();
+                const time = row.cells[7].textContent;
+
+                let showRow = true;
+
+                // IP筛选
+                if (ipSearch && !ip.includes(ipSearch)) {
+                    showRow = false;
+                }
+
+                // 状态筛选
+                if (statusFilter) {
+                    const statusMap = {
+                        'online': '在线',
+                        'offline': '错误',
+                        'idle': '空闲'
+                    };
+                    if (!status.includes(statusMap[statusFilter])) {
+                        showRow = false;
+                    }
+                }
+
+                // 操作人筛选
+                if (userSearch && !user.includes(userSearch)) {
+                    showRow = false;
+                }
+
+                // 时间筛选（如果选择了时间，只显示该日期的记录）
+                if (timeSearch && time) {
+                    const selectedDate = new Date(timeSearch).toISOString().split('T')[0];
+                    const rowDate = new Date(time.replace(' ', 'T')).toISOString().split('T')[0];
+                    if (selectedDate !== rowDate) {
+                        showRow = false;
+                    }
+                }
+
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSearchPlaceholder('appmarket');
+            initializeActionButtons();
+            initializeDeviceDetailButtons();
+            initializeDeviceSearch();
+        });
+    </script>
+</body>
+</html>

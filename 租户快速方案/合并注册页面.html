@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能应用平台 - 完善您的信息</title>
+    <style>
+        /* 全局重置和基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f7f8fa; /* 匹配图片的浅灰色背景 */
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 主容器 */
+        .container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        /* 顶部欢迎语 */
+        .welcome-header {
+            font-size: 24px;
+            font-weight: 500;
+            color: #1f2d3d;
+            margin-bottom: 12px;
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+            color: #606266;
+            margin-bottom: 30px;
+        }
+
+        /* 表单卡片 */
+        .form-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            text-align: left;
+        }
+
+        /* 卡片标题 */
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        /* 表单组 */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        /* 表单标签 */
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #3c4858;
+            margin-bottom: 8px;
+        }
+
+        .optional-tag {
+            color: #909399;
+            font-weight: 400;
+            font-size: 13px;
+            margin-left: 5px;
+        }
+
+        /* 输入框容器（用于放置输入框和计数器） */
+        .input-wrapper {
+            position: relative;
+        }
+
+        /* 输入框和文本域 */
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #dcdfe6;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #303133;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: #c0c4cc;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #409eff;
+            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        /* 字符计数器 */
+        .char-counter {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #909399;
+        }
+        
+        .textarea-counter {
+            text-align: right;
+            font-size: 12px;
+            color: #909399;
+            margin-top: 5px;
+        }
+
+        /* 提交按钮 */
+        .submit-button {
+            width: 100%;
+            padding: 14px;
+            background-color: #409eff; /* 匹配图片的蓝色 */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            margin-top: 15px;
+        }
+
+        .submit-button:hover {
+            background-color: #66b1ff;
+        }
+
+        .submit-button:active {
+            transform: scale(0.98);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 class="welcome-header">嗨，欢迎来到智能应用平台！</h1>
+        <p class="welcome-subtitle">一步完成账号设置和空间创建，即刻起航！</p>
+        <div class="form-card">
+            <h2 class="card-title">设置您的账户和空间</h2>
+            <form id="setupForm">
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        用户名称<span class="optional-tag">(可选)</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" class="form-input" placeholder="默认为您的手机号/邮箱号" maxlength="30">
+                        <span class="char-counter" id="usernameCounter">0 / 30</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="spaceName" class="form-label">
+                        空间名称<span class="optional-tag">(可选)</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" id="spaceName" class="form-input" placeholder="例如：市场团队的工作空间" maxlength="30">
+                        <span class="char-counter" id="spaceNameCounter">0 / 30</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="spaceDescription" class="form-label">
+                        空间描述<span class="optional-tag">(可选)</span>
+                    </label>
+                    <textarea id="spaceDescription" class="form-textarea" placeholder="简单描述一下这个空间，方便团队成员了解" maxlength="200"></textarea>
+                    <div class="textarea-counter" id="spaceDescriptionCounter">0 / 200</div>
+                </div>
+
+                <button type="submit" class="submit-button">开始使用</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function setupCharCounter(inputId, counterId, maxLength) {
+            const input = document.getElementById(inputId);
+            const counter = document.getElementById(counterId);
+            
+            input.addEventListener('input', () => {
+                const currentLength = input.value.length;
+                counter.textContent = `${currentLength} / ${maxLength}`;
+            });
+        }
+
+        setupCharCounter('username', 'usernameCounter', 30);
+        setupCharCounter('spaceName', 'spaceNameCounter', 30);
+        setupCharCounter('spaceDescription', 'spaceDescriptionCounter', 200);
+        
+        // 阻止表单默认提交行为 (用于演示)
+        document.getElementById('setupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('设置已保存！正在进入平台...');
+            // 在这里添加跳转到主页的逻辑
+            // window.location.href = '/dashboard';
+        });
+    </script>
+
+</body>
+</html>

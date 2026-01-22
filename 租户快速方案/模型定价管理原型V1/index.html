@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>模型定价管理</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <div class="page-container">
+    <header class="page-header">
+      <h1 class="page-title">模型定价管理</h1>
+      <p class="page-tip">在这里集中配置、审查和调整所有大模型的商业定价策略。</p>
+    </header>
+
+    <section class="toolbar toolbar--right">
+      <div class="toolbar__row">
+        <div class="filters filters--inline">
+          <div class="filter-item filter-item--name">
+            <div class="searchbox">
+              <span class="searchbox__icon">🔍</span>
+              <input id="searchName" type="text" placeholder="搜索模型" />
+            </div>
+          </div>
+
+          <div class="filter-item">
+            <div class="msd" id="vendorMsd">
+              <button class="msd__trigger" type="button">
+                <span class="msd__label" data-placeholder="请选择厂商">请选择厂商</span>
+                <span class="msd__arrow">▾</span>
+              </button>
+              <div class="msd__panel">
+                <div class="msd__options" id="vendorSelect"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-item">
+            <div class="msd" id="levelMsd">
+              <button class="msd__trigger" type="button">
+                <span class="msd__label" data-placeholder="请选择定级">请选择定级</span>
+                <span class="msd__arrow">▾</span>
+              </button>
+              <div class="msd__panel">
+                <div class="msd__options" id="levelSelect"></div>
+              </div>
+            </div>
+          </div>
+
+          
+        </div>
+
+        <div class="bulk-actions">
+          <span id="selectedCount">已选择 0 项</span>
+          <button id="btnBulkEdit" class="btn primary" disabled>批量编辑</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:36px;"><input type="checkbox" id="checkAll" /></th>
+            <th>模型厂商</th>
+            <th>模型名称</th>
+            <th>输入 (每1k tokens)价格</th>
+            <th>输出 (每1k tokens)价格</th>
+            <th>定级</th>
+            <th>模型描述</th>
+            <th style="width:80px;">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </section>
+
+    <section class="pagination-bar">
+      <div class="page-info">
+        <span id="totalInfo">共 0 条</span>
+      </div>
+      <div class="page-controls">
+        <button id="prevPage" class="btn" disabled>上一页</button>
+        <div id="pageNumbers" class="page-numbers"></div>
+        <button id="nextPage" class="btn" disabled>下一页</button>
+        <div class="page-size">
+          <label for="pageSize">每页</label>
+          <select id="pageSize">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+          <span>条</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 单行编辑弹窗 -->
+  <div class="modal" id="editModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="true"></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+      <div class="modal__header">
+        <div>
+          <h3 id="editModalTitle">编辑模型定价</h3>
+          <div id="editSubtitle" class="subtitle"></div>
+        </div>
+        <button class="modal__close" data-close="true" aria-label="关闭">×</button>
+      </div>
+      <div class="modal__body">
+        <div id="editError" class="form-error" hidden></div>
+        <form id="editForm" class="form form--horizontal">
+          <div class="form-item">
+            <div class="form-item__label">
+              <label for="editLevel"><span class="req">*</span> 定级</label>
+            </div>
+            <div class="form-item__control">
+              <select id="editLevel" aria-required="true"></select>
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="form-item__label">
+              <label for="editPriceInput"><span class="req">*</span> 输入价格</label>
+            </div>
+            <div class="form-item__control">
+              <div class="input-group">
+                <input id="editPriceInput" type="number" step="0.01" min="0" placeholder="例如 2.50" aria-describedby="editPriceInputUnit" />
+                <span class="addon" id="editPriceInputUnit">点/1k</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="form-item__label">
+              <label for="editPriceOutput"><span class="req">*</span> 输出价格</label>
+            </div>
+            <div class="form-item__control">
+              <div class="input-group">
+                <input id="editPriceOutput" type="number" step="0.01" min="0" placeholder="例如 5.00" aria-describedby="editPriceOutputUnit" />
+                <span class="addon" id="editPriceOutputUnit">点/1k</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="form-item__label"></div>
+            <div class="form-item__control">
+              <p class="form-tip">价格单位为"点/1k tokens"，仅支持非负数字，最多两位小数</p>
+            </div>
+          </div>
+          <input type="hidden" id="editId" />
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn" data-close="true">取消</button>
+        <button id="saveEdit" class="btn primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批量编辑弹窗 -->
+  <div class="modal" id="bulkModal" aria-hidden="true">
+    <div class="modal__backdrop" data-close="true"></div>
+    <div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="bulkModalTitle">
+      <div class="modal__header">
+        <div>
+          <h3 id="bulkModalTitle">批量编辑</h3>
+          <div id="bulkSubtitle" class="subtitle"></div>
+        </div>
+        <button class="modal__close" data-close="true" aria-label="关闭">×</button>
+      </div>
+      <div class="modal__body">
+        <div id="bulkError" class="form-error" hidden></div>
+        <form id="bulkForm" class="form form--horizontal">
+          <div class="form-item">
+            <div class="form-item__label"></div>
+            <div class="form-item__control">
+              <p class="form-tip">仅覆盖填写的字段，未填写的字段保持不变</p>
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="form-item__label">
+              <label for="bulkLevel">定级</label>
+            </div>
+            <div class="form-item__control">
+              <select id="bulkLevel"></select>
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="form-item__label">
+              <label for="bulkPriceInput">输入价格</label>
+            </div>
+            <div class="form-item__control">
+              <div class="input-group">
+                <input id="bulkPriceInput" type="number" step="0.01" min="0" placeholder="留空则不变" aria-describedby="bulkPriceInputUnit" />
+                <span class="addon" id="bulkPriceInputUnit">点/1k</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="form-item__label">
+              <label for="bulkPriceOutput">输出价格</label>
+            </div>
+            <div class="form-item__control">
+              <div class="input-group">
+                <input id="bulkPriceOutput" type="number" step="0.01" min="0" placeholder="留空则不变" aria-describedby="bulkPriceOutputUnit" />
+                <span class="addon" id="bulkPriceOutputUnit">点/1k</span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal__footer">
+        <button class="btn" data-close="true">取消</button>
+        <button id="saveBulk" class="btn primary">应用</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/mock-data.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
+
+

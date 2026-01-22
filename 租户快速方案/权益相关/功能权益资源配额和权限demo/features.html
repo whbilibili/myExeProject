@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>功能权限分配 - 终版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': { '50': '#eff6ff', '100': '#dbeafe', '200': '#bfdbfe', '300': '#93c5fd', '400': '#60a5fa', '500': '#3b82f6', '600': '#2563eb', '700': '#1d4ed8', '800': '#1e40af', '900': '#1e3a8a' },
+                        'slate': { '50': '#f8fafc', '100': '#f1f5f9', '200': '#e2e8f0', '300': '#cbd5e1', '400': '#94a3b8', '500': '#64748b', '600': '#475569', '700': '#334155', '800': '#1e293b', '900': '#0f172a' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://rsms.me/inter/inter.css');
+        html { font-family: 'Inter', sans-serif; }
+        body { background-color: #0f172a; color: #cbd5e1; overflow-y: auto; }
+        .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; opacity: 0; }
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-backdrop { transition: opacity 0.3s ease; }
+        .modal-panel { transition: all 0.3s ease; }
+        .modal-hidden { opacity: 0; pointer-events: none; }
+        .modal-visible { opacity: 1; pointer-events: auto; }
+        .modal-hidden .modal-panel { transform: translateY(20px) scale(0.98); opacity: 0; }
+        .modal-visible .modal-panel { transform: translateY(0) scale(1); opacity: 1; }
+        .list-item-container::-webkit-scrollbar { width: 6px; }
+        .list-item-container::-webkit-scrollbar-track { background: #1e293b; }
+        .list-item-container::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 3px; }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <div class="animate-fade-in-up">
+            <h1 class="text-3xl font-bold text-white mb-2">功能权限分配</h1>
+            <p class="text-slate-400">将您订阅的功能席位分配给企业内的指定成员、部门，或为全员启用。</p>
+        </div>
+        <div id="feature-list" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+
+    <!-- FINAL Assignment Modal -->
+    <div id="assignment-modal" class="modal-hidden fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] bg-slate-900 bg-opacity-80 backdrop-blur-sm modal-backdrop">
+        <div class="modal-panel bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col" style="max-height: 80vh;">
+            <div class="flex items-start justify-between p-6 border-b border-slate-700">
+                <div><h2 id="modal-title" class="text-xl font-bold text-white">管理分配</h2><p id="modal-subtitle" class="text-sm text-slate-400 mt-1">为此功能添加或移除成员/部门</p></div>
+                <button id="close-assign-modal-btn" class="p-2 -mr-2 text-slate-500 hover:text-white hover:bg-slate-700 rounded-full transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 flex-1 flex flex-col overflow-y-auto space-y-6">
+                <div class="bg-slate-900/50 rounded-lg p-4">
+                    <div class="flex items-center justify-between"><label for="enable-for-all" class="font-medium text-white cursor-pointer select-none">为所有成员启用</label><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="enable-for-all" class="sr-only peer"><div class="w-11 h-6 bg-slate-600 rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div></label></div>
+                    <p class="text-slate-400 text-xs mt-2">开启后，租户内的所有成员都将获得此功能，并覆盖下方的单独分配。</p>
+                </div>
+                <div id="assignment-area" class="space-y-6 transition-opacity">
+                    <!-- Individuals Input -->
+                    <div>
+                        <label class="text-sm font-semibold text-white mb-2 block">按成员分配</label>
+                        <div class="relative">
+                            <div id="user-input-container" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 flex flex-wrap items-center gap-2 min-h-[44px]">
+                                <input id="user-search-input" type="text" placeholder="按misID/手机/邮箱/用户名搜索" class="flex-1 bg-transparent focus:outline-none min-w-[200px] text-sm h-full p-1">
+                            </div>
+                            <button id="clear-users-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors hidden"><i class="fas fa-times-circle"></i></button>
+                            <div id="user-search-results" class="hidden absolute top-full left-0 w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-20 max-h-60 overflow-y-auto list-item-container"></div>
+                        </div>
+                    </div>
+                    <!-- Departments Input -->
+                    <div>
+                        <label class="text-sm font-semibold text-white mb-2 block">按部门分配</label>
+                        <div class="relative">
+                            <div id="dept-input-container" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 flex flex-wrap items-center gap-2 min-h-[44px] cursor-pointer">
+                                <span id="dept-placeholder" class="text-slate-500 text-sm p-1">点击选择部门</span>
+                            </div>
+                            <button id="clear-depts-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors hidden"><i class="fas fa-times-circle"></i></button>
+                            <div id="dept-tree-popover" class="hidden absolute top-full left-0 w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl z-10 p-4 max-h-72 flex flex-col">
+                                <input id="dept-search-input" type="text" placeholder="搜索部门" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm mb-3">
+                                <div id="department-tree" class="flex-1 overflow-y-auto list-item-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between p-6 border-t border-slate-700">
+                <div class="text-sm"><p id="seat-count" class="font-semibold text-white">已分配席位: 0</p><p id="seat-warning" class="text-red-400 text-xs mt-1 h-4">&nbsp;</p></div>
+                <div class="flex items-center space-x-4"><button id="cancel-assign-btn" class="px-5 py-2.5 text-sm font-semibold text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">取消</button><button id="save-assign-btn" class="px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 disabled:bg-primary-900 disabled:text-slate-400 disabled:cursor-not-allowed rounded-lg transition-colors">保存更改</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- MOCK DATA ---
+        const mockUsers = [
+            { id: 1, misId: 'zhangsan', phone: '13800138001', name: '张三', email: 'zhangsan@example.com', avatar: 'https://images.unsplash.com/photo-1579783483458-83d02161294e?w=100&h=100&fit=crop', departmentId: 5 },
+            { id: 2, misId: 'lisi', phone: '13800138002', name: '李四', email: 'lisi@example.com', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop', departmentId: 6 },
+            { id: 3, misId: 'wangwu', phone: '13800138003', name: '王五', email: 'wangwu@example.com', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop', departmentId: 2 },
+        ];
+        const mockDepartments = [
+            { id: 1, name: '产品研发部', userCount: 4, parentId: null }, { id: 5, name: '前端团队', userCount: 2, parentId: 1 }, { id: 6, name: '后端团队', userCount: 2, parentId: 1 },
+            { id: 2, name: '市场营销部', userCount: 2, parentId: null }, { id: 3, name: '客户支持部', userCount: 2, parentId: null },
+        ];
+        let mockFeatures = [
+            { id: 'ai_assistant', name: 'AI 助手 (专业版)', description: '通过自然语言生成内容和公式。', type: 'per_seat', totalSeats: 5, assignment: { assignedUserIds: [1], assignedDeptIds: [2], enabledForAll: false }, icon: 'fa-robot', color: 'text-purple-400' },
+            { id: 'automation_workflow', name: '自动化工作流', description: '创建跨应用的自动化任务。', type: 'per_seat', totalSeats: 10, assignment: { assignedUserIds: [], assignedDeptIds: [], enabledForAll: false }, icon: 'fa-cogs', color: 'text-green-400' },
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let currentFeature = null;
+        let tempAssignment = null;
+
+        // --- DOM ELEMENTS ---
+        const featureListEl = document.getElementById('feature-list');
+        const modalEl = document.getElementById('assignment-modal');
+        const userInputContainer = document.getElementById('user-input-container');
+        const userSearchInput = document.getElementById('user-search-input');
+        const userSearchResultsEl = document.getElementById('user-search-results');
+        const deptInputContainer = document.getElementById('dept-input-container');
+        const deptPopoverEl = document.getElementById('dept-tree-popover');
+        const deptTreeEl = document.getElementById('department-tree');
+        const deptSearchInput = document.getElementById('dept-search-input');
+
+        // --- CORE LOGIC ---
+        const getAssignedUserCount = (assignment) => {
+            if (!assignment) return 0;
+            if (assignment.enabledForAll) return mockUsers.length;
+            const userIds = new Set(assignment.assignedUserIds);
+            assignment.assignedDeptIds.forEach(deptId => {
+                const processDept = (dId) => {
+                    mockUsers.filter(u => u.departmentId === dId).forEach(u => userIds.add(u.id));
+                    mockDepartments.filter(d => d.parentId === dId).forEach(child => processDept(child.id));
+                };
+                processDept(deptId);
+            });
+            return userIds.size;
+        };
+
+        const updateSeatCount = () => {
+            if (!currentFeature) return;
+            const count = getAssignedUserCount(tempAssignment);
+            
+            // MVP Change: Only show assigned count, remove total and validation
+            document.getElementById('seat-count').textContent = `已分配席位: ${count}`;
+            
+            const warningEl = document.getElementById('seat-warning');
+            const saveBtn = document.getElementById('save-assign-btn');
+            
+            // Always clear warning and enable save button
+            warningEl.innerHTML = '&nbsp;';
+            saveBtn.disabled = false;
+        };
+        
+        // --- RENDER FUNCTIONS ---
+        const renderFeatures = () => {
+            featureListEl.innerHTML = mockFeatures.map((feature, index) => {
+                const count = getAssignedUserCount(feature.assignment);
+                const infoHtml = feature.assignment.enabledForAll
+                    ? `<p class="text-sm font-semibold text-green-400">已为所有成员启用</p>`
+                    : `<p class="text-sm font-semibold">${count} <span class="text-slate-400">席位已分配</span></p>`;
+                return `
+                    <div class="bg-slate-800 rounded-2xl p-6 flex flex-col justify-between border border-slate-700 hover:border-primary-500 transition-colors animate-fade-in-up" style="animation-delay: ${index * 100}ms;">
+                        <div>
+                            <div class="flex items-center justify-between"><h3 class="text-lg font-bold text-white">${feature.name}</h3><i class="fas ${feature.icon} ${feature.color} text-xl"></i></div>
+                            <p class="mt-2 text-sm text-slate-400">${feature.description}</p>
+                        </div>
+                        <div class="mt-6">${infoHtml}<div class="mt-4"><button data-feature-id="${feature.id}" class="manage-btn w-full text-center px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-semibold transition-colors">管理分配</button></div></div>
+                    </div>`;
+            }).join('');
+            document.querySelectorAll('.manage-btn').forEach(btn => btn.addEventListener('click', (e) => openModal(e.currentTarget.dataset.featureId)));
+        };
+        
+        const createPill = (text, id, type) => {
+            const pill = document.createElement('div');
+            pill.className = 'bg-primary-700 text-white text-sm font-medium px-2.5 py-1 rounded-md flex items-center gap-2';
+            pill.innerHTML = `<span>${text}</span><button data-id="${id}" data-type="${type}" class="remove-pill-btn hover:text-red-300">&times;</button>`;
+            return pill;
+        };
+
+        const renderUserPills = () => {
+            document.querySelectorAll('#user-input-container .remove-pill-btn').forEach(p => p.parentElement.remove());
+            tempAssignment.assignedUserIds.forEach(id => {
+                const user = mockUsers.find(u => u.id === id);
+                if(user) userInputContainer.prepend(createPill(user.name, id, 'user'));
+            });
+            document.getElementById('clear-users-btn').classList.toggle('hidden', tempAssignment.assignedUserIds.length === 0);
+        };
+        
+        const renderDeptPills = () => {
+            document.querySelectorAll('#dept-input-container .remove-pill-btn').forEach(p => p.parentElement.remove());
+            tempAssignment.assignedDeptIds.forEach(id => {
+                const dept = mockDepartments.find(d => d.id === id);
+                if (dept) deptInputContainer.prepend(createPill(dept.name, id, 'dept'));
+            });
+            document.getElementById('dept-placeholder').classList.toggle('hidden', tempAssignment.assignedDeptIds.length > 0);
+            document.getElementById('clear-depts-btn').classList.toggle('hidden', tempAssignment.assignedDeptIds.length === 0);
+        };
+
+        const renderUserSearchResults = () => {
+            const term = userSearchInput.value.toLowerCase();
+            if (!term) { userSearchResultsEl.classList.add('hidden'); return; }
+            const results = mockUsers.filter(u =>
+                !tempAssignment.assignedUserIds.includes(u.id) &&
+                (u.name.toLowerCase().includes(term) || u.email.toLowerCase().includes(term) || u.misId.toLowerCase().includes(term) || u.phone.includes(term))
+            );
+            userSearchResultsEl.innerHTML = results.length > 0
+                ? results.map(u => `<div data-id="${u.id}" class="user-result-item p-3 hover:bg-slate-700 cursor-pointer flex items-center gap-3"><img src="${u.avatar}" class="w-8 h-8 rounded-full"><p class="text-sm font-medium">${u.name}<span class="text-xs text-slate-400 ml-2">${u.email}</span></p></div>`).join('')
+                : '<div class="p-3 text-sm text-slate-500">无匹配结果</div>';
+            userSearchResultsEl.classList.remove('hidden');
+        };
+
+        const renderDeptTree = () => {
+            const term = deptSearchInput.value.toLowerCase();
+            const buildTree = (parentId) => mockDepartments
+                .filter(d => d.parentId === parentId)
+                .map(d => {
+                    const isVisible = d.name.toLowerCase().includes(term);
+                    const childrenHtml = buildTree(d.id);
+                    if (!isVisible && !childrenHtml) return ''; // Hide if doesn't match and has no matching children
+                    return `<li>
+                        <div class="flex items-center p-2 rounded-md hover:bg-slate-700 ${!isVisible ? 'hidden' : ''}">
+                            <input type="checkbox" id="dept-${d.id}" data-id="${d.id}" class="dept-checkbox h-4 w-4 rounded bg-slate-600 border-slate-500 text-primary-600 focus:ring-primary-500 mr-3" ${tempAssignment.assignedDeptIds.includes(d.id) ? 'checked' : ''}>
+                            <label for="dept-${d.id}" class="text-sm cursor-pointer">${d.name}</label>
+                        </div>
+                        <ul class="pl-4 space-y-1">${childrenHtml}</ul>
+                    </li>`
+                }).join('');
+            deptTreeEl.innerHTML = `<ul class="space-y-1">${buildTree(null)}</ul>`;
+        };
+
+        // --- MODAL & UI LOGIC ---
+        const openModal = (featureId) => {
+            currentFeature = mockFeatures.find(f => f.id === featureId);
+            if (!currentFeature) return;
+            tempAssignment = JSON.parse(JSON.stringify(currentFeature.assignment));
+            document.getElementById('modal-title').textContent = `管理分配 - ${currentFeature.name}`;
+            
+            document.getElementById('enable-for-all').checked = tempAssignment.enabledForAll;
+            toggleAssignmentArea(!tempAssignment.enabledForAll);
+            renderUserPills();
+            renderDeptPills();
+            updateSeatCount();
+
+            modalEl.classList.add('modal-visible');
+            modalEl.classList.remove('modal-hidden');
+        };
+
+        const closeModal = () => {
+            modalEl.classList.add('modal-hidden');
+            modalEl.classList.remove('modal-visible');
+            userSearchResultsEl.classList.add('hidden');
+            deptPopoverEl.classList.add('hidden');
+            currentFeature = null;
+            tempAssignment = null;
+        };
+
+        const toggleAssignmentArea = (enabled) => {
+            const area = document.getElementById('assignment-area');
+            area.style.opacity = enabled ? '1' : '0.4';
+            area.style.pointerEvents = enabled ? 'auto' : 'none';
+        };
+        
+        const saveChanges = () => {
+            const featureIndex = mockFeatures.findIndex(f => f.id === currentFeature.id);
+            if (featureIndex !== -1) mockFeatures[featureIndex].assignment = tempAssignment;
+            closeModal();
+            renderFeatures();
+        };
+
+        // --- EVENT LISTENERS ---
+        modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
+        document.getElementById('close-assign-modal-btn').addEventListener('click', closeModal);
+        document.getElementById('cancel-assign-btn').addEventListener('click', closeModal);
+        document.getElementById('save-assign-btn').addEventListener('click', saveChanges);
+
+        document.getElementById('enable-for-all').addEventListener('change', (e) => {
+            tempAssignment.enabledForAll = e.target.checked;
+            toggleAssignmentArea(!e.target.checked);
+            updateSeatCount();
+        });
+
+        // User input logic
+        userSearchInput.addEventListener('input', renderUserSearchResults);
+        userSearchInput.addEventListener('focus', renderUserSearchResults);
+        userSearchResultsEl.addEventListener('click', e => {
+            const target = e.target.closest('.user-result-item');
+            if (target) {
+                const userId = parseInt(target.dataset.id);
+                if (!tempAssignment.assignedUserIds.includes(userId)) {
+                    tempAssignment.assignedUserIds.push(userId);
+                    renderUserPills();
+                    updateSeatCount();
+                }
+                userSearchInput.value = '';
+                userSearchResultsEl.classList.add('hidden');
+            }
+        });
+        document.getElementById('clear-users-btn').addEventListener('click', () => {
+            tempAssignment.assignedUserIds = [];
+            renderUserPills(); updateSeatCount();
+        });
+        userInputContainer.addEventListener('click', e => {
+            if (e.target.matches('.remove-pill-btn')) {
+                const userId = parseInt(e.target.dataset.id);
+                tempAssignment.assignedUserIds = tempAssignment.assignedUserIds.filter(id => id !== userId);
+                renderUserPills(); updateSeatCount();
+            }
+        });
+        
+        // Department input logic
+        deptInputContainer.addEventListener('click', () => {
+            renderDeptTree();
+            deptPopoverEl.classList.toggle('hidden');
+        });
+        deptSearchInput.addEventListener('input', renderDeptTree);
+        deptPopoverEl.addEventListener('change', e => {
+            if (e.target.matches('.dept-checkbox')) {
+                const deptId = parseInt(e.target.dataset.id);
+                if (e.target.checked) {
+                    if (!tempAssignment.assignedDeptIds.includes(deptId)) tempAssignment.assignedDeptIds.push(deptId);
+                } else {
+                    tempAssignment.assignedDeptIds = tempAssignment.assignedDeptIds.filter(id => id !== deptId);
+                }
+                renderDeptPills();
+                updateSeatCount();
+            }
+        });
+        document.getElementById('clear-depts-btn').addEventListener('click', () => {
+            tempAssignment.assignedDeptIds = [];
+            renderDeptPills(); updateSeatCount();
+            renderDeptTree();
+        });
+        
+        // Hide popovers when clicking outside
+        document.addEventListener('click', e => {
+            if (!userSearchResultsEl.contains(e.target) && e.target !== userSearchInput) userSearchResultsEl.classList.add('hidden');
+            if (!deptPopoverEl.contains(e.target) && !deptInputContainer.contains(e.target)) deptPopoverEl.classList.add('hidden');
+        });
+
+        // --- INITIALIZATION ---
+        renderFeatures();
+    });
+    </script>
+</body>
+</html>

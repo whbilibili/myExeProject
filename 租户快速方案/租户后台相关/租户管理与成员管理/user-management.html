@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全局用户管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a","950":"#172554"}
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <main class="p-4 sm:p-6 lg:p-8">
+        <div class="max-w-screen-xl mx-auto">
+            <!-- Header -->
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">全局用户管理</h1>
+                <p class="mt-1 text-sm font-normal text-gray-500 dark:text-gray-400">查看和管理平台上的所有注册用户。</p>
+            </div>
+
+            <!-- Card Container -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <!-- Card Header with Search and Actions -->
+                <div class="p-4 border-b dark:border-gray-700">
+                    <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4">
+                        <div class="w-full md:w-1/2">
+                            <form class="flex items-center">
+                                <label for="simple-search" class="sr-only">搜索用户</label>
+                                <div class="relative w-full">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" id="simple-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" placeholder="按名称或邮箱搜索用户...">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+                            <div class="flex items-center space-x-3 w-full md:w-auto">
+                                <button id="filterTenantDropdownButton" data-dropdown-toggle="filterTenantDropdown" class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700" type="button">
+                                    <svg class="w-4 h-4 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.092 1.21-.138 2.43-.138 3.662s.046 2.453.138 3.662m14.524 0a4.006 4.006 0 0 1-3.7 3.7 48.678 48.678 0 0 1-7.324 0 4.006 4.006 0 0 1-3.7-3.7c.092-1.21.138-2.43.138-3.662m14.524 0c0-3.473-.636-6.89-1.78-9.942m-12.96 0A48.678 48.678 0 0 0 12 2.058c2.17 0 4.34.166 6.48.498m-12.96 0c-1.144 3.052-1.78 6.47-1.78 9.942m0 0c0 3.473.636 6.89 1.78 9.942m12.96 0a48.678 48.678 0 0 1-7.324 0c-1.144-3.052-1.78-6.47-1.78-9.942" />
+                                    </svg>
+                                    租户筛选
+                                    <svg class="-mr-1 ml-1.5 w-5 h-5" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path clip-rule="evenodd" fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                    </svg>
+                                </button>
+                                <div id="filterTenantDropdown" class="z-10 hidden w-56 p-3 bg-white rounded-lg shadow dark:bg-gray-700">
+                                    <h6 class="mb-3 text-sm font-medium text-gray-900 dark:text-white">选择租户</h6>
+                                    <ul class="space-y-2 text-sm" aria-labelledby="filterTenantDropdownButton">
+                                        <li class="flex items-center"><input id="innovate-tech" type="checkbox" value="" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"><label for="innovate-tech" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">InnovateTech Solutions</label></li>
+                                        <li class="flex items-center"><input id="data-driven" type="checkbox" value="" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"><label for="data-driven" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">DataDriven Inc.</label></li>
+                                        <li class="flex items-center"><input id="quantum" type="checkbox" value="" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"><label for="quantum" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Quantum Leap AI</label></li>
+                                        <li class="flex items-center"><input id="legacy-corp" type="checkbox" value="" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"><label for="legacy-corp" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Legacy Corp</label></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">用户</th>
+                                <th scope="col" class="px-6 py-3">所属租户</th>
+                                <th scope="col" class="px-6 py-3">最后登录</th>
+                                <th scope="col" class="px-6 py-3">状态</th>
+                                <th scope="col" class="px-6 py-3">
+                                    <span class="sr-only">操作</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Table Row 1 -->
+                            <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <th scope="row" class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
+                                    <img class="w-10 h-10 rounded-full" src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="Olivia Rhye image">
+                                    <div class="pl-3">
+                                        <div class="text-base font-semibold">Olivia Rhye</div>
+                                        <div class="font-normal text-gray-500">olivia@innovatetech.com</div>
+                                    </div>
+                                </th>
+                                <td class="px-6 py-4">
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300">InnovateTech Solutions</span>
+                                </td>
+                                <td class="px-6 py-4">2024-05-20 10:30</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <span class="inline-block h-2.5 w-2.5 rounded-full bg-green-500 mr-2"></span> 活跃
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                     <button id="user-dropdown-button-1" data-dropdown-toggle="user-dropdown-1" class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600" type="button">
+                                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                        </svg>
+                                    </button>
+                                    <div id="user-dropdown-1" class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
+                                        <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="user-dropdown-button-1">
+                                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">查看详情</a></li>
+                                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">强制重置密码</a></li>
+                                        </ul>
+                                        <div class="py-1"><a href="#" class="block py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">禁用账户</a></div>
+                                    </div>
+                                </td>
+                            </tr>
+                             <!-- Table Row 2 -->
+                            <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <th scope="row" class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
+                                    <img class="w-10 h-10 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="Alex Chen image">
+                                    <div class="pl-3">
+                                        <div class="text-base font-semibold">Alex Chen</div>
+                                        <div class="font-normal text-gray-500">alex.chen@email.com</div>
+                                    </div>
+                                </th>
+                                <td class="px-6 py-4">
+                                    <span class="bg-gray-100 text-gray-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-gray-700 dark:text-gray-300">Alex的个人空间</span>
+                                </td>
+                                <td class="px-6 py-4">2024-05-21 14:00</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <span class="inline-block h-2.5 w-2.5 rounded-full bg-green-500 mr-2"></span> 活跃
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                     <button id="user-dropdown-button-2" data-dropdown-toggle="user-dropdown-2" class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600" type="button">
+                                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                        </svg>
+                                    </button>
+                                    <div id="user-dropdown-2" class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
+                                        <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="user-dropdown-button-2">
+                                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">查看详情</a></li>
+                                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">强制重置密码</a></li>
+                                        </ul>
+                                        <div class="py-1"><a href="#" class="block py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">禁用账户</a></div>
+                                    </div>
+                                </td>
+                            </tr>
+                             <!-- Table Row 3 -->
+                            <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <th scope="row" class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
+                                    <img class="w-10 h-10 rounded-full" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="Lana Steiner image">
+                                    <div class="pl-3">
+                                        <div class="text-base font-semibold">Lana Steiner</div>
+                                        <div class="font-normal text-gray-500">lana.steiner@sideproject.co</div>
+                                    </div>
+                                </th>
+                                <td class="px-6 py-4">
+                                     <div class="flex flex-wrap gap-1">
+                                        <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-gray-700 dark:text-gray-300">Lana的个人空间</span>
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300">DataDriven Inc.</span>
+                                        <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-purple-900 dark:text-purple-300">Quantum Leap AI</span>
+                                     </div>
+                                </td>
+                                <td class="px-6 py-4">2024-05-22 09:15</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <span class="inline-block h-2.5 w-2.5 rounded-full bg-green-500 mr-2"></span> 活跃
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button id="user-dropdown-button-3" data-dropdown-toggle="user-dropdown-3" class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600" type="button">
+                                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                        </svg>
+                                    </button>
+                                    <div id="user-dropdown-3" class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
+                                        <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="user-dropdown-button-3">
+                                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">查看详情</a></li>
+                                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">强制重置密码</a></li>
+                                        </ul>
+                                        <div class="py-1"><a href="#" class="block py-2 px-4 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">禁用账户</a></div>
+                                    </div>
+                                </td>
+                            </tr>
+                             <!-- Table Row 4 -->
+                            <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <th scope="row" class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap dark:text-white">
+                                    <img class="w-10 h-10 rounded-full" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="David Lee image">
+                                    <div class="pl-3">
+                                        <div class="text-base font-semibold">David Lee</div>
+                                        <div class="font-normal text-gray-500">david.lee@example.com</div>
+                                    </div>
+                                </th>
+                                <td class="px-6 py-4">
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-300">Legacy Corp</span>
+                                </td>
+                                <td class="px-6 py-4">2024-03-15 18:05</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <span class="inline-block h-2.5 w-2.5 rounded-full bg-red-500 mr-2"></span> 禁用
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                     <button id="user-dropdown-button-4" data-dropdown-toggle="user-dropdown-4" class="inline-flex items-center p-2 text-sm font-medium text-center text-gray-900 bg-white rounded-lg hover:bg-gray-100 focus:ring-4 focus:outline-none dark:text-white focus:ring-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-600" type="button">
+                                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                        </svg>
+                                    </button>
+                                    <div id="user-dropdown-4" class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
+                                        <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="user-dropdown-button-4">
+                                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">查看详情</a></li>
+                                        </ul>
+                                        <div class="py-1"><a href="#" class="block py-2 px-4 text-sm text-green-600 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-green-400 dark:hover:text-white">启用账户</a></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                 <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4" aria-label="Table navigation">
+                    <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                        显示
+                        <span class="font-semibold text-gray-900 dark:text-white">1-10</span>
+                        条，共
+                        <span class="font-semibold text-gray-900 dark:text-white">1000</span>
+                        条
+                    </span>
+                    <ul class="inline-flex items-stretch -space-x-px">
+                        <li>
+                            <a href="#" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                                <span class="sr-only">上一页</span>
+                                <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">1</a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">2</a>
+                        </li>
+                        <li>
+                            <a href="#" aria-current="page" class="z-10 flex items-center justify-center text-sm py-2 px-3 leading-tight text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white">3</a>
+                        </li>
+                        <li>
+                            <span class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">...</span>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">100</a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                                <span class="sr-only">下一页</span>
+                                <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+</body>
+</html>

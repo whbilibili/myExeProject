@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>成员与部门</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 飞书设计系统 -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-2);
+    }
+    
+    /* Tabs顶部区域 */
+    .tabs-header {
+      background: var(--bg-1);
+      padding: var(--spacing-4) var(--spacing-6);
+      border-bottom: 1px solid var(--border-2);
+    }
+    
+    /* 组织成员页面布局 */
+    .org-layout {
+      display: flex;
+      height: calc(100vh - 120px);
+      background: var(--bg-2);
+    }
+    
+    /* 左侧组织树 */
+    .org-tree-container {
+      width: 280px;
+      background: var(--bg-1);
+      border-right: 1px solid var(--border-2);
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    
+    .tree-header {
+      padding: var(--spacing-5);
+      border-bottom: 1px solid var(--border-2);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+    }
+    
+    .tree-content {
+      padding: var(--spacing-4);
+    }
+    
+    /* 右侧成员列表 */
+    .members-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: var(--spacing-6);
+    }
+    
+    .members-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-4);
+      gap: var(--spacing-4);
+    }
+    
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      flex: 1;
+    }
+    
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    /* 成员表格容器 */
+    .members-table-container {
+      flex: 1;
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      box-shadow: var(--shadow-1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* 成员名称单元格 */
+    .member-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .member-tag {
+      margin-left: var(--spacing-2);
+    }
+    
+    /* 占位页面 */
+    .placeholder-page {
+      height: calc(100vh - 120px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-1);
+    }
+    
+    .placeholder-content {
+      text-align: center;
+      color: var(--text-3);
+    }
+    
+    .placeholder-icon {
+      font-size: 64px;
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .placeholder-text {
+      font-size: var(--font-size-16);
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <!-- Tabs -->
+    <div class="tabs-header">
+      <el-tabs v-model="activeTab">
+        <el-tab-pane label="全部成员" name="all" />
+        <el-tab-pane label="组织成员" name="organization" />
+        <el-tab-pane label="外部协作者" name="external" />
+        <el-tab-pane label="虚拟角色管理" name="virtual" />
+      </el-tabs>
+    </div>
+    
+    <!-- 组织成员页面 -->
+    <div v-if="activeTab === 'organization'" class="org-layout">
+      <!-- 左侧组织树 -->
+      <div class="org-tree-container">
+        <div class="tree-header">组织架构</div>
+        <div class="tree-content">
+          <el-tree
+            :data="orgTreeData"
+            :props="treeProps"
+            default-expand-all
+            highlight-current
+            @node-click="handleNodeClick"
+          >
+            <template #default="{ node, data }">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                <el-icon><OfficeBuilding /></el-icon>
+                <span>{{ node.label }}</span>
+                <span style="color: var(--text-3); font-size: 12px;">({{ data.count || 0 }})</span>
+              </span>
+            </template>
+          </el-tree>
+        </div>
+      </div>
+      
+      <!-- 右侧成员列表 -->
+      <div class="members-container">
+        <!-- 工具栏 -->
+        <div class="members-toolbar">
+          <div class="toolbar-left">
+            <el-input
+              v-model="searchKeyword"
+              placeholder="搜索关键词"
+              clearable
+              style="width: 300px;"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+            <el-button :icon="Filter">高级筛选</el-button>
+            <el-checkbox v-model="includeSubDepts">包含子部门</el-checkbox>
+          </div>
+          <div class="toolbar-right">
+            <el-button>
+              <el-icon><Upload /></el-icon>
+              批量导入
+            </el-button>
+            <el-button>
+              <el-icon><Message /></el-icon>
+              邀请成员
+            </el-button>
+            <el-button type="primary">
+              <el-icon><Plus /></el-icon>
+              添加成员
+            </el-button>
+          </div>
+        </div>
+        
+        <!-- 成员表格 -->
+        <div class="members-table-container">
+          <el-table
+            :data="filteredMembers"
+            style="width: 100%"
+            height="100%"
+          >
+            <el-table-column type="selection" width="50" />
+            
+            <el-table-column label="成员名称" min-width="180" fixed>
+              <template #default="{ row }">
+                <div class="member-cell">
+                  <img :src="row.avatar" :alt="row.name" class="avatar" />
+                  <span class="user-name">{{ row.name }}</span>
+                  <el-tag v-if="row.isLeader" size="small" type="primary" class="member-tag">负责人</el-tag>
+                </div>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="department" label="归属部门" min-width="160" />
+            
+            <el-table-column prop="phone" label="手机号" width="130">
+              <template #default="{ row }">
+                <span style="font-family: var(--font-family-mono); font-size: 13px;">{{ row.phone }}</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="email" label="邮箱号" min-width="180">
+              <template #default="{ row }">
+                <span style="font-family: var(--font-family-mono); font-size: 13px;">{{ row.email }}</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="supervisor" label="直属上级" width="120">
+              <template #default="{ row }">
+                {{ row.supervisor || '-' }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="role" label="权限" width="120">
+              <template #default="{ row }">
+                <el-tag size="small" :type="getRoleType(row.role)">{{ row.role }}</el-tag>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="joinTime" label="加入时间" width="120" />
+            
+            <el-table-column label="操作" width="100" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="danger" size="small" @click="handleRemoveMember(row)">
+                  删除
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          
+          <!-- 分页 -->
+          <div style="padding: 16px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-2);">
+            <span style="color: var(--text-3); font-size: 13px;">
+              共 {{ filteredMembers.length }} 条
+            </span>
+            <el-pagination
+              v-model:current-page="pagination.page"
+              v-model:page-size="pagination.pageSize"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="filteredMembers.length"
+              layout="sizes, prev, pager, next, jumper"
+              small
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 其他Tab占位页面 -->
+    <div v-else class="placeholder-page">
+      <div class="placeholder-content">
+        <div class="placeholder-icon">📋</div>
+        <div class="placeholder-text">{{ getPlaceholderText() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  
+  <script>
+    const { createApp, ref, computed } = Vue;
+    
+    const app = createApp({
+      setup() {
+        // Tab状态
+        const activeTab = ref('organization');
+        
+        // 组织树数据
+        const orgTreeData = ref([
+          {
+            label: '质效技术部',
+            count: 35,
+            children: [
+              { label: '闪购技术部', count: 8 },
+              { 
+                label: '内购测试组', 
+                count: 15,
+                children: [
+                  { label: '内购业务测试组', count: 5 },
+                  { label: '内购产品测试组', count: 5 },
+                  { label: '内购商家端测试组', count: 3 },
+                  { label: '内购营销测试组', count: 2 },
+                ]
+              },
+              { label: '公共产品测试组', count: 7 },
+              { label: '酒店质行测试组', count: 5 },
+            ]
+          },
+          {
+            label: '服务零售测试组',
+            count: 20,
+            children: [
+              { label: '乐生活及品质交易测试组', count: 8 },
+              { label: '消费医疗及提档测试组', count: 7 },
+              { label: '易生活及增长测试组', count: 5 },
+            ]
+          },
+          {
+            label: '爆约平台测试组',
+            count: 18,
+            children: [
+              { label: '爆约方案与策略测试组', count: 6 },
+              { label: '爆约终端测试组', count: 12 },
+            ]
+          },
+        ]);
+        
+        const treeProps = {
+          children: 'children',
+          label: 'label',
+        };
+        
+        // 成员数据
+        const allMembers = ref(MockData.members);
+        const searchKeyword = ref('');
+        const includeSubDepts = ref(true);
+        const selectedDept = ref(null);
+        
+        // 分页
+        const pagination = ref({
+          page: 1,
+          pageSize: 20,
+        });
+        
+        // 过滤后的成员
+        const filteredMembers = computed(() => {
+          let members = [...allMembers.value];
+          
+          // 搜索
+          if (searchKeyword.value) {
+            const keyword = searchKeyword.value.toLowerCase();
+            members = members.filter(m =>
+              m.name.toLowerCase().includes(keyword) ||
+              m.phone.includes(keyword) ||
+              m.email.toLowerCase().includes(keyword) ||
+              m.department.toLowerCase().includes(keyword)
+            );
+          }
+          
+          return members;
+        });
+        
+        // 方法
+        const handleNodeClick = (data) => {
+          selectedDept.value = data.label;
+          // 这里可以根据选中的部门筛选成员
+        };
+        
+        const getRoleType = (role) => {
+          const roleMap = {
+            '所有者': 'danger',
+            '管理员': 'warning',
+            '空间创建员': 'success',
+            '成员': 'info',
+          };
+          return roleMap[role] || 'info';
+        };
+        
+        const handleRemoveMember = async (row) => {
+          const confirmed = await Utils.confirmAction(
+            `确定要删除成员"${row.name}"吗？`,
+            '删除成员'
+          );
+          
+          if (confirmed) {
+            const index = allMembers.value.findIndex(m => m.id === row.id);
+            if (index > -1) {
+              allMembers.value.splice(index, 1);
+              Utils.showSuccess('成员已删除');
+            }
+          }
+        };
+        
+        const getPlaceholderText = () => {
+          const textMap = {
+            'all': '全部成员页面（演示占位）',
+            'external': '外部协作者页面（演示占位）',
+            'virtual': '虚拟角色管理页面（演示占位）',
+          };
+          return textMap[activeTab.value] || '';
+        };
+        
+        return {
+          activeTab,
+          orgTreeData,
+          treeProps,
+          allMembers,
+          searchKeyword,
+          includeSubDepts,
+          selectedDept,
+          pagination,
+          filteredMembers,
+          handleNodeClick,
+          getRoleType,
+          handleRemoveMember,
+          getPlaceholderText,
+        };
+      },
+    });
+    
+    // 注册图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

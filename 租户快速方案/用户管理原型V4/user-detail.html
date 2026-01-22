@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户详情 - 用户管理系统</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义CSS -->
+  <link rel="stylesheet" href="./assets/css/feishu-design.css">
+  
+  <style>
+    .detail-page {
+      min-height: 100vh;
+      background: var(--bg-gray-1);
+    }
+
+    /* 顶部导航栏 */
+    .detail-nav {
+      background: var(--bg-white);
+      border-bottom: 1px solid var(--border-1);
+      padding: 0 var(--space-6);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: var(--space-2);
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+    }
+
+    .back-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .page-title {
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    /* 用户基本信息区域 */
+    .user-info-section {
+      margin: var(--space-6) auto;
+      max-width: 1600px;
+      padding: 0 var(--space-6);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+
+    .section-title {
+      font-size: var(--font-size-xl);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .user-info-card {
+      background: var(--bg-white);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8) var(--space-6);
+      box-shadow: var(--shadow-base);
+    }
+
+    .user-info-main {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-6);
+      margin-bottom: var(--space-6);
+    }
+
+    .user-avatar-wrapper {
+      flex-shrink: 0;
+    }
+
+    .user-avatar-large {
+      width: 96px;
+      height: 96px;
+      border-radius: var(--radius-xl);
+      border: 2px solid var(--border-1);
+    }
+
+    .user-info-content {
+      flex: 1;
+    }
+
+    .user-name {
+      font-size: var(--font-size-3xl);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+
+    .user-id {
+      font-size: var(--font-size-sm);
+      color: var(--text-tertiary);
+      margin-bottom: var(--space-4);
+    }
+
+    .user-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: var(--space-5) var(--space-8);
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .info-label {
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: var(--font-size-base);
+      color: var(--text-primary);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    /* 标签页区域 */
+    .tabs-section {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 var(--space-6) var(--space-6);
+    }
+
+    .tab-content {
+      background: var(--bg-white);
+      border-radius: 0 var(--radius-lg) var(--radius-lg) var(--radius-lg);
+      min-height: 600px;
+      overflow: hidden;
+      box-shadow: var(--shadow-base);
+    }
+
+    .tab-iframe {
+      width: 100%;
+      height: 800px;
+      border: none;
+      display: block;
+    }
+
+    .loading-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 400px;
+      color: var(--text-tertiary);
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="detail-page">
+    <!-- 顶部导航栏 -->
+    <div class="detail-nav">
+      <div class="nav-left">
+        <div class="back-btn" @click="goBack">
+          <el-icon size="18"><el-icon-arrow-left /></el-icon>
+          <span>返回</span>
+        </div>
+        <el-divider direction="vertical" />
+        <div class="page-title">用户详情</div>
+      </div>
+
+      <div class="nav-actions">
+        <el-button
+          :type="currentUser.status === '正常' ? 'warning' : 'success'"
+          @click="toggleStatus"
+        >
+          {{ currentUser.status === '正常' ? '禁用账号' : '启用账号' }}
+        </el-button>
+        <el-button @click="resetPassword">
+          重置密码
+        </el-button>
+        <el-button type="danger" @click="deleteUser">
+          注销账号
+        </el-button>
+      </div>
+    </div>
+
+    <!-- 用户基本信息区域 -->
+    <div class="user-info-section">
+      <div class="section-header">
+        <h2 class="section-title">用户基本信息</h2>
+        <el-button type="primary" @click="editDrawerVisible = true">
+          <el-icon><el-icon-edit /></el-icon>
+          <span>编辑基本信息</span>
+        </el-button>
+      </div>
+
+      <div class="user-info-card">
+        <div class="user-info-main">
+          <div class="user-avatar-wrapper">
+            <img :src="currentUser.avatar" :alt="currentUser.name" class="user-avatar-large" />
+          </div>
+          <div class="user-info-content">
+            <div class="user-name">{{ currentUser.name }}</div>
+            <div class="user-id">ID: {{ currentUser.id }}</div>
+          </div>
+        </div>
+
+        <div class="user-info-grid">
+          <div class="info-item">
+            <div class="info-label">绑定手机</div>
+            <div class="info-value">
+              {{ currentUser.phone }}
+              <el-icon class="copy-btn" @click="copyText(currentUser.phone)">
+                <el-icon-document-copy />
+              </el-icon>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">绑定邮箱</div>
+            <div class="info-value">
+              {{ currentUser.email }}
+              <el-icon class="copy-btn" @click="copyText(currentUser.email)">
+                <el-icon-document-copy />
+              </el-icon>
+            </div>
+          </div>
+
+          <div class="info-item" v-if="currentUser.mis">
+            <div class="info-label">绑定MIS</div>
+            <div class="info-value">
+              {{ currentUser.mis }}
+              <el-icon class="copy-btn" @click="copyText(currentUser.mis)">
+                <el-icon-document-copy />
+              </el-icon>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">创建时间</div>
+            <div class="info-value">
+              {{ Utils.formatDate(currentUser.createTime) }}
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">最后登录时间</div>
+            <div class="info-value">
+              {{ Utils.formatDate(currentUser.lastLoginTime) }}
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">账号状态</div>
+            <div class="info-value">
+              <el-tag
+                :type="currentUser.status === '正常' ? 'success' : 'warning'"
+                size="small"
+              >
+                {{ currentUser.status }}
+              </el-tag>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">账号余额</div>
+            <div class="info-value">
+              <strong style="color: var(--primary-color); font-size: var(--font-size-lg);">
+                {{ Utils.formatNumber(currentUser.balance) }} w币
+              </strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 标签页区域 -->
+    <div class="tabs-section">
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+          <el-tab-pane label="数据总览" name="overview">
+            <div class="tab-content">
+              <iframe
+                v-if="loadedTabs.overview"
+                :src="`./pages/overview.html?userId=${userId}`"
+                class="tab-iframe"
+                @load="handleIframeLoad('overview')"
+              ></iframe>
+              <div v-else class="loading-container">
+                <el-icon class="loading-spinner"><el-icon-loading /></el-icon>
+                <span style="margin-left: var(--space-2);">加载中...</span>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="消费明细" name="consumption">
+            <div class="tab-content">
+              <iframe
+                v-if="loadedTabs.consumption"
+                :src="`./pages/consumption.html?userId=${userId}`"
+                class="tab-iframe"
+                @load="handleIframeLoad('consumption')"
+              ></iframe>
+              <div v-else class="loading-container">
+                <el-icon class="loading-spinner"><el-icon-loading /></el-icon>
+                <span style="margin-left: var(--space-2);">加载中...</span>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="资产明细" name="assets">
+            <div class="tab-content">
+              <iframe
+                v-if="loadedTabs.assets"
+                :src="`./pages/assets.html?userId=${userId}`"
+                class="tab-iframe"
+                @load="handleIframeLoad('assets')"
+              ></iframe>
+              <div v-else class="loading-container">
+                <el-icon class="loading-spinner"><el-icon-loading /></el-icon>
+                <span style="margin-left: var(--space-2);">加载中...</span>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="加入的租户" name="tenants">
+            <div class="tab-content">
+              <iframe
+                v-if="loadedTabs.tenants"
+                :src="`./pages/tenants.html?userId=${userId}`"
+                class="tab-iframe"
+                @load="handleIframeLoad('tenants')"
+              ></iframe>
+              <div v-else class="loading-container">
+                <el-icon class="loading-spinner"><el-icon-loading /></el-icon>
+                <span style="margin-left: var(--space-2);">加载中...</span>
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </el-tabs>
+    </div>
+
+    <!-- 编辑基本信息抽屉 -->
+    <el-drawer
+      v-model="editDrawerVisible"
+      title="编辑基本信息"
+      size="500px"
+      direction="rtl"
+    >
+      <el-form
+        :model="editForm"
+        label-width="100px"
+        label-position="top"
+        style="padding: 0 var(--space-4);"
+      >
+        <el-form-item label="用户头像">
+          <div style="display: flex; align-items: center; gap: var(--space-4);">
+            <img
+              :src="editForm.avatar"
+              alt="头像"
+              style="width: 80px; height: 80px; border-radius: var(--radius-lg); border: 2px solid var(--border-1);"
+            />
+            <el-button size="small">
+              <el-icon><el-icon-upload /></el-icon>
+              <span>更换头像</span>
+            </el-button>
+          </div>
+        </el-form-item>
+
+        <el-form-item label="用户名称">
+          <el-input v-model="editForm.name" placeholder="请输入用户名称" />
+        </el-form-item>
+
+        <el-form-item label="绑定手机">
+          <el-input v-model="editForm.phone" placeholder="请输入手机号" />
+        </el-form-item>
+
+        <el-form-item label="绑定邮箱">
+          <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+
+        <el-form-item label="绑定MIS">
+          <el-input v-model="editForm.mis" placeholder="请输入MIS号（选填）" />
+        </el-form-item>
+
+        <el-form-item label="账号金额">
+          <el-input-number
+            v-model="editForm.balance"
+            :min="0"
+            :max="10000000"
+            style="width: 100%;"
+          />
+          <div style="margin-top: var(--space-1); font-size: var(--font-size-xs); color: var(--text-tertiary);">
+            当前余额：{{ Utils.formatNumber(currentUser.balance) }} w币
+          </div>
+        </el-form-item>
+
+        <el-form-item label="操作备注">
+          <el-input
+            v-model="editForm.remark"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入修改原因或备注（选填）"
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+          <el-button @click="editDrawerVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmEdit">
+            确认保存
+          </el-button>
+        </div>
+      </template>
+    </el-drawer>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+
+  <!-- 工具函数 -->
+  <script src="./assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="./assets/js/mock-data.js"></script>
+
+  <script>
+    const { createApp, ref, onMounted, watch } = Vue;
+
+    const app = createApp({
+      setup() {
+        const userId = ref('');
+        const currentUser = ref({
+          id: '',
+          name: '',
+          avatar: '',
+          phone: '',
+          email: '',
+          mis: '',
+          createTime: null,
+          lastLoginTime: null,
+          status: '正常',
+          balance: 0
+        });
+
+        const activeTab = ref('overview');
+        const loadedTabs = ref({
+          overview: false,
+          consumption: false,
+          assets: false,
+          tenants: false
+        });
+
+        // 编辑抽屉
+        const editDrawerVisible = ref(false);
+        const editForm = ref({
+          avatar: '',
+          name: '',
+          phone: '',
+          email: '',
+          mis: '',
+          balance: 0,
+          remark: ''
+        });
+
+        // 从URL获取userId
+        const getUserIdFromUrl = () => {
+          const params = Utils.parseUrlParams();
+          return params.userId || '';
+        };
+
+        // 加载用户数据
+        const loadUserData = () => {
+          const user = MockData.getUserById(userId.value);
+          if (user) {
+            currentUser.value = user;
+          } else {
+            ElementPlus.ElMessage.error('用户不存在');
+            setTimeout(() => {
+              goBack();
+            }, 1500);
+          }
+        };
+
+        // 处理标签页切换
+        const handleTabChange = (tabName) => {
+          // 懒加载：首次切换时加载iframe
+          if (!loadedTabs.value[tabName]) {
+            loadedTabs.value[tabName] = true;
+          }
+        };
+
+        // 处理iframe加载完成
+        const handleIframeLoad = (tabName) => {
+          console.log(`${tabName} iframe loaded`);
+        };
+
+        // 返回列表页
+        const goBack = () => {
+          window.location.href = 'index.html';
+        };
+
+        // 复制文本
+        const copyText = async (text) => {
+          const success = await Utils.copyToClipboard(text);
+          if (success) {
+            ElementPlus.ElMessage.success('复制成功');
+          } else {
+            ElementPlus.ElMessage.error('复制失败');
+          }
+        };
+
+        // 打开编辑抽屉（在watch中处理）
+        watch(editDrawerVisible, (newVal) => {
+          if (newVal) {
+            // 打开抽屉时，填充表单数据
+            editForm.value = {
+              avatar: currentUser.value.avatar,
+              name: currentUser.value.name,
+              phone: currentUser.value.phone,
+              email: currentUser.value.email,
+              mis: currentUser.value.mis || '',
+              balance: currentUser.value.balance,
+              remark: ''
+            };
+          }
+        });
+
+        // 确认编辑
+        const confirmEdit = () => {
+          // 验证
+          if (!editForm.value.name) {
+            ElementPlus.ElMessage.warning('请输入用户名称');
+            return;
+          }
+          if (!editForm.value.phone) {
+            ElementPlus.ElMessage.warning('请输入手机号');
+            return;
+          }
+          if (!editForm.value.email) {
+            ElementPlus.ElMessage.warning('请输入邮箱');
+            return;
+          }
+
+          // 更新数据
+          MockData.updateUser(userId.value, {
+            name: editForm.value.name,
+            phone: editForm.value.phone,
+            email: editForm.value.email,
+            mis: editForm.value.mis,
+            balance: editForm.value.balance
+          });
+
+          // 重新加载用户数据
+          loadUserData();
+
+          ElementPlus.ElMessage.success('保存成功');
+          editDrawerVisible.value = false;
+        };
+
+        // 切换状态
+        const toggleStatus = () => {
+          const action = currentUser.value.status === '正常' ? '禁用' : '启用';
+          
+          ElementPlus.ElMessageBox.confirm(
+            `确认${action}用户 "${currentUser.value.name}" 吗？`,
+            `${action}用户`,
+            {
+              confirmButtonText: '确认',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            MockData.toggleUserStatus(userId.value);
+            loadUserData();
+            ElementPlus.ElMessage.success(`用户已${action}`);
+          }).catch(() => {});
+        };
+
+        // 重置密码
+        const resetPassword = () => {
+          ElementPlus.ElMessageBox.prompt('请输入新密码', '重置密码', {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            inputPattern: /.{6,}/,
+            inputErrorMessage: '密码至少6位'
+          }).then(({ value }) => {
+            ElementPlus.ElMessage.success(`密码已重置`);
+          }).catch(() => {});
+        };
+
+        // 注销用户
+        const deleteUser = () => {
+          ElementPlus.ElMessageBox.prompt(
+            `注销用户是终极高危操作，将删除该用户的所有数据。请输入 "确认注销" 以继续`,
+            `注销用户 "${currentUser.value.name}"`,
+            {
+              confirmButtonText: '确认注销',
+              cancelButtonText: '取消',
+              inputPattern: /^确认注销$/,
+              inputErrorMessage: '请输入"确认注销"',
+              type: 'error'
+            }
+          ).then(() => {
+            ElementPlus.ElMessage.success(`用户 ${currentUser.value.name} 已注销`);
+            setTimeout(() => {
+              goBack();
+            }, 1500);
+          }).catch(() => {});
+        };
+
+        // 初始化
+        onMounted(() => {
+          userId.value = getUserIdFromUrl();
+          
+          if (!userId.value) {
+            ElementPlus.ElMessage.error('缺少用户ID参数');
+            setTimeout(() => {
+              goBack();
+            }, 1500);
+            return;
+          }
+
+          loadUserData();
+          
+          // 默认加载第一个标签页
+          loadedTabs.value.overview = true;
+        });
+
+        return {
+          userId,
+          currentUser,
+          activeTab,
+          loadedTabs,
+          editDrawerVisible,
+          editForm,
+          handleTabChange,
+          handleIframeLoad,
+          goBack,
+          copyText,
+          confirmEdit,
+          toggleStatus,
+          resetPassword,
+          deleteUser,
+          Utils
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

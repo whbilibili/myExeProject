@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用量与授权 - 企业级风格</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': { '50': '#eff6ff', '100': '#dbeafe', '200': '#bfdbfe', '300': '#93c5fd', '400': '#60a5fa', '500': '#3b82f6', '600': '#2563eb', '700': '#1d4ed8', '800': '#1e40af', '900': '#1e3a8a' },
+                        'slate': { '50': '#f8fafc', '100': '#f1f5f9', '200': '#e2e8f0', '300': '#cbd5e1', '400': '#94a3b8', '500': '#64748b', '600': '#475569', '700': '#334155', '800': '#1e293b', '900': '#0f172a' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://rsms.me/inter/inter.css');
+        html { font-family: 'Inter', sans-serif; }
+        body { background-color: #f8fafc; /* slate-50 */ color: #334155; /* slate-700 */ overflow-y: auto; }
+        .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; opacity: 0; }
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-backdrop { transition: opacity 0.3s ease; }
+        .modal-panel { transition: all 0.3s ease; }
+        .modal-hidden { opacity: 0; pointer-events: none; }
+        .modal-visible { opacity: 1; pointer-events: auto; }
+        .modal-hidden .modal-panel { transform: translateY(20px) scale(0.98); opacity: 0; }
+        .modal-visible .modal-panel { transform: translateY(0) scale(1); opacity: 1; }
+        .list-item-container::-webkit-scrollbar { width: 6px; }
+        .list-item-container::-webkit-scrollbar-track { background: #e2e8f0; } /* slate-200 */
+        .list-item-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; } /* slate-300 */
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Main Header -->
+        <div class="animate-fade-in-up">
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">用量与授权</h1>
+            <p class="text-slate-500">在这里统一管理您团队的资源用量和功能使用权限。</p>
+        </div>
+
+        <!-- Section 1: Resource Usage Allocation -->
+        <div class="mt-10 animate-fade-in-up" style="animation-delay: 100ms;">
+            <h2 class="text-xl font-semibold text-slate-900 mb-4">资源用量分配</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div id="cloud-computer-limit-card" class="bg-white rounded-xl p-6 flex flex-col justify-between border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-bold text-slate-800">云电脑设备使用时长</h3>
+                            <i class="fas fa-desktop text-sky-500 text-xl"></i>
+                        </div>
+                        <p class="mt-2 text-sm text-slate-500">为成员分配每月可用的云电脑设备使用时长。</p>
+                    </div>
+                    <div class="mt-6">
+                        <div class="mt-4">
+                            <button id="open-points-limit-modal-btn" class="w-full text-center px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg text-sm font-semibold text-slate-700 transition-colors">管理分配规则</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="mobile-limit-card" class="bg-white rounded-xl p-6 flex flex-col justify-between border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-bold text-slate-800">手机设备使用时长</h3>
+                            <i class="fas fa-mobile-alt text-teal-500 text-xl"></i>
+                        </div>
+                        <p class="mt-2 text-sm text-slate-500">为成员分配每月可用的手机设备使用时长。</p>
+                    </div>
+                    <div class="mt-6">
+                        <div class="mt-4">
+                            <!-- 注意: 此按钮目前重用云电脑的弹窗，实际开发中需要独立逻辑 -->
+                            <button id="open-mobile-limit-modal-btn" class="w-full text-center px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg text-sm font-semibold text-slate-700 transition-colors">管理分配规则</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Advanced Feature Authorization -->
+        <div class="mt-10 animate-fade-in-up" style="animation-delay: 200ms;">
+            <h2 class="text-xl font-semibold text-slate-900 mb-4">高级功能授权</h2>
+            <div id="feature-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Feature cards will be injected here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL 1: Points Limit Allocation Modal -->
+    <div id="points-limit-modal" class="modal-hidden fixed inset-0 z-50 flex items-start justify-center p-4 pt-[5vh] bg-slate-900/50 backdrop-blur-sm modal-backdrop">
+        <div class="modal-panel bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col" style="max-height: 90vh;">
+            <div class="flex-shrink-0 p-6 border-b border-slate-200">
+                <h1 id="points-limit-modal-title" class="text-xl font-bold text-slate-900">云电脑设备使用时长分配</h1>
+                <p class="mt-1 text-sm text-slate-500">为租户内所有成员设置通用的月度设备使用时长，并可为特定个人或部门添加例外规则。</p>
+            </div>
+            <div class="flex-grow p-6 overflow-y-auto list-item-container bg-slate-50">
+                <div class="bg-white p-6 rounded-lg border border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-900">按租户设置</h2>
+                    <div class="mt-4 flex items-center space-x-8 py-4">
+                        <span class="text-sm font-medium text-slate-700">每个成员的使用时长</span>
+                        <div id="default-limit-options" class="flex items-center space-x-6">
+                            <div class="flex items-center"><input id="default-no-limit" name="default-limit" type="radio" class="h-4 w-4 border-slate-300 text-primary-600 focus:ring-primary-500"><label for="default-no-limit" class="ml-2 block text-sm text-slate-700">不限制</label></div>
+                            <div class="flex items-center"><input id="default-limit" name="default-limit" type="radio" class="h-4 w-4 border-slate-300 text-primary-600 focus:ring-primary-500"><label for="default-limit" class="ml-2 block text-sm text-slate-700">每人最多</label></div>
+                            <div class="flex items-center"><input type="number" id="default-limit-input" placeholder="100" class="w-28 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 sm:text-sm p-2"><span class="ml-3 text-sm font-medium bg-slate-100 text-slate-600 px-3 py-2 rounded-md">分钟/月</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg border border-slate-200 mt-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-900">按白名单设置</h2>
+                        <p class="mt-1 text-sm text-slate-500">白名单规则生效的优先级从高到低依次为：成员、部门/虚拟角色组。</p>
+                    </div>
+
+                    <!-- Tabs Navigation -->
+                    <div class="mt-4">
+                        <div class="border-b border-slate-200">
+                            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                <button id="member-tab" type="button" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors border-primary-500 text-primary-600">
+                                    按成员
+                                </button>
+                                <button id="group-tab" type="button" class="whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
+                                    按部门/组
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <!-- Tab Panels -->
+                    <div class="mt-4">
+                        <!-- Member Panel -->
+                        <div id="member-panel">
+                            <div class="flex justify-between items-center mb-3">
+                                <p class="text-sm text-slate-600">为特定成员设置规则，优先级高于部门规则。</p>
+                                <button id="add-member-rule-btn" class="add-rule-btn inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50">+ 添加个人</button>
+                            </div>
+                            <div id="member-rules-container" class="-mx-2">
+                                <!-- Member rules will be injected here -->
+                            </div>
+                        </div>
+                        <!-- Group Panel -->
+                        <div id="group-panel" class="hidden">
+                             <div class="flex justify-between items-center mb-3">
+                                <p class="text-sm text-slate-600">为特定部门/组设置规则。</p>
+                                <button id="add-group-rule-btn" class="add-rule-btn inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50">+ 添加部门/组</button>
+                            </div>
+                            <div id="group-rules-container" class="-mx-2">
+                                <!-- Group rules will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-shrink-0 p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3"><button id="cancel-points-limit-btn" class="bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold py-2 px-5 rounded-lg text-sm transition-colors">取消</button><button id="save-points-limit-btn" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-5 rounded-lg text-sm transition-colors">保存更改</button></div>
+        </div>
+    </div>
+    
+    <template id="whitelist-rule-template">
+        <div class="rule-row flex items-center space-x-4 border-t border-slate-200 py-4 px-2 opacity-0 -translate-y-2 transition-all duration-300">
+            <div class="flex-grow relative">
+                <div class="rule-input-container w-full bg-white border border-slate-300 rounded-lg p-1.5 flex flex-nowrap items-center gap-2 min-h-[44px] overflow-hidden">
+                    <input type="text" class="rule-search-input flex-1 bg-transparent focus:outline-none min-w-[150px] text-sm h-full p-1">
+                    <div class="plus-n-container relative hidden flex-shrink-0">
+                        <button class="plus-n-badge h-full text-sm font-medium text-primary-600 px-2 hover:bg-slate-100 rounded-md"></button>
+                        <div class="plus-n-tooltip absolute bottom-full right-0 mb-2 w-max max-w-xs bg-slate-800 text-white text-xs rounded-lg p-2 shadow-lg z-30 hidden opacity-0 transition-opacity pointer-events-none"></div>
+                    </div>
+                </div>
+                <div class="rule-search-results hidden absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-20 max-h-60 overflow-y-auto list-item-container"></div>
+            </div>
+            <div class="flex items-center space-x-4 flex-shrink-0">
+                <div class="flex items-center"><input name="rule-limit-type" type="radio" class="no-limit-radio h-4 w-4 border-slate-300 text-primary-600 focus:ring-primary-500"><label class="ml-2 block text-sm">不限制</label></div>
+                <div class="flex items-center"><input name="rule-limit-type" type="radio" class="limit-radio h-4 w-4 border-slate-300 text-primary-600 focus:ring-primary-500"><label class="ml-2 block text-sm">每人最多</label></div>
+                <div class="flex items-center">
+                    <input type="number" placeholder="200" class="limit-input w-24 border border-slate-300 rounded-md p-2 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"><span class="ml-2 text-sm font-medium bg-slate-100 px-2 py-2 rounded-md">分钟/月</span>
+                </div>
+            </div>
+            <button class="delete-btn text-slate-400 hover:text-red-500 p-1 rounded-full transition-colors flex-shrink-0">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    </template>
+    
+    <!-- MODAL 2: Feature Seat Assignment Modal -->
+    <div id="assignment-modal" class="modal-hidden fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] bg-slate-900/50 backdrop-blur-sm modal-backdrop">
+        <div class="modal-panel bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col" style="max-height: 80vh;">
+            <div class="flex items-start justify-between p-6 border-b border-slate-200">
+                <div><h2 id="modal-title" class="text-xl font-bold text-slate-900">管理分配</h2><p id="modal-subtitle" class="text-sm text-slate-500 mt-1">为此功能添加或移除成员/部门</p></div>
+                <button id="close-assign-modal-btn" class="p-2 -mr-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 flex-1 flex flex-col overflow-y-auto space-y-6 bg-slate-50">
+                 <div class="bg-white rounded-lg p-4 border border-slate-200"><div class="flex items-center justify-between"><label for="enable-for-all" class="font-medium text-slate-800 cursor-pointer select-none">为所有成员启用</label><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="enable-for-all" class="sr-only peer"><div class="w-11 h-6 bg-slate-200 rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-500/50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div></label></div><p class="text-slate-500 text-xs mt-2">开启后，租户内的所有成员都将获得此功能，并覆盖下方的单独分配。</p></div>
+                <div id="assignment-area" class="space-y-6 transition-opacity">
+                    <div class="bg-white p-4 rounded-lg border border-slate-200"><label class="text-sm font-semibold text-slate-800 mb-2 block">按成员分配</label><div class="relative"><div id="user-input-container" class="w-full bg-white border border-slate-300 rounded-lg p-2 flex flex-wrap items-center gap-2 min-h-[44px]"><input id="user-search-input" type="text" placeholder="按misID/手机/邮箱/用户名搜索" class="flex-1 bg-transparent focus:outline-none min-w-[200px] text-sm h-full p-1"></div><div id="user-search-results" class="hidden absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-20 max-h-60 overflow-y-auto list-item-container"></div></div></div>
+                    <div class="bg-white p-4 rounded-lg border border-slate-200"><label class="text-sm font-semibold text-slate-800 mb-2 block">按部门分配</label><div class="relative"><div id="dept-input-container" class="w-full bg-white border border-slate-300 rounded-lg p-2 flex flex-wrap items-center gap-2 min-h-[44px] cursor-pointer"><span id="dept-placeholder" class="text-slate-400 text-sm p-1">点击选择部门</span></div><div id="dept-tree-popover" class="hidden absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-2xl z-10 p-4 max-h-72 flex flex-col"><input id="dept-search-input" type="text" placeholder="搜索部门" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"><div id="department-tree" class="flex-1 overflow-y-auto list-item-container"></div></div></div></div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between p-6 border-t border-slate-200 bg-slate-50">
+                <div class="text-sm"><p id="seat-count" class="font-semibold text-slate-800">已分配席位: 0</p></div>
+                <div class="flex items-center space-x-4"><button id="cancel-assign-btn" class="px-5 py-2.5 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg transition-colors">取消</button><button id="save-assign-btn" class="px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors">保存更改</button></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- MOCK DATA (SHARED) ---
+        const mockUsers = [
+            { id: 1, name: '张三', email: 'zhangsan@example.com', avatar: 'https://images.unsplash.com/photo-1579783483458-83d02161294e?w=100&h=100&fit=crop', departmentId: 5 },
+            { id: 2, name: '李四', email: 'lisi@example.com', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop', departmentId: 6 },
+            { id: 3, name: '王五', email: 'wangwu@example.com', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop', departmentId: 2 },
+            { id: 4, name: '赵六', email: 'zhaoliu@example.com', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop', departmentId: 5 },
+        ];
+        const mockDepartments = [
+            { id: 1, name: '产品研发部', userCount: 4, parentId: null }, { id: 5, name: '前端团队', userCount: 2, parentId: 1 }, { id: 6, name: '后端团队', userCount: 2, parentId: 1 },
+            { id: 2, name: '市场营销部', userCount: 2, parentId: null }, { id: 3, name: '客户支持部', userCount: 2, parentId: null },
+        ];
+        
+        // --- LOGIC FOR POINTS LIMIT MODAL ---
+        let mockPointsLimitRules = {
+            default: { type: 'limit', value: 100 },
+            whitelist: [
+                { id: 1, type: 'member', targets: [1], rule: { type: 'no_limit' } },
+                { id: 2, type: 'group', targets: [2, 1, 3], rule: { type: 'limit', value: 200 } }
+            ]
+        };
+        let tempPointsLimitRules = null;
+
+        const pointsModal = document.getElementById('points-limit-modal');
+        const openPointsModalBtn = document.getElementById('open-points-limit-modal-btn');
+        const openMobileLimitModalBtn = document.getElementById('open-mobile-limit-modal-btn');
+        const cancelPointsBtn = document.getElementById('cancel-points-limit-btn');
+        const savePointsBtn = document.getElementById('save-points-limit-btn');
+        const addMemberRuleBtn = document.getElementById('add-member-rule-btn');
+        const addGroupRuleBtn = document.getElementById('add-group-rule-btn');
+        const memberRulesContainer = document.getElementById('member-rules-container');
+        const groupRulesContainer = document.getElementById('group-rules-container');
+        const whitelistTemplate = document.getElementById('whitelist-rule-template');
+        const defaultLimitOptions = document.getElementById('default-limit-options');
+        
+        // Tab elements
+        const memberTab = document.getElementById('member-tab');
+        const groupTab = document.getElementById('group-tab');
+        const memberPanel = document.getElementById('member-panel');
+        const groupPanel = document.getElementById('group-panel');
+
+        const setActiveTab = (tabName) => {
+            const isMemberActive = tabName === 'member';
+            
+            // Toggle tab styles
+            memberTab.className = `whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${isMemberActive ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`;
+            groupTab.className = `whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${!isMemberActive ? 'border-primary-500 text-primary-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`;
+
+            // Toggle panel visibility
+            memberPanel.classList.toggle('hidden', !isMemberActive);
+            groupPanel.classList.toggle('hidden', isMemberActive);
+        };
+
+        memberTab.addEventListener('click', () => setActiveTab('member'));
+        groupTab.addEventListener('click', () => setActiveTab('group'));
+
+        const showPointsModal = (deviceType) => {
+            // 注意: 此处为演示目的，两个按钮共用同一套规则数据。
+            tempPointsLimitRules = JSON.parse(JSON.stringify(mockPointsLimitRules));
+            
+            const modalTitleEl = document.getElementById('points-limit-modal-title');
+            modalTitleEl.textContent = `${deviceType === 'mobile' ? '手机' : '云电脑'}设备使用时长分配`;
+            
+            setActiveTab('member'); // Reset to default tab on open
+            renderPointsLimitRules();
+            pointsModal.classList.replace('modal-hidden', 'modal-visible');
+        };
+        const hidePointsModal = () => {
+            pointsModal.classList.replace('modal-visible', 'modal-hidden');
+            memberRulesContainer.innerHTML = '';
+            groupRulesContainer.innerHTML = '';
+        };
+
+        const savePointsLimitRules = () => {
+            mockPointsLimitRules = JSON.parse(JSON.stringify(tempPointsLimitRules));
+            console.log('Saved points limit rules:', mockPointsLimitRules);
+            hidePointsModal();
+        };
+
+        openPointsModalBtn.addEventListener('click', () => showPointsModal('cloud-computer'));
+        openMobileLimitModalBtn.addEventListener('click', () => showPointsModal('mobile'));
+        cancelPointsBtn.addEventListener('click', hidePointsModal);
+        savePointsBtn.addEventListener('click', savePointsLimitRules);
+        pointsModal.addEventListener('click', e => { if (e.target === pointsModal) hidePointsModal(); });
+        
+        const renderPointsLimitRules = () => {
+            const { default: defaultRule, whitelist } = tempPointsLimitRules;
+            const noLimitRadio = defaultLimitOptions.querySelector('#default-no-limit');
+            const limitRadio = defaultLimitOptions.querySelector('#default-limit');
+            const limitInput = defaultLimitOptions.querySelector('#default-limit-input');
+            
+            if (defaultRule.type === 'no_limit') {
+                noLimitRadio.checked = true;
+                limitInput.disabled = true;
+                limitInput.value = '';
+            } else {
+                limitRadio.checked = true;
+                limitInput.disabled = false;
+                limitInput.value = defaultRule.value;
+            }
+
+            memberRulesContainer.innerHTML = '';
+            groupRulesContainer.innerHTML = '';
+            whitelist.forEach(rule => {
+                if (rule.type === 'member') {
+                    createNewRule(rule, false, memberRulesContainer);
+                } else if (rule.type === 'group') {
+                    createNewRule(rule, false, groupRulesContainer);
+                }
+            });
+        };
+
+        defaultLimitOptions.addEventListener('change', (e) => {
+            const limitInput = defaultLimitOptions.querySelector('#default-limit-input');
+            if (e.target.id === 'default-no-limit') {
+                limitInput.disabled = true;
+                tempPointsLimitRules.default = { type: 'no_limit' };
+            } else if (e.target.id === 'default-limit') {
+                limitInput.disabled = false;
+                tempPointsLimitRules.default = { type: 'limit', value: parseInt(limitInput.value, 10) || 0 };
+            }
+        });
+        defaultLimitOptions.querySelector('#default-limit-input').addEventListener('input', (e) => {
+            tempPointsLimitRules.default.value = parseInt(e.target.value, 10) || 0;
+        });
+
+        const createNewRule = (ruleData = null, isNew = true, container) => {
+            if (isNew) {
+                const newRule = { id: Date.now(), type: ruleData.type, targets: [], rule: { type: 'limit', value: 200 } };
+                tempPointsLimitRules.whitelist.push(newRule);
+                ruleData = newRule;
+            }
+
+            const clone = whitelistTemplate.content.cloneNode(true);
+            const newRow = clone.querySelector('.rule-row');
+            newRow.dataset.ruleId = ruleData.id;
+            
+            const searchInput = newRow.querySelector('.rule-search-input');
+            if (ruleData.type === 'member') {
+                searchInput.placeholder = '搜索成员';
+            } else {
+                searchInput.placeholder = '搜索部门或用户组';
+            }
+            
+            container.appendChild(newRow);
+            attachRuleEventListeners(newRow, ruleData);
+            
+            if(isNew) {
+                requestAnimationFrame(() => newRow.classList.remove('opacity-0', '-translate-y-2'));
+            } else {
+                newRow.classList.remove('opacity-0', '-translate-y-2');
+            }
+        };
+
+        const updateOverflow = (container) => {
+            const tags = Array.from(container.querySelectorAll('.rule-tag'));
+            const searchInput = container.querySelector('.rule-search-input');
+            const plusNContainer = container.querySelector('.plus-n-container');
+            if (!plusNContainer) return;
+
+            const plusNBadge = plusNContainer.querySelector('.plus-n-badge');
+            const tooltip = plusNContainer.querySelector('.plus-n-tooltip');
+
+            tags.forEach(tag => tag.classList.remove('hidden'));
+            plusNContainer.classList.add('hidden');
+
+            requestAnimationFrame(() => {
+                const containerWidth = container.clientWidth;
+                
+                let totalChildrenWidth = 0;
+                const gap = 8; // 0.5rem from gap-2
+                tags.forEach(tag => totalChildrenWidth += tag.offsetWidth + gap);
+                if (searchInput) {
+                    totalChildrenWidth += searchInput.offsetWidth;
+                }
+
+                if (totalChildrenWidth <= containerWidth) return;
+                
+                const plusNBadgeWidth = 45;
+                const hiddenTagsContent = [];
+                let currentVisibleWidth = totalChildrenWidth;
+
+                for (let i = tags.length - 1; i >= 0; i--) {
+                    const tag = tags[i];
+                    const tagWidth = tag.offsetWidth + gap;
+
+                    currentVisibleWidth -= tagWidth;
+                    hiddenTagsContent.unshift(tag.querySelector('span.font-medium').textContent);
+
+                    if (currentVisibleWidth + plusNBadgeWidth <= containerWidth) {
+                        break;
+                    }
+                }
+                
+                if(hiddenTagsContent.length > 0) {
+                    const visibleTagsCount = tags.length - hiddenTagsContent.length;
+                    tags.forEach((tag, index) => {
+                        if(index >= visibleTagsCount) {
+                            tag.classList.add('hidden');
+                        }
+                    });
+
+                    plusNBadge.textContent = `+${hiddenTagsContent.length}`;
+                    tooltip.innerHTML = hiddenTagsContent.join('<br>');
+                    plusNContainer.classList.remove('hidden');
+                }
+            });
+        };
+
+        const attachRuleEventListeners = (row, rule) => {
+            const ruleInputContainer = row.querySelector('.rule-input-container');
+            const searchInput = row.querySelector('.rule-search-input');
+            const searchResults = row.querySelector('.rule-search-results');
+            
+            const noLimitRadio = row.querySelector('.no-limit-radio');
+            const limitRadio = row.querySelector('.limit-radio');
+            const limitInput = row.querySelector('.limit-input');
+            const deleteBtn = row.querySelector('.delete-btn');
+            
+            const plusNContainer = row.querySelector('.plus-n-container');
+            const plusNBadge = plusNContainer.querySelector('.plus-n-badge');
+            const tooltip = plusNContainer.querySelector('.plus-n-tooltip');
+            
+            plusNBadge.addEventListener('mouseenter', () => {
+                if (tooltip.innerHTML) {
+                    tooltip.classList.remove('hidden');
+                    setTimeout(() => tooltip.classList.remove('opacity-0'), 10);
+                }
+            });
+            plusNBadge.addEventListener('mouseleave', () => {
+                tooltip.classList.add('opacity-0');
+                tooltip.addEventListener('transitionend', () => tooltip.classList.add('hidden'), { once: true });
+            });
+
+            if (rule.rule.type === 'no_limit') {
+                noLimitRadio.checked = true;
+                limitInput.disabled = true;
+            } else {
+                limitRadio.checked = true;
+                limitInput.value = rule.rule.value;
+                limitInput.disabled = false;
+            }
+            const radioName = `rule-limit-type-${rule.id}`;
+            row.querySelectorAll('input[type="radio"]').forEach(radio => radio.name = radioName);
+
+            const renderTags = () => {
+                ruleInputContainer.querySelectorAll('.rule-tag').forEach(tag => tag.remove());
+                let source = rule.type === 'member' ? mockUsers : mockDepartments;
+                
+                source.filter(item => rule.targets.includes(item.id)).forEach(item => {
+                    const tag = document.createElement('div');
+                    tag.className = 'rule-tag flex-shrink-0 flex items-center bg-slate-100 rounded-md p-1.5 text-sm';
+                    const icon = rule.type === 'member' ? `<img src="${item.avatar}" class="w-5 h-5 rounded-full mr-2">` : `<i class="fas fa-users text-slate-400 mr-2"></i>`;
+                    tag.innerHTML = `${icon}<span class="font-medium">${item.name}</span><button data-target-id="${item.id}" class="remove-rule-target-btn ml-2 text-slate-400 hover:text-slate-600">&times;</button>`;
+                    ruleInputContainer.insertBefore(tag, searchInput);
+                });
+                updateOverflow(ruleInputContainer);
+            };
+            renderTags();
+
+            const renderSearchResults = (query) => {
+                let source = rule.type === 'member' ? mockUsers : mockDepartments;
+                const unassigned = source.filter(item => !rule.targets.includes(item.id));
+                const filtered = unassigned.filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
+                
+                if (filtered.length > 0) {
+                    searchResults.innerHTML = filtered.map(item => {
+                        const icon = rule.type === 'member' ? `<img src="${item.avatar}" class="w-8 h-8 rounded-full mr-3">` : `<i class="fas fa-users text-slate-400 mr-3 text-lg w-8 text-center"></i>`;
+                        const subtext = rule.type === 'member' ? item.email : `包含 ${item.userCount} 人`;
+                        return `<div data-target-id="${item.id}" class="rule-result-item flex items-center p-3 hover:bg-slate-100 cursor-pointer">
+                            ${icon}
+                            <div>
+                                <p class="font-semibold text-sm text-slate-800">${item.name}</p>
+                                <p class="text-xs text-slate-500">${subtext}</p>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    searchResults.classList.remove('hidden');
+                } else {
+                    searchResults.classList.add('hidden');
+                }
+            };
+            
+            searchInput.addEventListener('input', () => renderSearchResults(searchInput.value));
+            searchInput.addEventListener('focus', () => renderSearchResults(searchInput.value));
+            document.addEventListener('click', e => { if (!searchResults.contains(e.target) && e.target !== searchInput) searchResults.classList.add('hidden'); });
+
+            searchResults.addEventListener('click', e => {
+                const item = e.target.closest('.rule-result-item');
+                if (item) {
+                    const targetId = parseInt(item.dataset.targetId, 10);
+                    rule.targets.push(targetId);
+                    renderTags();
+                    searchInput.value = '';
+                    searchResults.classList.add('hidden');
+                }
+            });
+
+            ruleInputContainer.addEventListener('click', e => {
+                const btn = e.target.closest('.remove-rule-target-btn');
+                if (btn) {
+                    const targetId = parseInt(btn.dataset.targetId, 10);
+                    rule.targets = rule.targets.filter(id => id !== targetId);
+                    renderTags();
+                }
+            });
+            
+            noLimitRadio.addEventListener('change', () => { limitInput.disabled = true; rule.rule = { type: 'no_limit' }; });
+            limitRadio.addEventListener('change', () => { limitInput.disabled = false; rule.rule = { type: 'limit', value: parseInt(limitInput.value, 10) || 0 }; });
+            limitInput.addEventListener('input', (e) => { rule.rule.value = parseInt(e.target.value, 10) || 0; });
+            
+            deleteBtn.addEventListener('click', () => {
+                tempPointsLimitRules.whitelist = tempPointsLimitRules.whitelist.filter(r => r.id !== rule.id);
+                row.style.opacity = 0;
+                setTimeout(() => row.remove(), 300);
+            });
+        };
+
+        addMemberRuleBtn.addEventListener('click', () => createNewRule({type: 'member'}, true, memberRulesContainer));
+        addGroupRuleBtn.addEventListener('click', () => createNewRule({type: 'group'}, true, groupRulesContainer));
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                document.querySelectorAll('.rule-input-container').forEach(updateOverflow);
+            }, 150);
+        });
+
+        // --- LOGIC FOR FEATURE ASSIGNMENT (MODAL 2) ---
+        let mockFeatures = [
+             { id: 'ui_control_instruction', name: 'UI操作指令', description: '高级功能，用于操作手机和电脑的工作流指令。', assignment: { assignedUserIds: [1], assignedDeptIds: [2], enabledForAll: false }, icon: 'fa-hand-pointer', color: 'text-indigo-500' },
+             { id: 'automation_workflow', name: '自动化工作流', description: '创建跨应用的自动化任务。', assignment: { assignedUserIds: [], assignedDeptIds: [], enabledForAll: false }, icon: 'fa-cogs', color: 'text-green-500' },
+        ];
+        let currentFeature = null, tempAssignment = null;
+        
+        const featureListEl = document.getElementById('feature-list');
+        const assignmentModal = document.getElementById('assignment-modal');
+        const closeAssignModalBtn = document.getElementById('close-assign-modal-btn');
+        const saveAssignBtn = document.getElementById('save-assign-btn');
+        const cancelAssignBtn = document.getElementById('cancel-assign-btn');
+
+        // Feature modal DOM elements
+        const modalTitle = document.getElementById('modal-title');
+        const enableForAllCheckbox = document.getElementById('enable-for-all');
+        const assignmentArea = document.getElementById('assignment-area');
+        const userInputContainer = document.getElementById('user-input-container');
+        const userSearchInput = document.getElementById('user-search-input');
+        const userSearchResults = document.getElementById('user-search-results');
+        const deptInputContainer = document.getElementById('dept-input-container');
+        const deptPlaceholder = document.getElementById('dept-placeholder');
+        const deptTreePopover = document.getElementById('dept-tree-popover');
+        const deptSearchInput = document.getElementById('dept-search-input');
+        const departmentTree = document.getElementById('department-tree');
+        const seatCountEl = document.getElementById('seat-count');
+
+        const getAssignedUserCount = (assignment) => {
+            if (!assignment) return 0;
+            if (assignment.enabledForAll) return mockUsers.length;
+            const userIds = new Set(assignment.assignedUserIds);
+            const allDeptIds = new Set();
+
+            function getAllSubDeptIds(deptId) {
+                const subDepts = [];
+                const queue = [deptId];
+                const visited = new Set([deptId]);
+                while(queue.length > 0) {
+                    const currentId = queue.shift();
+                    subDepts.push(currentId);
+                    mockDepartments.filter(d => d.parentId === currentId).forEach(child => {
+                        if (!visited.has(child.id)) {
+                            visited.add(child.id);
+                            queue.push(child.id);
+                        }
+                    });
+                }
+                return subDepts;
+            }
+
+            assignment.assignedDeptIds.forEach(deptId => {
+                getAllSubDeptIds(deptId).forEach(id => allDeptIds.add(id));
+            });
+
+            mockUsers.forEach(user => {
+                if (allDeptIds.has(user.departmentId)) {
+                    userIds.add(user.id);
+                }
+            });
+
+            return userIds.size;
+        };
+        
+        const renderFeatures = () => {
+             featureListEl.innerHTML = mockFeatures.map(feature => {
+                 const count = getAssignedUserCount(feature.assignment);
+                 const infoHtml = feature.assignment.enabledForAll ? `<p class="text-sm font-semibold text-green-600">✅ 已为所有成员启用</p>` : `<p class="text-sm font-semibold">${count} <span class="text-slate-500 font-normal">席位已分配</span></p>`;
+                 return `<div class="bg-white rounded-xl p-6 flex flex-col justify-between border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                             <div>
+                                 <div class="flex items-center justify-between"><h3 class="text-lg font-bold text-slate-800">${feature.name}</h3><i class="fas ${feature.icon} ${feature.color} text-xl"></i></div>
+                                 <p class="mt-2 text-sm text-slate-500">${feature.description}</p>
+                             </div>
+                             <div class="mt-6">
+                                 ${infoHtml}
+                                 <div class="mt-4">
+                                     <button data-feature-id="${feature.id}" class="manage-feature-btn w-full text-center px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg text-sm font-semibold text-slate-700 transition-colors">管理分配</button>
+                                 </div>
+                             </div>
+                         </div>`;
+             }).join('');
+             document.querySelectorAll('.manage-feature-btn').forEach(btn => btn.addEventListener('click', (e) => openAssignmentModal(e.currentTarget.dataset.featureId)));
+        };
+
+        const renderSelectedUsers = () => {
+            userInputContainer.querySelectorAll('.user-tag').forEach(tag => tag.remove());
+            mockUsers
+                .filter(u => tempAssignment.assignedUserIds.includes(u.id))
+                .forEach(user => {
+                    const tag = document.createElement('div');
+                    tag.className = 'user-tag flex items-center bg-slate-100 rounded-md p-1.5 text-sm';
+                    tag.innerHTML = `<img src="${user.avatar}" class="w-5 h-5 rounded-full mr-2"><span class="font-medium">${user.name}</span><button data-user-id="${user.id}" class="remove-user-btn ml-2 text-slate-400 hover:text-slate-600">&times;</button>`;
+                    userInputContainer.insertBefore(tag, userSearchInput);
+                });
+        }
+        
+        const renderSelectedDepts = () => {
+            deptInputContainer.querySelectorAll('.dept-tag').forEach(tag => tag.remove());
+            if (tempAssignment.assignedDeptIds.length > 0) {
+                deptPlaceholder.classList.add('hidden');
+            } else {
+                deptPlaceholder.classList.remove('hidden');
+            }
+            mockDepartments
+                .filter(d => tempAssignment.assignedDeptIds.includes(d.id))
+                .forEach(dept => {
+                    const tag = document.createElement('div');
+                    tag.className = 'dept-tag flex items-center bg-slate-100 rounded-md p-1.5 text-sm';
+                    tag.innerHTML = `<i class="fas fa-users text-slate-400 mr-2"></i><span class="font-medium">${dept.name}</span><button data-dept-id="${dept.id}" class="remove-dept-btn ml-2 text-slate-400 hover:text-slate-600">&times;</button>`;
+                    deptInputContainer.insertBefore(tag, deptPlaceholder);
+                });
+        }
+        
+        const updateSeatCount = () => {
+            seatCountEl.textContent = `已分配席位: ${getAssignedUserCount(tempAssignment)}`;
+        }
+
+        const renderUserSearchResults = (query) => {
+            const unassignedUsers = mockUsers.filter(u => !tempAssignment.assignedUserIds.includes(u.id));
+            const filtered = unassignedUsers.filter(u => u.name.toLowerCase().includes(query.toLowerCase()) || u.email.toLowerCase().includes(query.toLowerCase()));
+            
+            if (filtered.length > 0) {
+                userSearchResults.innerHTML = filtered.map(user => `
+                    <div data-user-id="${user.id}" class="user-result-item flex items-center p-3 hover:bg-slate-100 cursor-pointer">
+                        <img src="${user.avatar}" class="w-8 h-8 rounded-full mr-3">
+                        <div>
+                            <p class="font-semibold text-sm text-slate-800">${user.name}</p>
+                            <p class="text-xs text-slate-500">${user.email}</p>
+                        </div>
+                    </div>
+                `).join('');
+                userSearchResults.classList.remove('hidden');
+            } else {
+                userSearchResults.classList.add('hidden');
+            }
+        };
+
+        const renderDepartmentTree = (query = '') => {
+            const depts = mockDepartments;
+            const tree = depts.filter(d => d.parentId === null).map(root => buildTree(root, depts, query)).join('');
+            departmentTree.innerHTML = tree || '<p class="text-sm text-slate-400 text-center py-4">无匹配部门</p>';
+        };
+
+        const buildTree = (node, allDepts, query) => {
+            const children = allDepts.filter(d => d.parentId === node.id);
+            const childrenHtml = children.map(child => buildTree(child, allDepts, query)).join('');
+            
+            const isMatch = node.name.toLowerCase().includes(query.toLowerCase());
+            if (!isMatch && !childrenHtml) return '';
+
+            const isChecked = tempAssignment.assignedDeptIds.includes(node.id);
+            return `<div style="padding-left: ${node.parentId ? '1.5rem' : '0'}">
+                        <div class="flex items-center my-1 p-1 rounded-md hover:bg-slate-100 ${isMatch ? '' : 'opacity-50'}">
+                            <input type="checkbox" id="dept-${node.id}" data-dept-id="${node.id}" class="h-4 w-4 border-slate-300 rounded text-primary-600 focus:ring-primary-500" ${isChecked ? 'checked' : ''}>
+                            <label for="dept-${node.id}" class="ml-2 text-sm text-slate-800 flex-1">${node.name} <span class="text-slate-400">(${node.userCount})</span></label>
+                        </div>
+                        <div class="dept-children">${childrenHtml}</div>
+                    </div>`;
+        };
+
+        const openAssignmentModal = (featureId) => {
+            currentFeature = mockFeatures.find(f => f.id === featureId);
+            if (!currentFeature) return;
+            tempAssignment = JSON.parse(JSON.stringify(currentFeature.assignment));
+            
+            modalTitle.textContent = `管理分配 - ${currentFeature.name}`;
+            enableForAllCheckbox.checked = tempAssignment.enabledForAll;
+            assignmentArea.style.opacity = tempAssignment.enabledForAll ? '0.5' : '1';
+            assignmentArea.style.pointerEvents = tempAssignment.enabledForAll ? 'none' : 'auto';
+
+            renderSelectedUsers();
+            renderSelectedDepts();
+            renderDepartmentTree();
+            updateSeatCount();
+            
+            assignmentModal.classList.replace('modal-hidden', 'modal-visible');
+        };
+        
+        const closeAssignmentModal = () => assignmentModal.classList.replace('modal-visible', 'modal-hidden');
+
+        const saveAssignment = () => {
+            currentFeature.assignment = JSON.parse(JSON.stringify(tempAssignment));
+            renderFeatures();
+            closeAssignmentModal();
+        };
+
+        // Event Listeners for Modal 2
+        enableForAllCheckbox.addEventListener('change', (e) => {
+            tempAssignment.enabledForAll = e.target.checked;
+            assignmentArea.style.opacity = e.target.checked ? '0.5' : '1';
+            assignmentArea.style.pointerEvents = e.target.checked ? 'none' : 'auto';
+            updateSeatCount();
+        });
+
+        userSearchInput.addEventListener('input', () => renderUserSearchResults(userSearchInput.value));
+        userSearchInput.addEventListener('focus', () => renderUserSearchResults(userSearchInput.value));
+        document.addEventListener('click', (e) => {
+            if (!userSearchResults.contains(e.target) && e.target !== userSearchInput) {
+                userSearchResults.classList.add('hidden');
+            }
+            if (!deptTreePopover.contains(e.target) && !deptInputContainer.contains(e.target)) {
+                deptTreePopover.classList.add('hidden');
+            }
+        });
+
+        userSearchResults.addEventListener('click', (e) => {
+            const item = e.target.closest('.user-result-item');
+            if (item) {
+                const userId = parseInt(item.dataset.userId, 10);
+                if (!tempAssignment.assignedUserIds.includes(userId)) {
+                    tempAssignment.assignedUserIds.push(userId);
+                    renderSelectedUsers();
+                    updateSeatCount();
+                    userSearchInput.value = '';
+                    userSearchResults.classList.add('hidden');
+                }
+            }
+        });
+
+        userInputContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-user-btn');
+            if (btn) {
+                const userId = parseInt(btn.dataset.userId, 10);
+                tempAssignment.assignedUserIds = tempAssignment.assignedUserIds.filter(id => id !== userId);
+                renderSelectedUsers();
+                updateSeatCount();
+            }
+        });
+
+        deptInputContainer.addEventListener('click', () => {
+            deptTreePopover.classList.toggle('hidden');
+        });
+
+        deptSearchInput.addEventListener('input', () => renderDepartmentTree(deptSearchInput.value));
+
+        departmentTree.addEventListener('change', e => {
+            if (e.target.type === 'checkbox') {
+                const deptId = parseInt(e.target.dataset.deptId, 10);
+                if (e.target.checked) {
+                    if (!tempAssignment.assignedDeptIds.includes(deptId)) {
+                        tempAssignment.assignedDeptIds.push(deptId);
+                    }
+                } else {
+                    tempAssignment.assignedDeptIds = tempAssignment.assignedDeptIds.filter(id => id !== deptId);
+                }
+                renderSelectedDepts();
+                updateSeatCount();
+            }
+        });
+
+        deptInputContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove-dept-btn');
+            if (btn) {
+                const deptId = parseInt(btn.dataset.deptId, 10);
+                tempAssignment.assignedDeptIds = tempAssignment.assignedDeptIds.filter(id => id !== deptId);
+                renderSelectedDepts();
+                renderDepartmentTree(); // Re-render to update checkboxes
+                updateSeatCount();
+            }
+        });
+        
+        closeAssignModalBtn.addEventListener('click', closeAssignmentModal);
+        cancelAssignBtn.addEventListener('click', closeAssignmentModal);
+        saveAssignBtn.addEventListener('click', saveAssignment);
+        assignmentModal.addEventListener('click', e => { if (e.target === assignmentModal) closeAssignmentModal(); });
+        
+        renderFeatures();
+    });
+    </script>
+</body>
+</html>

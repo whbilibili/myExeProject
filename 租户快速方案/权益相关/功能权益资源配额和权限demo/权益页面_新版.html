@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的订阅计划</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #4F46E5;
+            --primary-hover: #4338CA;
+            --secondary-color: #10B981;
+            --secondary-hover: #059669;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --text-light: #9CA3AF;
+            --bg-color: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --border-color: #E5E7EB;
+            --orange-color: #F59E0B;
+            --red-color: #EF4444;
+            --green-color: #10B981;
+            --blue-color: #3B82F6;
+            --purple-color: #8B5CF6;
+            --yellow-color: #F59E0B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Helvetica Neue', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', 'Microsoft Yahei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .main-container {
+            min-height: 100vh;
+            background-color: var(--card-bg);
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .close-btn:hover {
+            background-color: #F3F4F6;
+        }
+
+        .content-wrapper {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-navigation {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab-item {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 12px 0 16px 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .tab-item.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* 头部信息区域 */
+        .header-section {
+            background-color: #F8F9FF;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 60px;
+        }
+
+        .plan-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .current-plan {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .current-plan .plan-text {
+            font-size: 16px;
+            color: var(--text-primary);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .current-plan .plan-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .plan-badge {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 50%;
+            font-size: 12px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-left: 4px;
+        }
+
+        .expiry-info {
+            font-size: 14px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            margin-bottom: 20px;
+        }
+
+        .manage-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+        }
+        .manage-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .credits-section {
+            display: flex;
+            align-items: flex-start;
+            gap: 32px;
+            flex-shrink: 0;
+        }
+
+        .credits-info {
+            text-align: left;
+        }
+
+        .credits-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .credits-icon {
+            background-color: var(--orange-color);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .credits-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .credits-amount {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .credits-amount .total {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .credits-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .credits-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            background-color: white;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            min-width: 100px;
+            text-align: center;
+        }
+        .credits-btn:hover {
+            background-color: #F3F4F6;
+        }
+
+        .credits-btn.primary {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .credits-btn.primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        /* 用量概览区域 */
+        .usage-section {
+            margin-bottom: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .view-records-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .view-records-btn:hover {
+            text-decoration: underline;
+        }
+
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .usage-item {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .usage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .usage-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .usage-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .usage-icon.blue { background-color: var(--blue-color); }
+        .usage-icon.green { background-color: var(--green-color); }
+        .usage-icon.red { background-color: var(--red-color); }
+        .usage-icon.purple { background-color: var(--purple-color); }
+        .usage-icon.orange { background-color: var(--orange-color); }
+        .usage-icon.yellow { background-color: var(--yellow-color); }
+        .usage-icon.cyan { background-color: #06B6D4; }
+
+        .usage-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .buy-pack-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+            font-weight: 500;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .buy-pack-btn:hover {
+            text-decoration: underline;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #F3F4F6;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .progress.green { background-color: var(--green-color); }
+        .progress.orange { background-color: var(--orange-color); }
+        .progress.red { background-color: var(--red-color); }
+        .progress.yellow { background-color: var(--yellow-color); }
+
+        .usage-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .usage-current {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .usage-current .number {
+            font-weight: 600;
+        }
+
+        .usage-total {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .usage-total .number {
+            font-weight: 600;
+        }
+
+        .warning-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background-color: var(--red-color);
+            color: white;
+            font-size: 10px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            white-space: nowrap;
+            z-index: 1;
+        }
+
+        /* 资源包购买弹窗样式 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .modal-left {
+            flex: 1;
+            padding: 40px;
+            background-color: #FAFBFC;
+        }
+
+        .modal-right {
+            width: 380px;
+            padding: 40px;
+            background-color: white;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 32px;
+        }
+
+        /* 服务卡片 */
+        .service-card {
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 28px;
+            text-align: center;
+            margin-bottom: 32px;
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+        }
+
+        .service-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .service-price {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-color);
+            line-height: 1.2;
+        }
+
+        .service-unit {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* 数量选择区域 */
+        .quantity-section {
+            margin-bottom: 32px;
+        }
+
+        .quantity-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+
+        .quantity-slider-container {
+            margin-bottom: 24px;
+        }
+
+        .quantity-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) 4%, #E5E7EB 4%, #E5E7EB 100%);
+            outline: none;
+            -webkit-appearance: none;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .quantity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            transition: all 0.2s;
+        }
+
+        .quantity-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .quantity-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .slider-marks {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .quantity-input-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .quantity-label {
+            font-size: 16px;
+            color: var(--text-primary);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .quantity-btn {
+            background-color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .quantity-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .quantity-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quantity-input {
+            border: none;
+            width: 100px;
+            height: 44px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            outline: none;
+            background-color: white;
+            color: var(--text-primary);
+        }
+
+        /* 优惠卡片 */
+        .discount-card {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            border: 2px solid #F59E0B;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+        }
+
+        .discount-badge {
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #F59E0B;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 0 12px 12px 0;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .discount-content {
+            margin-left: 40px;
+        }
+
+        .discount-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .discount-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* 右侧订单区域 */
+        .company-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 32px;
+            text-align: center;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #F3F4F6;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 15px;
+            padding: 8px 0;
+        }
+
+        .order-item.total {
+            font-size: 18px;
+            font-weight: 700;
+            padding: 20px 0 16px 0;
+            margin: 24px 0 32px 0;
+            border-top: 2px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .order-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .order-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .order-value.highlight {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .order-value.discount {
+            color: #059669;
+            font-weight: 700;
+        }
+
+        .order-value.final {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        /* 协议区域 */
+        .agreement-section {
+            margin: 24px 0;
+            padding: 16px;
+            background-color: #F9FAFB;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .agreement-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .agreement-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            cursor: pointer;
+        }
+
+        .agreement-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .agreement-link:hover {
+            text-decoration: underline;
+        }
+
+        /* 提交按钮 */
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background-color: #EF4444;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* 关闭按钮 */
+        .close-btn-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 2px solid var(--border-color);
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        .close-btn-modal:hover {
+            background-color: #EF4444;
+            color: white;
+            border-color: #EF4444;
+            transform: scale(1.1);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .usage-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .header-section {
+                gap: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content-wrapper {
+                padding: 24px;
+            }
+            
+            .header-section {
+                flex-direction: column;
+                gap: 24px;
+                align-items: stretch;
+            }
+            
+            .credits-section {
+                justify-content: space-between;
+                gap: 24px;
+            }
+            
+            .credits-actions {
+                flex-direction: row;
+                align-items: center;
+            }
+            
+            .usage-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+            
+            .tab-navigation {
+                gap: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .usage-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .credits-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                flex-direction: column;
+                max-width: 500px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            
+            .modal-left {
+                padding: 24px;
+            }
+            
+            .modal-right {
+                width: 100%;
+                padding: 24px;
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+            }
+            
+            .quantity-input-container {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .service-card {
+                padding: 20px;
+            }
+            
+            .service-price {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <button class="close-btn">×</button>
+        
+        <div class="content-wrapper">
+            <!-- 标签导航 -->
+            <div class="tab-navigation">
+                <div class="tab-item active">当前订阅计划</div>
+                <div class="tab-item">升级方案</div>
+            </div>
+
+            <!-- 头部信息 -->
+            <div class="header-section">
+                <div class="plan-info">
+                    <div class="current-plan">
+                        <span class="plan-text">当前方案：</span>
+                        <span class="plan-name">企业版</span>
+                        <span class="plan-badge">?</span>
+                    </div>
+                    <div class="expiry-info">到期时间：2025年8月15日</div>
+                    <button class="manage-btn">管理订阅</button>
+                </div>
+
+                <div class="credits-section">
+                    <div class="credits-info">
+                        <div class="credits-header">
+                            <div class="credits-icon">积</div>
+                            <span class="credits-title">积分</span>
+                        </div>
+                        <div class="credits-amount">
+                            6,500 <span class="total">/ 3,002,000</span>
+                        </div>
+                    </div>
+                    <div class="credits-actions">
+                        <button class="credits-btn">查看消耗规则</button>
+                        <button class="credits-btn">查看流水</button>
+                        <button class="credits-btn primary">充值积分</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用量概览 -->
+            <div class="usage-section">
+                <div class="section-header">
+                    <h2 class="section-title">额度用量概览</h2>
+                    <button class="view-records-btn">查看操作记录</button>
+                </div>
+
+                <div class="usage-grid">
+                    <!-- 新建智能体 -->
+                    <div class="usage-item">
+                        <div class="usage-header">
+                            <div class="usage-title-wrapper">
+                                <div class="usage-icon blue">🤖</div>
+                                <span class="usage-name">新建智能体</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress green" style="width: 30%;"></div>
+                        </div>
+                        <div class="usage-stats">
+                            <span class="usage-current">已使用：<span class="number">3059</span> 个</span>
+                            <span class="usage-total">总量：<span class="number">9999</span> 个</span>
+                        </div>
+                    </div>
+
+                    <!-- 新建工作流 -->
+                    <div class="usage-item">
+                        <div class="usage-header">
+                            <div class="usage-title-wrapper">
+                                <div class="usage-icon cyan">💎</div>
+                                <span class="usage-name">新建工作流</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress red" style="width: 80%;"></div>
+                        </div>
+                        <div class="usage-stats">
+                            <span class="usage-current">已使用：<span class="number">8059</span> 个</span>
+                            <span class="usage-total">总量：<span class="number">9999</span> 个</span>
+                        </div>
+                    </div>
+
+                    <!-- 新建工具 -->
+                    <div class="usage-item">
+                        <div class="usage-header">
+                            <div class="usage-title-wrapper">
+                                <div class="usage-icon red">❌</div>
+                                <span class="usage-name">新建工具</span>
+                            </div>
+                        </div>
+                        <span class="warning-badge">用量已满额，请购买资源包</span>
+                        <div class="progress-bar">
+                            <div class="progress red" style="width: 100%;"></div>
+                        </div>
+                        <div class="usage-stats">
+                            <span class="usage-current">已使用：<span class="number">59994</span> 个</span>
+                            <span class="usage-total">总量：<span class="number">9999</span> 个</span>
+                        </div>
+                    </div>
+
+                    <!-- 新建知识库 -->
+                    <div class="usage-item">
+                        <div class="usage-header">
+                            <div class="usage-title-wrapper">
+                                <div class="usage-icon purple">👑</div>
+                                <span class="usage-name">新建知识库</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress yellow" style="width: 70%;"></div>
+                        </div>
+                        <div class="usage-stats">
+                            <span class="usage-current">已使用：<span class="number">6959</span> 个</span>
+                            <span class="usage-total">总量：<span class="number">9999</span> 个</span>
+                        </div>
+                    </div>
+
+                    <!-- 新建空间 -->
+                    <div class="usage-item">
+                        <div class="usage-header">
+                            <div class="usage-title-wrapper">
+                                <div class="usage-icon purple">💜</div>
+                                <span class="usage-name">新建空间</span>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress green" style="width: 10%;"></div>
+                        </div>
+                        <div class="usage-stats">
+                            <span class="usage-current">已使用：<span class="number">1059</span> 个</span>
+                            <span class="usage-total">总量：<span class="number">9999</span> 个</span>
+                        </div>
+                    </div>
+
+                    <!-- 云电脑设备使用时长 -->
+                    <div class="usage-item">
+                        <div class="usage-header">
+                            <div class="usage-title-wrapper">
+                                <div class="usage-icon red">🖥️</div>
+                                <span class="usage-name">云电脑设备使用时长</span>
+                            </div>
+                            <button class="buy-pack-btn" onclick="openResourcePackModal()">增购资源包</button>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress yellow" style="width: 70%;"></div>
+                        </div>
+                        <div class="usage-stats">
+                            <span class="usage-current">已使用：<span class="number">6959</span> 分钟</span>
+                            <span class="usage-total">总量：<span class="number">9999</span> 分钟/月</span>
+                        </div>
+                    </div>
+
+                    <!-- 手机设备使用时长 -->
+                    <div class="usage-item">
+                        <div class="usage-header">
+                            <div class="usage-title-wrapper">
+                                <div class="usage-icon cyan">📱</div>
+                                <span class="usage-name">手机设备使用时长</span>
+                            </div>
+                            <button class="buy-pack-btn">增购资源包</button>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress yellow" style="width: 70%;"></div>
+                        </div>
+                        <div class="usage-stats">
+                            <span class="usage-current">已使用：<span class="number">6959</span> 分钟</span>
+                            <span class="usage-total">总量：<span class="number">9999</span> 分钟/月</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 云电脑资源包购买弹窗 -->
+    <div class="modal-overlay" id="resource-pack-modal">
+        <div class="modal-content">
+            <button class="close-btn-modal" onclick="closeResourcePackModal()">&times;</button>
+            
+            <!-- 左侧选择区域 -->
+            <div class="modal-left">
+                <h3 class="modal-title">选择方案</h3>
+                
+                <!-- 服务卡片 -->
+                <div class="service-card">
+                    <div class="service-title">云电脑设备时长</div>
+                    <div class="service-price">
+                        1 积分 <span class="service-unit">/ 分钟</span>
+                    </div>
+                </div>
+
+                <!-- 购买数量 -->
+                <div class="quantity-section">
+                    <div class="quantity-title">购买时长</div>
+                    
+                    <div class="quantity-slider-container">
+                        <input type="range" 
+                               class="quantity-slider" 
+                               id="quantity-slider"
+                               min="60" 
+                               max="3000" 
+                               value="120" 
+                               step="30"
+                               oninput="updateQuantityFromSlider(this.value)">
+                        <div class="slider-marks">
+                            <span>60</span>
+                            <span>600</span>
+                            <span>1200</span>
+                            <span>1800</span>
+                            <span>2400</span>
+                            <span>3000</span>
+                        </div>
+                    </div>
+
+                    <div class="quantity-input-container">
+                        <span class="quantity-label">使用时长</span>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" onclick="changeQuantity(-30)">−</button>
+                            <input type="number" 
+                                   class="quantity-input" 
+                                   id="quantity-input" 
+                                   value="120" 
+                                   min="60" 
+                                   max="3000" 
+                                   step="30"
+                                   onchange="updateQuantityFromInput()">
+                            <button class="quantity-btn" onclick="changeQuantity(30)">+</button>
+                        </div>
+                        <span class="quantity-label">分钟</span>
+                    </div>
+                </div>
+
+                <!-- 优惠信息 -->
+                <div class="discount-card">
+                    <div class="discount-badge">首购</div>
+                    <div class="discount-content">
+                        <div class="discount-title">新用户福利</div>
+                        <div class="discount-desc">首次购买云电脑时长享受8折优惠</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧订单信息 -->
+            <div class="modal-right">
+                <div class="company-name">AI工作台 - 云电脑服务</div>
+                
+                <div class="order-item">
+                    <span class="order-label">购买项目</span>
+                    <span class="order-value">云电脑设备时长</span>
+                </div>
+                
+                <div class="order-item">
+                    <span class="order-label">使用时长</span>
+                    <span class="order-value" id="order-duration">120分钟</span>
+                </div>
+                
+                <div class="order-item">
+                    <span class="order-label">所需积分</span>
+                    <span class="order-value" id="order-credits">120 积分</span>
+                </div>
+                
+                <div class="order-item">
+                    <span class="order-label">新用户优惠</span>
+                    <span class="order-value discount" id="order-discount">-24 积分</span>
+                </div>
+                
+                <div class="order-item">
+                    <span class="order-label">当前积分余额</span>
+                    <span class="order-value highlight" id="current-balance">6,500 积分</span>
+                </div>
+                
+                <div class="order-item total">
+                    <span class="order-label">实际消耗</span>
+                    <span class="order-value final" id="final-credits">96 积分</span>
+                </div>
+
+                <div class="agreement-section">
+                    <label class="agreement-checkbox">
+                        <input type="checkbox" id="agreement-check" checked>
+                        我已阅读并同意 <a href="#" class="agreement-link">《云电脑使用协议》</a>
+                    </label>
+                </div>
+
+                <button class="submit-btn" onclick="confirmPurchase()" id="submit-btn">
+                    确认兑换
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 标签切换功能
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelector('.tab-item.active').classList.remove('active');
+                this.classList.add('active');
+            });
+        });
+
+        // 关闭按钮功能
+        document.querySelector('.close-btn').addEventListener('click', function() {
+            window.close();
+        });
+
+        // 资源包购买相关变量
+        let currentCredits = 6500;
+        const creditsPerMinute = 1; // 1积分/1分钟
+        const discountRate = 0.8; // 8折优惠
+        const isFirstPurchase = true; // 是否首次购买
+
+        function openResourcePackModal() {
+            document.getElementById('resource-pack-modal').style.display = 'flex';
+            updateOrder();
+        }
+
+        function closeResourcePackModal() {
+            document.getElementById('resource-pack-modal').style.display = 'none';
+        }
+
+        function changeQuantity(delta) {
+            const input = document.getElementById('quantity-input');
+            const slider = document.getElementById('quantity-slider');
+            let value = parseInt(input.value) + delta;
+            
+            if (value < 60) value = 60;
+            if (value > 3000) value = 3000;
+            
+            input.value = value;
+            slider.value = value;
+            updateSliderBackground();
+            updateOrder();
+        }
+
+        function updateQuantityFromInput() {
+            const input = document.getElementById('quantity-input');
+            const slider = document.getElementById('quantity-slider');
+            let value = parseInt(input.value);
+            
+            if (value < 60) value = 60;
+            if (value > 3000) value = 3000;
+            
+            // 调整为30分钟的倍数
+            value = Math.round(value / 30) * 30;
+            
+            input.value = value;
+            slider.value = value;
+            updateSliderBackground();
+            updateOrder();
+        }
+
+        function updateQuantityFromSlider(value) {
+            const input = document.getElementById('quantity-input');
+            // 调整为30分钟的倍数
+            value = Math.round(value / 30) * 30;
+            input.value = value;
+            updateSliderBackground();
+            updateOrder();
+        }
+
+        function updateSliderBackground() {
+            const slider = document.getElementById('quantity-slider');
+            const value = slider.value;
+            const min = slider.min;
+            const max = slider.max;
+            const percentage = ((value - min) / (max - min)) * 100;
+            
+            slider.style.background = `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${percentage}%, #E5E7EB ${percentage}%, #E5E7EB 100%)`;
+        }
+
+        function updateOrder() {
+            const quantity = parseInt(document.getElementById('quantity-input').value);
+            const originalCredits = quantity * creditsPerMinute;
+            let finalCredits = originalCredits;
+            let discountCredits = 0;
+            
+            // 如果是首次购买，应用8折优惠
+            if (isFirstPurchase) {
+                finalCredits = Math.floor(originalCredits * discountRate);
+                discountCredits = originalCredits - finalCredits;
+            }
+            
+            document.getElementById('order-duration').textContent = quantity + '分钟';
+            document.getElementById('order-credits').textContent = originalCredits + ' 积分';
+            document.getElementById('order-discount').textContent = discountCredits > 0 ? '-' + discountCredits + ' 积分' : '无优惠';
+            document.getElementById('current-balance').textContent = currentCredits.toLocaleString() + ' 积分';
+            document.getElementById('final-credits').textContent = finalCredits + ' 积分';
+            
+            // 检查积分是否足够
+            const submitBtn = document.getElementById('submit-btn');
+            
+            if (finalCredits > currentCredits) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = '积分余额不足';
+                submitBtn.style.backgroundColor = '#EF4444';
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '确认兑换';
+                submitBtn.style.backgroundColor = 'var(--primary-color)';
+            }
+        }
+
+        function confirmPurchase() {
+            const agreementCheck = document.getElementById('agreement-check');
+            if (!agreementCheck.checked) {
+                alert('请先同意云电脑使用协议');
+                return;
+            }
+            
+            const quantity = parseInt(document.getElementById('quantity-input').value);
+            const originalCredits = quantity * creditsPerMinute;
+            let finalCredits = originalCredits;
+            
+            if (isFirstPurchase) {
+                finalCredits = Math.floor(originalCredits * discountRate);
+            }
+            
+            if (finalCredits > currentCredits) {
+                alert('积分余额不足，无法兑换云电脑时长');
+                return;
+            }
+            
+            // 模拟购买成功
+            currentCredits -= finalCredits;
+            
+            const hours = Math.floor(quantity / 60);
+            const minutes = quantity % 60;
+            let timeText = '';
+            if (hours > 0) {
+                timeText += hours + '小时';
+            }
+            if (minutes > 0) {
+                timeText += minutes + '分钟';
+            }
+            
+            alert(`兑换成功！\n获得云电脑时长：${timeText}\n消耗积分：${finalCredits} 积分\n剩余积分：${currentCredits.toLocaleString()} 积分\n\n云电脑时长已添加到您的账户，请在有效期内使用。`);
+            
+            closeResourcePackModal();
+            
+            // 更新页面显示的积分余额
+            const creditsBalanceElement = document.querySelector('.credits-amount');
+            if (creditsBalanceElement) {
+                creditsBalanceElement.innerHTML = `${currentCredits.toLocaleString()} <span class="total">/ 3,002,000</span>`;
+            }
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('resource-pack-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeResourcePackModal();
+            }
+        });
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateSliderBackground();
+        });
+    </script>
+</body>
+</html> 

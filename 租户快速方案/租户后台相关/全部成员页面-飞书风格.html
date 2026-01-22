@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成员管理 - 飞书风格</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'lark': {
+                            '50': '#f0f9ff',
+                            '100': '#e0f2fe', 
+                            '200': '#bae6fd',
+                            '300': '#7dd3fc',
+                            '400': '#38bdf8',
+                            '500': '#0ea5e9',
+                            '600': '#0284c7',
+                            '700': '#0369a1',
+                            '800': '#075985',
+                            '900': '#0c4a6e'
+                        }
+                    },
+                    boxShadow: {
+                        'lark': '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)',
+                        'lark-lg': '0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                        'lark-hover': '0 4px 12px 0 rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            min-height: 100vh;
+        }
+        
+        /* 飞书风格的按钮 */
+        .lark-btn {
+            @apply inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 ease-in-out;
+            @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+        }
+        
+        .lark-btn-primary {
+            @apply bg-lark-600 text-white hover:bg-lark-700 focus:ring-lark-500;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .lark-btn-secondary {
+            @apply bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-500;
+        }
+        
+        /* 飞书风格的输入框 */
+        .lark-input {
+            @apply w-full px-3 py-2 border border-gray-200 rounded-lg text-sm;
+            @apply focus:outline-none focus:ring-2 focus:ring-lark-500 focus:border-transparent;
+            @apply placeholder-gray-400 transition-all duration-200;
+        }
+        
+        /* 飞书风格的卡片 */
+        .lark-card {
+            @apply bg-white rounded-xl border border-gray-100;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+        }
+        
+        .lark-card:hover {
+            box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+        
+        /* 表格样式 */
+        .lark-table {
+            @apply w-full;
+        }
+        
+        .lark-table thead {
+            @apply bg-gray-50/80;
+        }
+        
+        .lark-table th {
+            @apply px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider;
+            @apply border-b border-gray-100;
+        }
+        
+        .lark-table td {
+            @apply px-6 py-4 text-sm border-b border-gray-50;
+        }
+        
+        .lark-table tbody tr:hover {
+            @apply bg-gray-50/50;
+        }
+        
+        /* 权限标签样式 */
+        .permission-tag {
+            @apply inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium;
+            @apply transition-all duration-200 cursor-pointer;
+        }
+        
+        .permission-tag:hover {
+            @apply transform scale-105;
+        }
+        
+        /* 头像样式 */
+        .lark-avatar {
+            @apply rounded-full border-2 border-white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+        
+        /* 状态指示器 */
+        .status-dot {
+            @apply absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white;
+        }
+        
+        .status-online { @apply bg-green-400; }
+        .status-offline { @apply bg-gray-300; }
+        
+        /* 下拉菜单动画 */
+        .dropdown-enter {
+            opacity: 0;
+            transform: translateY(-4px) scale(0.95);
+        }
+        
+        .dropdown-enter-active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            transition: all 0.15s ease-out;
+        }
+        
+        .dropdown-exit {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        
+        .dropdown-exit-active {
+            opacity: 0;
+            transform: translateY(-4px) scale(0.95);
+            transition: all 0.1s ease-in;
+        }
+        
+        /* 搜索框样式 */
+        .search-container {
+            @apply relative;
+        }
+        
+        .search-container::before {
+            content: '';
+            @apply absolute left-3 top-1/2 transform -translate-y-1/2;
+            @apply w-4 h-4 bg-gray-400;
+            mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3e%3c/path%3e%3c/svg%3e") no-repeat center;
+        }
+        
+        /* Tab样式 */
+        .lark-tab {
+            @apply px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200;
+            @apply hover:bg-gray-100;
+        }
+        
+        .lark-tab.active {
+            @apply bg-lark-50 text-lark-700;
+        }
+        
+        .lark-tab .badge {
+            @apply ml-2 px-2 py-0.5 text-xs rounded-full;
+        }
+        
+        .lark-tab.active .badge {
+            @apply bg-lark-100 text-lark-700;
+        }
+        
+        .lark-tab:not(.active) .badge {
+            @apply bg-gray-200 text-gray-600;
+        }
+    </style>
+</head>
+<body>
+    <!-- 主容器 -->
+    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <!-- 顶部导航 -->
+        <nav class="bg-white border-b border-gray-100 px-6 py-4">
+            <div class="flex items-center justify-between max-w-7xl mx-auto">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-gradient-to-br from-lark-500 to-lark-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-white text-sm"></i>
+                        </div>
+                        <h1 class="text-xl font-semibold text-gray-900">租户管理</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 hover:bg-gray-100 rounded-lg relative transition-colors">
+                        <i class="fas fa-bell text-gray-500"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                    </button>
+                    <div class="flex items-center space-x-3 pl-4 border-l border-gray-200">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" 
+                             alt="用户头像" class="w-8 h-8 rounded-full border border-gray-200">
+                        <span class="text-sm font-medium text-gray-700">管理员</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <!-- 页面标题 -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-2">成员与组织管理</h2>
+                <p class="text-gray-600">管理租户内所有成员信息，包括企业成员和外部协作者</p>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="lark-card p-6 transition-all duration-200">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-users text-white"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">总成员数</p>
+                            <p class="text-2xl font-semibold text-gray-900">8</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="lark-card p-6 transition-all duration-200">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-building text-white"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">企业成员</p>
+                            <p class="text-2xl font-semibold text-gray-900">6</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="lark-card p-6 transition-all duration-200">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-user-friends text-white"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">外部成员</p>
+                            <p class="text-2xl font-semibold text-gray-900">2</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主要内容卡片 -->
+            <div class="lark-card overflow-hidden">
+                <!-- Tab导航 -->
+                <div class="border-b border-gray-100 px-6 py-4">
+                    <nav class="flex space-x-2">
+                        <button class="lark-tab active">
+                            全部成员
+                            <span class="badge">8</span>
+                        </button>
+                        <button class="lark-tab">
+                            企业成员
+                            <span class="badge">6</span>
+                        </button>
+                        <button class="lark-tab">
+                            非企业成员
+                            <span class="badge">2</span>
+                        </button>
+                        <button class="lark-tab">
+                            虚拟角色管理
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- 操作栏 -->
+                <div class="px-6 py-4 bg-gray-50/50 border-b border-gray-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                        <div class="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                            <!-- 搜索框 -->
+                            <div class="search-container">
+                                <input type="text" 
+                                       class="lark-input pl-10 w-80" 
+                                       placeholder="按姓名/手机/邮箱搜索成员"
+                                       id="search-input">
+                            </div>
+
+                            <!-- 筛选按钮 -->
+                            <button class="lark-btn lark-btn-secondary px-4 py-2">
+                                <i class="fas fa-filter mr-2"></i>
+                                筛选
+                            </button>
+                        </div>
+
+                        <div class="flex items-center space-x-3">
+                            <!-- 添加成员按钮 -->
+                            <button class="lark-btn lark-btn-primary px-4 py-2">
+                                <i class="fas fa-plus mr-2"></i>
+                                添加成员
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 成员列表 -->
+                <div class="overflow-x-auto">
+                    <table class="lark-table">
+                        <thead>
+                            <tr>
+                                <th class="w-12">
+                                    <input type="checkbox" class="rounded border-gray-300 text-lark-600 focus:ring-lark-500">
+                                </th>
+                                <th>成员信息</th>
+                                <th>归属部门</th>
+                                <th>联系方式</th>
+                                <th>直属上级</th>
+                                <th>权限角色</th>
+                                <th>加入时间</th>
+                                <th class="text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white">
+                            <!-- 成员行1 - 王宏 -->
+                            <tr class="group">
+                                <td>
+                                    <input type="checkbox" class="rounded border-gray-300 text-lark-600 focus:ring-lark-500">
+                                </td>
+                                <td>
+                                    <div class="flex items-center">
+                                        <div class="relative">
+                                            <img class="w-10 h-10 lark-avatar" 
+                                                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" 
+                                                 alt="王宏">
+                                            <div class="status-dot status-online"></div>
+                                        </div>
+                                        <div class="ml-3">
+                                            <div class="text-sm font-semibold text-gray-900">王宏</div>
+                                            <div class="text-xs text-gray-500">租户所有者</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                            产品研发部
+                                        </span>
+                                        <span class="text-gray-400 text-xs">+2</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="space-y-1">
+                                        <div class="text-sm text-gray-900">wanghong@company.com</div>
+                                        <div class="text-xs text-gray-500">—</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-gray-500">—</td>
+                                <td>
+                                    <span class="permission-tag bg-purple-50 text-purple-700 border border-purple-200 cursor-not-allowed opacity-75">
+                                        <i class="fas fa-shield-alt mr-1.5"></i>
+                                        所有者
+                                    </span>
+                                </td>
+                                <td class="text-sm text-gray-500">2025-07-10</td>
+                                <td>
+                                    <div class="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button class="p-1.5 text-gray-400 hover:text-lark-600 hover:bg-lark-50 rounded-lg transition-colors">
+                                            <i class="fas fa-edit text-sm"></i>
+                                        </button>
+                                        <div class="relative">
+                                            <button class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                                <i class="fas fa-ellipsis-h text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 成员行2 - 张三 -->
+                            <tr class="group">
+                                <td>
+                                    <input type="checkbox" class="rounded border-gray-300 text-lark-600 focus:ring-lark-500">
+                                </td>
+                                <td>
+                                    <div class="flex items-center">
+                                        <div class="relative">
+                                            <img class="w-10 h-10 lark-avatar" 
+                                                 src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face" 
+                                                 alt="张三">
+                                            <div class="status-dot status-online"></div>
+                                        </div>
+                                        <div class="ml-3">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="text-sm font-semibold text-gray-900">张三</div>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                                                    <i class="fas fa-star mr-1"></i>美团
+                                                </span>
+                                            </div>
+                                            <div class="text-xs text-gray-500">技术专家</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                                        技术部
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="space-y-1">
+                                        <div class="text-sm text-gray-900">zhangsan@meituan.com</div>
+                                        <div class="text-xs text-gray-500">138****1234</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-gray-500">王宏</td>
+                                <td>
+                                    <div class="relative permission-selector">
+                                        <button class="permission-tag bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100" 
+                                                onclick="togglePermissionDropdown(this)">
+                                            <i class="fas fa-user-shield mr-1.5"></i>
+                                            管理员
+                                            <i class="fas fa-chevron-down ml-1.5 text-xs"></i>
+                                        </button>
+                                        <div class="permission-dropdown hidden absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lark-lg border border-gray-100 z-20 min-w-[200px]">
+                                            <div class="p-2">
+                                                <div class="permission-option px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer opacity-50 cursor-not-allowed" data-value="owner">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex items-center">
+                                                            <i class="fas fa-shield-alt text-purple-500 mr-3"></i>
+                                                            <span class="text-sm font-medium">所有者</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="permission-option px-3 py-2 rounded-lg bg-lark-50 cursor-pointer" data-value="admin">
+                                                    <div class="flex items-center justify-between">
+                                                        <div class="flex items-center">
+                                                            <i class="fas fa-user-shield text-orange-500 mr-3"></i>
+                                                            <span class="text-sm font-medium">管理员</span>
+                                                        </div>
+                                                        <i class="fas fa-check text-lark-600"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="permission-option px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer" data-value="creator">
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-user-plus text-cyan-500 mr-3"></i>
+                                                        <span class="text-sm font-medium">创建者</span>
+                                                    </div>
+                                                </div>
+                                                <div class="permission-option px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer" data-value="editor">
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-edit text-green-500 mr-3"></i>
+                                                        <span class="text-sm font-medium">编辑者</span>
+                                                    </div>
+                                                </div>
+                                                <div class="permission-option px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer" data-value="commenter">
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-comment text-orange-500 mr-3"></i>
+                                                        <span class="text-sm font-medium">评论者</span>
+                                                    </div>
+                                                </div>
+                                                <div class="permission-option px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer" data-value="viewer">
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-eye text-yellow-500 mr-3"></i>
+                                                        <span class="text-sm font-medium">浏览者</span>
+                                                    </div>
+                                                </div>
+                                                <div class="border-t border-gray-100 my-1"></div>
+                                                <div class="permission-option px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer" data-value="none">
+                                                    <div class="flex items-center">
+                                                        <i class="fas fa-ban text-red-500 mr-3"></i>
+                                                        <span class="text-sm font-medium">没有访问权限</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-gray-500">2025-07-15</td>
+                                <td>
+                                    <div class="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button class="p-1.5 text-gray-400 hover:text-lark-600 hover:bg-lark-50 rounded-lg transition-colors">
+                                            <i class="fas fa-edit text-sm"></i>
+                                        </button>
+                                        <div class="relative">
+                                            <button class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                                <i class="fas fa-ellipsis-h text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 成员行3 - 李四 -->
+                            <tr class="group">
+                                <td>
+                                    <input type="checkbox" class="rounded border-gray-300 text-lark-600 focus:ring-lark-500">
+                                </td>
+                                <td>
+                                    <div class="flex items-center">
+                                        <div class="relative">
+                                            <img class="w-10 h-10 lark-avatar" 
+                                                 src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&h=40&fit=crop&crop=face" 
+                                                 alt="李四">
+                                            <div class="status-dot status-online"></div>
+                                        </div>
+                                        <div class="ml-3">
+                                            <div class="text-sm font-semibold text-gray-900">李四</div>
+                                            <div class="text-xs text-gray-500">市场专员</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex flex-wrap gap-1">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                                            市场部
+                                        </span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-pink-50 text-pink-700 border border-pink-200">
+                                            运营部
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="space-y-1">
+                                        <div class="text-sm text-gray-900">lisi@company.com</div>
+                                        <div class="text-xs text-gray-500">139****5678</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-gray-500">张三</td>
+                                <td>
+                                    <span class="permission-tag bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100 cursor-pointer">
+                                        <i class="fas fa-user-plus mr-1.5"></i>
+                                        创建者
+                                        <i class="fas fa-chevron-down ml-1.5 text-xs"></i>
+                                    </span>
+                                </td>
+                                <td class="text-sm text-gray-500">2025-08-01</td>
+                                <td>
+                                    <div class="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button class="p-1.5 text-gray-400 hover:text-lark-600 hover:bg-lark-50 rounded-lg transition-colors">
+                                            <i class="fas fa-edit text-sm"></i>
+                                        </button>
+                                        <div class="relative">
+                                            <button class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                                <i class="fas fa-ellipsis-h text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 成员行4 - 王五（外部） -->
+                            <tr class="group">
+                                <td>
+                                    <input type="checkbox" class="rounded border-gray-300 text-lark-600 focus:ring-lark-500">
+                                </td>
+                                <td>
+                                    <div class="flex items-center">
+                                        <div class="relative">
+                                            <img class="w-10 h-10 lark-avatar" 
+                                                 src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=40&h=40&fit=crop&crop=face" 
+                                                 alt="王五">
+                                            <div class="status-dot status-online"></div>
+                                        </div>
+                                        <div class="ml-3">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="text-sm font-semibold text-gray-900">王五</div>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                                    外部
+                                                </span>
+                                            </div>
+                                            <div class="text-xs text-gray-500">外部顾问</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                                        非企业成员
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="space-y-1">
+                                        <div class="text-sm text-gray-900">wangwu@consultant.com</div>
+                                        <div class="text-xs text-gray-500">186****9012</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-gray-500">—</td>
+                                <td>
+                                    <span class="permission-tag bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 cursor-pointer">
+                                        <i class="fas fa-user mr-1.5"></i>
+                                        成员
+                                        <i class="fas fa-chevron-down ml-1.5 text-xs"></i>
+                                    </span>
+                                </td>
+                                <td class="text-sm text-gray-500">2025-08-05</td>
+                                <td>
+                                    <div class="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button class="p-1.5 text-gray-400 hover:text-lark-600 hover:bg-lark-50 rounded-lg transition-colors">
+                                            <i class="fas fa-edit text-sm"></i>
+                                        </button>
+                                        <div class="relative">
+                                            <button class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                                <i class="fas fa-ellipsis-h text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 成员行5 - 未注册用户 -->
+                            <tr class="group">
+                                <td>
+                                    <input type="checkbox" class="rounded border-gray-300 text-lark-600 focus:ring-lark-500">
+                                </td>
+                                <td>
+                                    <div class="flex items-center">
+                                        <div class="relative">
+                                            <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center border-2 border-gray-200">
+                                                <i class="fas fa-user text-gray-400"></i>
+                                            </div>
+                                            <div class="status-dot status-offline"></div>
+                                        </div>
+                                        <div class="ml-3">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="text-sm font-semibold text-gray-900">158303484527</div>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
+                                                    <i class="fas fa-clock mr-1"></i>未注册
+                                                </span>
+                                            </div>
+                                            <div class="text-xs text-gray-500">待激活</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                                        非企业成员
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="space-y-1">
+                                        <div class="text-sm text-gray-500">—</div>
+                                        <div class="text-xs text-gray-900">158303484527</div>
+                                    </div>
+                                </td>
+                                <td class="text-sm text-gray-500">—</td>
+                                <td>
+                                    <span class="permission-tag bg-blue-50 text-blue-700 border border-blue-200">
+                                        <i class="fas fa-user mr-1.5"></i>
+                                        成员
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="space-y-1">
+                                        <div class="text-sm text-gray-500">2025-08-13</div>
+                                        <div class="text-xs text-yellow-600">
+                                            <i class="fas fa-clock mr-1"></i>邀请待接受
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button class="p-1.5 text-gray-400 hover:text-lark-600 hover:bg-lark-50 rounded-lg transition-colors">
+                                            <i class="fas fa-envelope text-sm"></i>
+                                        </button>
+                                        <div class="relative">
+                                            <button class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                                                <i class="fas fa-ellipsis-h text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页 -->
+                <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <p class="text-sm text-gray-600">
+                                显示第 <span class="font-medium text-gray-900">1</span> 到 <span class="font-medium text-gray-900">5</span> 项，共 <span class="font-medium text-gray-900">8</span> 项
+                            </p>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-600">每页显示</span>
+                                <select class="lark-input px-2 py-1 w-20 text-sm">
+                                    <option>10</option>
+                                    <option>20</option>
+                                    <option>50</option>
+                                </select>
+                                <span class="text-sm text-gray-600">项</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="lark-btn lark-btn-secondary px-3 py-1.5 text-sm" disabled>
+                                <i class="fas fa-chevron-left mr-1"></i>
+                                上一页
+                            </button>
+                            <div class="flex items-center space-x-1">
+                                <button class="w-8 h-8 bg-lark-600 text-white rounded-lg text-sm font-medium">1</button>
+                                <button class="w-8 h-8 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors">2</button>
+                            </div>
+                            <button class="lark-btn lark-btn-secondary px-3 py-1.5 text-sm">
+                                下一页
+                                <i class="fas fa-chevron-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 权限下拉菜单控制
+        function togglePermissionDropdown(button) {
+            const dropdown = button.nextElementSibling;
+            const isHidden = dropdown.classList.contains('hidden');
+            
+            // 关闭所有其他下拉菜单
+            document.querySelectorAll('.permission-dropdown').forEach(d => {
+                if (d !== dropdown) {
+                    d.classList.add('hidden');
+                }
+            });
+            
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                dropdown.classList.add('dropdown-enter');
+                setTimeout(() => {
+                    dropdown.classList.remove('dropdown-enter');
+                    dropdown.classList.add('dropdown-enter-active');
+                }, 10);
+            } else {
+                dropdown.classList.add('dropdown-exit');
+                setTimeout(() => {
+                    dropdown.classList.add('hidden');
+                    dropdown.classList.remove('dropdown-exit', 'dropdown-enter-active');
+                }, 100);
+            }
+        }
+
+        // 权限选择处理
+        document.addEventListener('click', function(e) {
+            const option = e.target.closest('.permission-option');
+            if (option && !option.classList.contains('cursor-not-allowed')) {
+                const dropdown = option.closest('.permission-dropdown');
+                const button = dropdown.previousElementSibling;
+                const value = option.dataset.value;
+                
+                // 更新按钮显示
+                updatePermissionButton(button, value);
+                
+                // 关闭下拉菜单
+                dropdown.classList.add('hidden');
+                
+                console.log('权限已更改为:', value);
+            }
+            
+            // 点击外部关闭下拉菜单
+            if (!e.target.closest('.permission-selector')) {
+                document.querySelectorAll('.permission-dropdown').forEach(dropdown => {
+                    dropdown.classList.add('hidden');
+                });
+            }
+        });
+
+        function updatePermissionButton(button, value) {
+            const permissionMap = {
+                'owner': { icon: 'fas fa-shield-alt', text: '所有者', class: 'bg-purple-50 text-purple-700 border-purple-200' },
+                'admin': { icon: 'fas fa-user-shield', text: '管理员', class: 'bg-orange-50 text-orange-700 border-orange-200' },
+                'creator': { icon: 'fas fa-user-plus', text: '创建者', class: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
+                'editor': { icon: 'fas fa-edit', text: '编辑者', class: 'bg-green-50 text-green-700 border-green-200' },
+                'commenter': { icon: 'fas fa-comment', text: '评论者', class: 'bg-orange-50 text-orange-700 border-orange-200' },
+                'viewer': { icon: 'fas fa-eye', text: '浏览者', class: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+                'none': { icon: 'fas fa-ban', text: '没有访问权限', class: 'bg-red-50 text-red-700 border-red-200' }
+            };
+            
+            const permission = permissionMap[value];
+            if (permission) {
+                button.className = `permission-tag ${permission.class} hover:bg-opacity-75 cursor-pointer transition-all`;
+                button.innerHTML = `<i class="${permission.icon} mr-1.5"></i>${permission.text}<i class="fas fa-chevron-down ml-1.5 text-xs"></i>`;
+            }
+        }
+
+        // Tab切换
+        document.querySelectorAll('.lark-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.lark-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 搜索功能
+        document.getElementById('search-input').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            console.log('搜索:', searchTerm);
+            // 这里可以添加实际的搜索逻辑
+        });
+
+        // 全选/取消全选
+        const selectAllCheckbox = document.querySelector('thead input[type="checkbox"]');
+        const memberCheckboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+        
+        selectAllCheckbox.addEventListener('change', function() {
+            memberCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        memberCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const checkedCount = Array.from(memberCheckboxes).filter(cb => cb.checked).length;
+                selectAllCheckbox.checked = checkedCount === memberCheckboxes.length;
+                selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < memberCheckboxes.length;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的订阅计划</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            /* 企业级配色方案 */
+            --primary-color: #3B82F6;
+            --primary-hover: #2563EB;
+            --primary-light: #DBEAFE;
+            --secondary-color: #10B981;
+            --secondary-hover: #059669;
+            --secondary-light: #D1FAE5;
+            
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --info-color: #3B82F6;
+            
+            /* 文字颜色 */
+            --text-primary: #111827;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --text-inverse: #ffffff;
+            
+            /* 背景颜色 */
+            --bg-primary: #F9FAFB;
+            --bg-card: #ffffff;
+            --bg-hover: #F3F4F6;
+            --bg-accent: #F0F9FF;
+            
+            /* 边框和阴影 */
+            --border-color: #E5E7EB;
+            --border-light: #F3F4F6;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            
+            /* 间距 */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 48px;
+            
+            /* 圆角 */
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 8px;
+            --radius-xl: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            margin: 0;
+            padding: var(--spacing-lg);
+            min-height: 100vh;
+            line-height: 1.5;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        /* 页面容器 */
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+
+        /* 页面标题区域 */
+        .page-header {
+            margin-bottom: var(--spacing-xl);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-title {
+            font-size: 1.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .page-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin: var(--spacing-xs) 0 0 0;
+        }
+
+        .version-badge {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* 账户信息卡片 */
+        .account-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .account-plan {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .plan-info h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 var(--spacing-xs) 0;
+            color: var(--text-primary);
+        }
+
+        .plan-info .plan-meta {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .account-balance {
+            text-align: right;
+        }
+
+        .balance-amount {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .balance-unit {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-left: var(--spacing-xs);
+        }
+
+        .balance-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: 8px 16px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary-hover);
+            border-color: var(--secondary-hover);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+        }
+
+        /* 用量统计网格 */
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        /* 用量卡片 */
+        .usage-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        .usage-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+
+        .usage-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .usage-title {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .usage-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .usage-icon.users { background: #DBEAFE; color: #3B82F6; }
+        .usage-icon.admin { background: #F3E8FF; color: #8B5CF6; }
+        .usage-icon.company { background: #ECFDF5; color: #10B981; }
+        .usage-icon.storage { background: #FEF3C7; color: #F59E0B; }
+        .usage-icon.data { background: #DBEAFE; color: #3B82F6; }
+        .usage-icon.api { background: #FEE2E2; color: #EF4444; }
+        .usage-icon.tools { background: #ECFDF5; color: #10B981; }
+        .usage-icon.assistant { background: #F3E8FF; color: #8B5CF6; }
+        .usage-icon.analysis { background: #DBEAFE; color: #3B82F6; }
+
+        .usage-name {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .usage-status {
+            font-size: 0.75rem;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+
+        .status-normal {
+            background: var(--secondary-light);
+            color: var(--secondary-color);
+        }
+
+        .status-warning {
+            background: #FEF3C7;
+            color: var(--warning-color);
+        }
+
+        .status-danger {
+            background: #FEE2E2;
+            color: var(--danger-color);
+        }
+
+        .status-disabled {
+            background: #F3F4F6;
+            color: var(--text-muted);
+        }
+
+        /* 用量统计 */
+        .usage-stats {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .usage-numbers {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .usage-current {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .usage-total {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .usage-description {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-md);
+        }
+
+        /* 进度条 */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: var(--border-light);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: var(--radius-sm);
+            transition: width 0.8s ease;
+        }
+
+        .progress-bar.normal {
+            background: var(--success-color);
+        }
+
+        .progress-bar.warning {
+            background: var(--warning-color);
+        }
+
+        .progress-bar.danger {
+            background: var(--danger-color);
+        }
+
+        .progress-bar.disabled {
+            background: var(--text-muted);
+        }
+
+        /* 查看详情链接 */
+        .view-details {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: var(--spacing-md);
+        }
+
+        .view-details a {
+            color: var(--primary-color);
+            font-size: 0.875rem;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .view-details a:hover {
+            text-decoration: underline;
+        }
+
+        /* 操作记录弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-primary);
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: var(--spacing-lg);
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: var(--spacing-md) 0;
+            border-bottom: 1px solid var(--border-light);
+            gap: var(--spacing-md);
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-action {
+            flex: 1;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: var(--spacing-md);
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+
+            .account-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+
+            .account-balance {
+                text-align: left;
+                width: 100%;
+            }
+
+            .usage-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .balance-actions {
+                justify-content: flex-start;
+            }
+        }
+
+        /* 加载动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .usage-card {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .usage-card:nth-child(1) { animation-delay: 0s; }
+        .usage-card:nth-child(2) { animation-delay: 0.1s; }
+        .usage-card:nth-child(3) { animation-delay: 0.2s; }
+        .usage-card:nth-child(4) { animation-delay: 0.3s; }
+        .usage-card:nth-child(5) { animation-delay: 0.4s; }
+        .usage-card:nth-child(6) { animation-delay: 0.5s; }
+        .usage-card:nth-child(7) { animation-delay: 0.6s; }
+        .usage-card:nth-child(8) { animation-delay: 0.7s; }
+        .usage-card:nth-child(9) { animation-delay: 0.8s; }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <div class="title-section">
+                <h1 class="page-title">会员版本</h1>
+                <p class="page-subtitle">管理您的订阅计划和功能权益</p>
+            </div>
+            <div class="version-badge">团队版</div>
+        </div>
+
+        <!-- 账户信息 -->
+        <div class="account-info">
+            <div class="account-plan">
+                <div class="plan-info">
+                    <h2>团队版 <span style="font-size: 0.875rem; color: var(--text-secondary);">(当前版本)</span></h2>
+                    <div class="plan-meta">到期时间：2025年8月15日</div>
+                </div>
+                <div class="plan-actions">
+                    <button class="btn btn-primary btn-sm">续费购买</button>
+                    <button class="btn btn-outline btn-sm">升级版本</button>
+                </div>
+            </div>
+            <div class="account-balance">
+                <div class="balance-amount">2.00 <span class="balance-unit">云币 (1 云币 = ¥ 1)</span></div>
+                <div class="balance-actions">
+                    <button class="btn btn-secondary btn-sm">充值</button>
+                    <button class="btn btn-outline btn-sm">支付设置</button>
+                    <button class="btn btn-outline btn-sm">消耗统计</button>
+                    <button class="btn btn-outline btn-sm">使用日志</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能用量统计 -->
+        <div class="usage-grid">
+            <!-- 可用人数 -->
+            <div class="usage-card">
+                <div class="usage-header">
+                    <div class="usage-title">
+                        <div class="usage-icon users">👥</div>
+                        <h3 class="usage-name">可用人数</h3>
+                    </div>
+                    <span class="usage-status status-normal">正常</span>
+                </div>
+                <div class="usage-stats">
+                    <div class="usage-numbers">
+                        <span class="usage-current">已使用：1 人</span>
+                        <span class="usage-total">上限：30 人</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar normal" style="width: 3.33%;"></div>
+                    </div>
+                </div>
+                <div class="view-details">
+                    <a href="#">查看详情</a>
+                </div>
+            </div>
+
+            <!-- 子管理员 -->
+            <div class="usage-card">
+                <div class="usage-header">
+                    <div class="usage-title">
+                        <div class="usage-icon admin">👤</div>
+                        <h3 class="usage-name">子管理员</h3>
+                    </div>
+                    <span class="usage-status status-normal">正常</span>
+                </div>
+                <div class="usage-stats">
+                    <div class="usage-numbers">
+                        <span class="usage-current">已用：0 人</span>
+                        <span class="usage-total">总量：0 人</span>
+                    </div>
+                    <div class="usage-description">可用个数高级系统管理员</div>
+                    <div class="progress-container">
+                        <div class="progress-bar normal" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="view-details">
+                    <a href="#">查看详情</a>
+                </div>
+            </div>
+
+            <!-- 连接企业数 -->
+            <div class="usage-card">
+                <div class="usage-header">
+                    <div class="usage-title">
+                        <div class="usage-icon company">🏢</div>
+                        <h3 class="usage-name">连接企业数</h3>
+                    </div>
+                    <span class="usage-status status-normal">正常</span>
+                </div>
+                <div class="usage-stats">
+                    <div class="usage-numbers">
+                        <span class="usage-current">已用：0 个</span>
+                        <span class="usage-total">总量：5 个</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar normal" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="view-details">
+                    <a href="#">查看详情</a>
+                </div>
+            </div>
+
+            <!-- 附件上传量 -->
+            <div class="usage-card">
+                <div class="usage-header">
+                    <div class="usage-title">
+                        <div class="usage-icon storage">📎</div>
+                        <h3 class="usage-name">附件上传量</h3>
+                    </div>
+                    <span class="usage-status status-normal">正常</span>
+                </div>
+                <div class="usage-stats">
+                    <div class="usage-numbers">
+                        <span class="usage-current">当年已用：0 Bytes</span>
+                        <span class="usage-total">每年总量：6 GB</span>
+                    </div>
+                    <div class="usage-description">超出容量后会消耗云币，每GB消耗19.92云币</div>
+                    <div class="progress-container">
+                        <div class="progress-bar normal" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="view-details">
+                    <a href="#">查看详情</a>
+                </div>
+            </div>
+
+            <!-- 总数据量 -->
+            <div class="usage-card">
+                <div class="usage-header">
+                    <div class="usage-title">
+                        <div class="usage-icon data">📊</div>
+                        <h3 class="usage-name">总数据量</h3>
+                    </div>
+                    <span class="usage-status status-normal">正常</span>
+                </div>
+                <div class="usage-stats">
+                    <div class="usage-numbers">
+                        <span class="usage-current">已用：190 条</span>
+                        <span class="usage-total">总量：5万 条</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar normal" style="width: 0.38%;"></div>
+                    </div>
+                </div>
+                <div class="view-details">
+                    <a href="#">查看详情</a>
+                </div>
+            </div>
+
+            <!-- 每月数据提交量 -->
+            <div class="usage-card">
+                <div class="usage-header">
+                    <div class="usage-title">
+                        <div class="usage-icon api">📤</div>
+                        <h3 class="usage-name">每月数据提交量</h3>
+                    </div>
+                    <span class="usage-status status-normal">正常</span>
+                </div>
+                <div class="usage-stats">
+                    <div class="usage-numbers">
+                        <span class="usage-current">当月已用：0 条</span>
+                        <span class="usage-total">每月总量：1000 条</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar normal" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="view-details">
+                    <a href="#">查看详情</a>
+                </div>
+            </div>
+
+            <!-- 数据工厂 -->
+            <div class="usage-card">
+                <div class="usage-header">
+                    <div class="usage-title">
+                        <div class="usage-icon tools">🏭</div>
+                        <h3 class="usage-name">数据工厂</h3>
+                    </div>
+                    <span class="usage-status status-disabled">用量已超限，请购买或调整</span>
+                </div>
+                <div class="usage-stats">
+                    <div class="usage-numbers">
+                        <span class="usage-current">已用：6 个</span>
+                        <span class="usage-total">总量：1 个</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar danger" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="view-details">
+                    <a href="#">查看详情</a>
+                </div>
+            </div>
+
+            <!-- 智能助手 -->
+            <div class="usage-card">
+                <div class="usage-header">
+                    <div class="usage-title">
+                        <div class="usage-icon assistant">🤖</div>
+                        <h3 class="usage-name">智能助手</h3>
+                    </div>
+                    <span class="usage-status status-disabled">用量已超限，请购买或调整</span>
+                </div>
+                <div class="usage-stats">
+                    <div class="usage-numbers">
+                        <span class="usage-current">已用：7 个</span>
+                        <span class="usage-total">总量：5 个</span>
+                    </div>
+                    <div class="usage-description">本月已执行次数：0次 / 免费 1000 次/每月消耗后一月此行消耗 0.01 云币</div>
+                    <div class="progress-container">
+                        <div class="progress-bar danger" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="view-details">
+                    <a href="#">查看详情</a>
+                </div>
+            </div>
+
+            <!-- 流程分析 -->
+            <div class="usage-card">
+                <div class="usage-header">
+                    <div class="usage-title">
+                        <div class="usage-icon analysis">📈</div>
+                        <h3 class="usage-name">流程分析</h3>
+                    </div>
+                    <span class="usage-status status-normal">正常</span>
+                </div>
+                <div class="usage-stats">
+                    <div class="usage-numbers">
+                        <span class="usage-current">已用：0 个</span>
+                        <span class="usage-total">总量：1 个</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar normal" style="width: 0%;"></div>
+                    </div>
+                </div>
+                <div class="view-details">
+                    <a href="#">查看详情</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作记录弹窗 -->
+    <div class="modal-overlay" id="logs-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">操作记录</h3>
+                <button class="modal-close" id="close-logs-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="log-item">
+                    <div class="log-action">用户 'admin' 创建了新的工作流 '用户增长分析'</div>
+                    <div class="log-time">2025-07-14 10:30</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-action">用户 'test@example.com' 删除了知识库 'Q2财报'</div>
+                    <div class="log-time">2025-07-13 15:02</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-action">订阅计划从 '团队版' 升级为 '企业版'</div>
+                    <div class="log-time">2025-07-12 09:00</div>
+                </div>
+                <div class="log-item">
+                    <div class="log-action">用户 'admin' 新增了工具 'API数据抓取'</div>
+                    <div class="log-time">2025-07-11 18:21</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 弹窗逻辑
+        const showLogsBtn = document.getElementById('show-logs-btn');
+        const logsModal = document.getElementById('logs-modal');
+        const closeLogsBtn = document.getElementById('close-logs-btn');
+
+        if (showLogsBtn) {
+            showLogsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                logsModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        if (closeLogsBtn) {
+            closeLogsBtn.addEventListener('click', () => {
+                logsModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+        }
+
+        if (logsModal) {
+            logsModal.addEventListener('click', (event) => {
+                if (event.target === logsModal) {
+                    logsModal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        }
+
+        // 页面加载动画
+        document.addEventListener('DOMContentLoaded', () => {
+            // 模拟进度条动画
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 300 + Math.random() * 500);
+            });
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && logsModal.style.display === 'flex') {
+                logsModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+    </script>
+</body>
+</html> 

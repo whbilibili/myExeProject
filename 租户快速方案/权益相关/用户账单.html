@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的账单 - 高保真原型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Helvetica Neue', 'Helvetica', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            background-color: #f8fafc; /* Use a very light gray for the background */
+        }
+        .enterprise-card {
+            background-color: white;
+            border-radius: 0.75rem; /* 12px */
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            transition: all 0.3s ease;
+        }
+        .enterprise-card:hover {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border-color: #cbd5e1;
+        }
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: min(18rem, calc(100vw - 16px)); /* 新增：小屏不溢出 */
+            word-break: break-word;                    /* 新增：长词换行 */
+        }
+        .has-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .table-header {
+            background-color: #f1f5f9;
+        }
+        .table-row:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .table-row:hover {
+            background-color: #eff6ff;
+        }
+        .smooth-transition {
+            transition: all 0.3s ease-in-out;
+        }
+        .max-h-0 {
+            max-height: 0;
+        }
+        .max-h-screen {
+            max-height: 100vh; /* Or a more specific value */
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- 全局标题栏 -->
+        <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+            <h1 class="text-3xl font-bold text-slate-900 mb-4 sm:mb-0">我的用量</h1>
+            <div class="relative flex items-center gap-3 min-w-0">
+                <span class="text-sm text-slate-500">当前租户</span>
+
+                <button id="tenant-trigger"
+                        type="button"
+                        class="group h-10 pl-2 pr-2.5 bg-white border border-slate-300 rounded-lg shadow-sm
+                               hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30
+                               data-[open=true]:ring-2 data-[open=true]:ring-blue-500/30 flex items-center gap-2
+                               max-w-[70vw] sm:max-w-[28rem] min-w-0"
+                        aria-haspopup="listbox" aria-expanded="false">
+                    <!-- 头像/首字母 -->
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                        星
+                    </span>
+                    <!-- 名称（自动截断，hover 看完整） -->
+                    <span class="tenant-name flex-1 min-w-0 text-sm text-slate-900"
+                          style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">星辰科技</span>
+                    <!-- 类型徽标 -->
+                    <span id="tenant-version" class="hidden sm:inline text-xs px-1.5 py-0.5 rounded">团队版</span>
+                    <!-- 箭头 -->
+                    <svg id="tenant-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         class="w-4 h-4 text-slate-500 transition-transform group-data-[open=true]:rotate-180">
+                        <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+
+                <!-- 提示图标与 tooltip（保留你现有的智能定位逻辑） -->
+                <div class="relative has-tooltip ml-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                         class="text-slate-400 cursor-pointer"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <div class="tooltip absolute z-10 bottom-full right-0 mb-2 w-72 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-lg">
+                        <h4 class="font-bold mb-1">什么是租户？</h4>
+                        <p class="text-slate-300">租户可以理解为您所在的一个独立工作空间或团队。您在不同租户下的资源配额和消耗记录是完全隔离的。例如，您在‘公司A’租户下创建的智能体，其消耗只会计入‘公司A’的账单。</p>
+                    </div>
+                </div>
+
+                <!-- 下拉面板（示例，可后续接入真实数据） -->
+                <div id="tenant-menu"
+                     class="absolute right-0 top-11 w-[280px] origin-top-right bg-white border border-slate-200 rounded-lg shadow-lg
+                            p-2 opacity-0 scale-95 pointer-events-none transition
+                            data-[open=true]:opacity-100 data-[open=true]:scale-100 data-[open=true]:pointer-events-auto">
+                    <!-- 搜索 -->
+                    <div class="p-2">
+                        <input type="text" placeholder="搜索租户" class="w-full h-9 px-3 rounded-md border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-sm" />
+                    </div>
+                    <ul role="listbox" class="max-h-64 overflow-auto">
+                        <li role="option" aria-selected="true"
+                            class="flex items-center gap-2 px-3 py-2 rounded-md bg-blue-50/60 text-slate-900 cursor-pointer">
+                            <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[10px] inline-flex items-center justify-center">星</span>
+                            <span class="truncate">星辰科技</span>
+                            <span class="ml-auto text-xs px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">企业</span>
+                        </li>
+                        <li role="option" class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-slate-50 cursor-pointer">
+                            <span class="w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-[10px] inline-flex items-center justify-center">个</span>
+                            <span class="truncate">我的个人空间（很长很长的名字用以测试截断效果）</span>
+                            <span class="ml-auto text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">个人</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面级提示横幅 -->
+        <div id="alert-banner" class="flex items-center justify-between p-4 mb-6 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg smooth-transition">
+            <div class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <p class="text-sm">提示：此页面展示您在特定租户下的资源用量。请在上方选择租户以查看对应的配额与用量消耗明细。</p>
+            </div>
+            <button onclick="document.getElementById('alert-banner').style.display='none'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <!-- 我的配额 -->
+        <section class="mb-8">
+            <h2 class="text-xl font-semibold text-slate-900 mb-4">我的配额</h2>
+
+            <!-- 说明性文字：我的配额 -->
+            <div class="text-sm text-slate-600 mb-4 flex items-start gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+              </svg>
+              <p>此区域展示由租户管理员为您配置的个人资源配额与使用进度。仅显示对您个人有上限的资源，若某项未设上限，将标记为“无限制”；共享型或无个人限制的资源不会出现。如需调整配额，请联系您所在租户的管理员。</p>
+            </div>
+
+            <div id="quotas-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Card 1: Normal -->
+                <div class="enterprise-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.5A4.5 4.5 0 0 0 18 5.5c0 2.71-2.29 4-2 4.5-.14.29-1 .86-1 .86H7s-.86-.57-1-.86c.29-.5-2-1.79-2-4.5A4.5 4.5 0 0 0 7.5 5.5c0 4.5 3 12.5 6 12.5 1.25 0 2.5-1.06 4-1.06Z"/><path d="M12 6.82c-1.5 0-2.75-1.06-4-1.06-3 0-6 8-6 12.5A4.5 4.5 0 0 1 6 22.5c0-2.71 2.29-4 2-4.5.14-.29 1-.86 1-.86h4s.86.57 1 .86c-.29.5 2 1.79 2 4.5a4.5 4.5 0 0 1-4.5 4.5c-1.25 0-2.5 1.06-4 1.06Z"/></svg>
+                            <h3 class="font-semibold text-slate-800">消耗积分</h3>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2.5 mb-2">
+                            <div class="bg-blue-500 h-2.5 rounded-full" style="width: 42.5%"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">已使用: <span class="font-medium text-slate-700">850 点</span></span>
+                        <span class="text-slate-500">总量: <span class="font-medium text-slate-700">2000 点/月</span></span>
+                    </div>
+                </div>
+                <!-- Card 2: Warning -->
+                <div class="enterprise-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y2="2"/><line x1="8" x2="8" y2="2"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                            <h3 class="font-semibold text-slate-800">API调用次数</h3>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2.5 mb-2">
+                            <div class="bg-amber-500 h-2.5 rounded-full" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">已使用: <span class="font-medium text-slate-700">85 次</span></span>
+                        <span class="text-slate-500">总量: <span class="font-medium text-slate-700">100 次/日</span></span>
+                    </div>
+                </div>
+                <!-- Card 3: Unlimited -->
+                <div class="enterprise-card p-5 flex flex-col justify-center items-center">
+                    <div class="flex items-center gap-3 mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                        <h3 class="font-semibold text-slate-800">云电脑设备时长</h3>
+                    </div>
+                    <span class="text-lg font-bold text-slate-700">无限制</span>
+                </div>
+                <!-- Card 4: Normal -->
+                 <div class="enterprise-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                            <h3 class="font-semibold text-slate-800">可创建空间数</h3>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2.5 mb-2">
+                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 30%"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">已使用: <span class="font-medium text-slate-700">3 个</span></span>
+                        <span class="text-slate-500">总量: <span class="font-medium text-slate-700">10 个</span></span>
+                    </div>
+                </div>
+                <!-- Hidden cards -->
+                <div class="enterprise-card p-5 flex flex-col justify-between hidden-quota">
+                     <div>
+                        <div class="flex items-center gap-3 mb-4">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            <h3 class="font-semibold text-slate-800">Token用量</h3>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2.5 mb-2">
+                            <div class="bg-indigo-500 h-2.5 rounded-full" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">已使用: <span class="font-medium text-slate-700">600k</span></span>
+                        <span class="text-slate-500">总量: <span class="font-medium text-slate-700">1M/月</span></span>
+                    </div>
+                </div>
+                <div class="enterprise-card p-5 flex flex-col justify-between hidden-quota">
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-rose-500"><rect width="7" height="7" x="14" y="3"/><path d="M3 3v11h11"/><path d="M14 14h7v7h-7z"/></svg>
+                            <h3 class="font-semibold text-slate-800">智能体数量</h3>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2.5 mb-2">
+                            <div class="bg-rose-500 h-2.5 rounded-full" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">已使用: <span class="font-medium text-slate-700">50 个</span></span>
+                        <span class="text-slate-500">总量: <span class="font-medium text-slate-700">50 个</span></span>
+                    </div>
+                </div>
+            </div>
+            <div id="toggle-quotas-wrapper" class="mt-6 text-center">
+                <button id="toggle-quotas-btn" class="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1 mx-auto">
+                    <span>显示更多</span>
+                    <svg id="toggle-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="smooth-transition"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- 账单流水 -->
+        <section>
+            <h2 class="text-xl font-semibold text-slate-900 mb-4">用量明细</h2>
+
+            <!-- 说明性文字：用量明细 -->
+            <div class="text-sm text-slate-600 mb-2 flex items-start gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+              </svg>
+              <p>此处按时间顺序列出您在该租户下的每一次资源变动详情，是“我的配额”中已用量的计算依据。您可通过筛选功能进行精确追溯。</p>
+            </div>
+
+            <!-- 筛选区 -->
+            <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                <!-- 日期范围 -->
+                <div class="relative">
+                    <button id="date-range" class="w-full sm:w-auto flex items-center justify-between gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50" aria-haspopup="menu" aria-expanded="false">
+                        <span id="date-range-label">最近7日</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div id="date-menu" class="absolute z-20 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-lg py-1 hidden">
+                        <button class="w-full text-left px-3 py-2 hover:bg-slate-50" data-range="今日">今日</button>
+                        <button class="w-full text-left px-3 py-2 hover:bg-slate-50" data-range="最近7日">最近7日</button>
+                        <button class="w-full text-left px-3 py-2 hover:bg-slate-50" data-range="本月">本月</button>
+                        <button class="w-full text-left px-3 py-2 hover:bg-slate-50" data-range="上月">上月</button>
+                        <button class="w-full text-left px-3 py-2 hover:bg-slate-50" data-range="全部时间">全部时间</button>
+                    </div>
+                </div>
+
+                <!-- 资源类型（多选） -->
+                <div class="relative">
+                    <button id="resource-type" class="w-full sm:w-auto flex items-center justify-between gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50" aria-haspopup="menu" aria-expanded="false">
+                        <span id="resource-type-label">全部资源类型</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </button>
+                    <div id="resource-menu" class="absolute z-20 mt-2 w-56 bg-white border border-slate-200 rounded-lg shadow-lg py-2 hidden">
+                        <div class="px-3 pb-2 text-xs text-slate-500">可多选</div>
+                        <ul id="resource-menu-list" class="max-h-64 overflow-auto"></ul>
+                        <div class="px-3 pt-2">
+                            <button id="resource-clear" class="text-xs text-slate-500 hover:text-slate-700">清空选择</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 表格 -->
+            <div class="overflow-x-auto enterprise-card">
+                <table class="w-full text-sm text-left text-slate-600">
+                    <thead class="text-xs text-slate-700 uppercase table-header">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">日期</th>
+                            <th scope="col" class="px-6 py-3">资源类型</th>
+                            <th scope="col" class="px-6 py-3">行为</th>
+                            <th scope="col" class="px-6 py-3">变动类型</th>
+                            <th scope="col" class="px-6 py-3">用量</th>
+                            <th scope="col" class="px-6 py-3">消耗积分</th>
+                            <th scope="col" class="px-6 py-3">计费方</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-row border-b border-slate-200">
+                            <td class="px-6 py-4">2025-08-08 10:30:00</td>
+                            <td class="px-6 py-4 font-medium">智能体</td>
+                            <td class="px-6 py-4">新建智能体</td>
+                            <td class="px-6 py-4"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">消耗</span></td>
+                            <td class="px-6 py-4">1个</td>
+                            <td class="px-6 py-4">-</td>
+                            <td class="px-6 py-4">星辰科技</td>
+                        </tr>
+                        <tr class="table-row border-b border-slate-200">
+                            <td class="px-6 py-4">2025-08-07 15:00:12</td>
+                            <td class="px-6 py-4 font-medium">云电脑设备时长</td>
+                            <td class="px-6 py-4">手动调用云电脑设备</td>
+                            <td class="px-6 py-4"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">消耗</span></td>
+                            <td class="px-6 py-4">30分钟</td>
+                            <td class="px-6 py-4">-</td>
+                            <td class="px-6 py-4">星辰科技</td>
+                        </tr>
+                        <tr class="table-row border-b border-slate-200">
+                            <td class="px-6 py-4">2025-08-07 14:00:00</td>
+                            <td class="px-6 py-4 font-medium">云电脑设备时长</td>
+                            <td class="px-6 py-4">手动调用云电脑设备 - 积分抵扣时长</td>
+                            <td class="px-6 py-4"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">消耗</span></td>
+                            <td class="px-6 py-4">10分钟</td>
+                            <td class="px-6 py-4 font-semibold text-red-600">-100点</td>
+                            <td class="px-6 py-4">星辰科技</td>
+                        </tr>
+                        <tr class="table-row border-b border-slate-200">
+                            <td class="px-6 py-4">2025-08-07 09:05:45</td>
+                            <td class="px-6 py-4 font-medium">Token</td>
+                            <td class="px-6 py-4">调用 GPT 4o</td>
+                            <td class="px-6 py-4"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">消耗</span></td>
+                            <td class="px-6 py-4">输入: 1024, 输出: 512</td>
+                            <td class="px-6 py-4 font-semibold text-red-600">-50点</td>
+                            <td class="px-6 py-4">星辰科技</td>
+                        </tr>
+                         <tr class="table-row border-b border-slate-200">
+                            <td class="px-6 py-4">2025-08-06 18:00:00</td>
+                            <td class="px-6 py-4 font-medium">智能体</td>
+                            <td class="px-6 py-4">删除智能体</td>
+                            <td class="px-6 py-4"><span class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">返还</span></td>
+                            <td class="px-6 py-4">1个</td>
+                            <td class="px-6 py-4">-</td>
+                            <td class="px-6 py-4">星辰科技</td>
+                        </tr>
+                        <tr class="table-row">
+                            <td class="px-6 py-4">2025-08-05 11:20:30</td>
+                            <td class="px-6 py-4 font-medium">手机设备时长</td>
+                            <td class="px-6 py-4">运行工作流调用手机设备</td>
+                            <td class="px-6 py-4"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">消耗</span></td>
+                            <td class="px-6 py-4">15分钟</td>
+                            <td class="px-6 py-4">-</td>
+                            <td class="px-6 py-4">星辰科技</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+             <!-- 分页 -->
+            <nav class="flex items-center justify-between pt-4" aria-label="Table navigation">
+                <span class="text-sm font-normal text-slate-500">共 <span class="font-semibold text-slate-900">100</span> 条记录</span>
+                <ul class="inline-flex items-center -space-x-px">
+                    <li>
+                        <a href="#" class="px-3 py-2 ml-0 leading-tight text-slate-500 bg-white border border-slate-300 rounded-l-lg hover:bg-slate-100 hover:text-slate-700">上一页</a>
+                    </li>
+                    <li>
+                        <a href="#" aria-current="page" class="z-10 px-3 py-2 leading-tight text-blue-600 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700">1</a>
+                    </li>
+                    <li>
+                        <a href="#" class="px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300 hover:bg-slate-100 hover:text-slate-700">2</a>
+                    </li>
+                    <li>
+                        <a href="#" class="px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300 hover:bg-slate-100 hover:text-slate-700">3</a>
+                    </li>
+                    <li>
+                        <a href="#" class="px-3 py-2 leading-tight text-slate-500 bg-white border border-slate-300 rounded-r-lg hover:bg-slate-100 hover:text-slate-700">下一页</a>
+                    </li>
+                </ul>
+            </nav>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('toggle-quotas-btn');
+            const toggleIcon = document.getElementById('toggle-icon');
+            const quotasGrid = document.getElementById('quotas-grid');
+            let isExpanded = false;
+
+            // Initially hide the extra quota cards
+            const hiddenQuotas = quotasGrid.querySelectorAll('.hidden-quota');
+            hiddenQuotas.forEach(card => {
+                card.classList.add('hidden', 'max-h-0', 'p-0', 'm-0', 'border-0');
+            });
+
+            toggleBtn.addEventListener('click', () => {
+                isExpanded = !isExpanded;
+                
+                hiddenQuotas.forEach(card => {
+                    card.classList.toggle('hidden');
+                    // We toggle these classes to trigger the transition
+                    setTimeout(() => {
+                        card.classList.toggle('max-h-0');
+                        card.classList.toggle('p-0');
+                        card.classList.toggle('m-0');
+                        card.classList.toggle('border-0');
+                    }, 10);
+                });
+
+                if (isExpanded) {
+                    toggleBtn.childNodes[1].textContent = '收起'; // The span
+                    toggleIcon.style.transform = 'rotate(180deg)';
+                } else {
+                    toggleBtn.childNodes[1].textContent = '显示更多';
+                    toggleIcon.style.transform = 'rotate(0deg)';
+                }
+            });
+
+            // 智能定位 tooltip，避免被遮挡
+            const SAFE_PAD = 8; // 距离视口留白
+            document.querySelectorAll('.has-tooltip').forEach(wrapper => {
+              const tooltip = wrapper.querySelector('.tooltip');
+              if (!tooltip) return;
+
+              const place = () => {
+                // 默认放在“上方-右对齐”
+                tooltip.style.left = 'auto';
+                tooltip.style.right = '0px';
+                tooltip.style.top = 'auto';
+                tooltip.style.bottom = '100%';
+                tooltip.style.marginTop = '0px';
+                tooltip.style.marginBottom = '8px';
+                tooltip.style.maxWidth = 'min(18rem, calc(100vw - 16px))';
+
+                // 计算是否越界：先判断上方是否放不下 → 放到下方
+                let rect = tooltip.getBoundingClientRect();
+                if (rect.top < SAFE_PAD) {
+                  tooltip.style.bottom = 'auto';
+                  tooltip.style.top = '100%';
+                  tooltip.style.marginBottom = '0px';
+                  tooltip.style.marginTop = '8px';
+                }
+
+                // 重新拿一次位置，处理左右越界：靠左/靠右对齐
+                rect = tooltip.getBoundingClientRect();
+                if (rect.left < SAFE_PAD) {
+                  tooltip.style.left = '0px';
+                  tooltip.style.right = 'auto';
+                } else if (rect.right > window.innerWidth - SAFE_PAD) {
+                  tooltip.style.left = 'auto';
+                  tooltip.style.right = '0px'; // 右对齐已能避免右侧越界
+                }
+              };
+
+              // hover 时定位（延后 1 帧，确保已可见再测量）
+              wrapper.addEventListener('mouseenter', () => {
+                setTimeout(place, 0);
+              });
+
+              // 视口变化时也重新定位
+              window.addEventListener('resize', place);
+              window.addEventListener('scroll', place, true);
+
+              // 离开时恢复内联样式，避免影响下次计算
+              wrapper.addEventListener('mouseleave', () => {
+                tooltip.style.left = '';
+                tooltip.style.right = '';
+                tooltip.style.top = '';
+                tooltip.style.bottom = '';
+                tooltip.style.marginTop = '';
+                tooltip.style.marginBottom = '';
+                tooltip.style.maxWidth = '';
+              });
+            });
+
+            // 租户选择器打开/关闭 + 无障碍
+            const trigger = document.getElementById('tenant-trigger');
+            const menu = document.getElementById('tenant-menu');
+            const chevron = document.getElementById('tenant-chevron');
+
+            const setOpen = (open) => {
+              trigger.setAttribute('aria-expanded', String(open));
+              trigger.dataset.open = open ? 'true' : 'false';
+              menu.dataset.open = open ? 'true' : 'false';
+            };
+
+            trigger.addEventListener('click', (e) => {
+              e.stopPropagation();
+              setOpen(trigger.getAttribute('aria-expanded') !== 'true');
+            });
+
+            // 点击外部关闭
+            document.addEventListener('click', () => setOpen(false));
+            // Esc 关闭
+            document.addEventListener('keydown', (e) => {
+              if (e.key === 'Escape') setOpen(false);
+            });
+
+            // —— 租户版本徽标渲染 ——
+            // 可从接口拿到的当前租户信息
+            const currentTenant = { name: '星辰科技', version: '团队版', avatar: '星' };
+
+            (function renderTenantBadge() {
+              const versionEl = document.getElementById('tenant-version');
+              const nameEl = document.querySelector('.tenant-name');
+              const avatarEl = document.querySelector('#tenant-trigger .inline-flex');
+
+              const versionClassMap = {
+                '试用版': 'bg-amber-50 text-amber-700',
+                '团队版': 'bg-blue-50 text-blue-700',
+                '企业版': 'bg-emerald-50 text-emerald-700'
+              };
+
+              if (nameEl) nameEl.textContent = currentTenant.name;
+              if (avatarEl) avatarEl.textContent = currentTenant.avatar || currentTenant.name?.[0] || '租';
+
+              if (versionEl) {
+                versionEl.textContent = currentTenant.version || '';
+                versionEl.className = 'hidden sm:inline text-xs px-1.5 py-0.5 rounded ' + (versionClassMap[currentTenant.version] || 'bg-slate-100 text-slate-600');
+              }
+            })();
+
+            // —— 长名称自适应展示 ——
+            // 保存完整名
+            const tenantNameEl = document.querySelector('.tenant-name');
+            tenantNameEl.dataset.full = tenantNameEl.textContent.trim();
+            tenantNameEl.title = tenantNameEl.dataset.full;
+
+            // 中间省略：保留头尾
+            function middleEllipsis(str, head, tail) {
+              if (!str) return '';
+              if (str.length <= head + tail + 1) return str;
+              return str.slice(0, head) + '…' + str.slice(-tail);
+            }
+
+            // 根据容器宽度估算可展示字符，并做中间省略
+            function fitTenantName() {
+              const full = tenantNameEl.dataset.full || '';
+              tenantNameEl.textContent = full; // 先还原
+              // 下一帧测量，确保样式已应用
+              requestAnimationFrame(() => {
+                const w = tenantNameEl.clientWidth;
+                if (!w) return;
+                // 估算每字符宽度（中文/英文混排取一个保守值）
+                const perChar = 12; // px
+                const cap = Math.max(8, Math.floor(w / perChar)); // 可展示字符数
+                if (tenantNameEl.scrollWidth > tenantNameEl.clientWidth) {
+                  const head = Math.max(3, Math.floor((cap - 1) * 0.66));
+                  const tail = Math.max(3, (cap - 1) - head);
+                  tenantNameEl.textContent = middleEllipsis(full, head, tail);
+                }
+              });
+            }
+
+            window.addEventListener('resize', fitTenantName);
+            // 触发展开/收起、版本徽标变化等情况下也重新计算
+            document.getElementById('tenant-trigger').addEventListener('click', () => setTimeout(fitTenantName, 0));
+
+            // 初次渲染
+            fitTenantName();
+
+            // —— 筛选交互与过滤 ——
+
+            // 元素
+            const dateBtn = document.getElementById('date-range');
+            const dateMenu = document.getElementById('date-menu');
+            const dateLabel = document.getElementById('date-range-label');
+
+            const resBtn = document.getElementById('resource-type');
+            const resMenu = document.getElementById('resource-menu');
+            const resLabel = document.getElementById('resource-type-label');
+            const resMenuList = document.getElementById('resource-menu-list');
+            const resClearBtn = document.getElementById('resource-clear');
+
+            const tbody = document.querySelector('table tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // 状态
+            let selectedRange = '最近7日';
+            const selectedTypes = new Set();
+
+            // Safari 兼容日期解析：'YYYY-MM-DD HH:mm:ss'
+            function parseDateString(s) {
+              const [d, t = '00:00:00'] = s.trim().split(' ');
+              const [y, m, day] = d.split('-').map(Number);
+              const [hh, mm, ss] = t.split(':').map(Number);
+              return new Date(y, (m || 1) - 1, day || 1, hh || 0, mm || 0, ss || 0);
+            }
+
+            function getRange(name) {
+              const now = new Date();
+              const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              if (name === '今日') return { start: startOfToday, end: now };
+              if (name === '最近7日') return { start: new Date(startOfToday.getTime() - 6 * 86400000), end: now };
+              if (name === '本月') return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: now };
+              if (name === '上月') {
+                const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+                return { start, end };
+              }
+              return { start: null, end: null }; // 全部时间
+            }
+
+            function applyFilters() {
+              const { start, end } = getRange(selectedRange);
+              const filteringByType = selectedTypes.size > 0;
+
+              let visibleCount = 0;
+
+              rows.forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                const dateText = tds[0]?.textContent || '';
+                const typeText = (tds[1]?.textContent || '').trim();
+
+                // 日期判断
+                let dateOk = true;
+                if (start || end) {
+                  const d = parseDateString(dateText);
+                  dateOk = (!start || d >= start) && (!end || d <= end);
+                }
+
+                // 类型判断
+                const typeOk = !filteringByType || selectedTypes.has(typeText);
+
+                const show = dateOk && typeOk;
+                tr.classList.toggle('hidden', !show);
+                if (show) visibleCount++;
+              });
+
+              // 更新条数（可选）
+              const totalSpan = document.querySelector('nav span span.font-semibold');
+              if (totalSpan) totalSpan.textContent = String(visibleCount);
+            }
+
+            // ——— 日期菜单 ———
+            dateBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              dateMenu.classList.toggle('hidden');
+              resMenu.classList.add('hidden');
+            });
+            dateMenu.querySelectorAll('[data-range]').forEach(btn => {
+              btn.addEventListener('click', () => {
+                selectedRange = btn.getAttribute('data-range');
+                dateLabel.textContent = selectedRange;
+                dateMenu.classList.add('hidden');
+                applyFilters();
+              });
+            });
+
+            // ——— 资源类型菜单（动态收集表格里的类型） ———
+            const resourceTypes = Array.from(new Set(rows.map(tr => (tr.querySelectorAll('td')[1]?.textContent || '').trim()).filter(Boolean)));
+
+            function renderResourceMenu() {
+              resMenuList.innerHTML = '';
+              resourceTypes.forEach(type => {
+                const li = document.createElement('li');
+                li.className = 'px-3 py-1.5 hover:bg-slate-50';
+                li.innerHTML = `
+                  <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500" value="${type}">
+                    <span class="truncate">${type}</span>
+                  </label>
+                `;
+                const checkbox = li.querySelector('input');
+                checkbox.checked = selectedTypes.has(type);
+                checkbox.addEventListener('change', (e) => {
+                  if (e.target.checked) selectedTypes.add(type);
+                  else selectedTypes.delete(type);
+                  updateResourceBtnLabel();
+                  applyFilters();
+                });
+                resMenuList.appendChild(li);
+              });
+            }
+            function updateResourceBtnLabel() {
+              if (selectedTypes.size === 0 || selectedTypes.size === resourceTypes.length) {
+                resLabel.textContent = '全部资源类型';
+              } else {
+                resLabel.textContent = `已选${selectedTypes.size}项`;
+              }
+            }
+            renderResourceMenu();
+            updateResourceBtnLabel();
+
+            resBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              resMenu.classList.toggle('hidden');
+              dateMenu.classList.add('hidden');
+            });
+            resClearBtn.addEventListener('click', () => {
+              selectedTypes.clear();
+              renderResourceMenu();
+              updateResourceBtnLabel();
+              applyFilters();
+            });
+
+            // 点击外部关闭菜单
+            document.addEventListener('click', () => {
+              dateMenu.classList.add('hidden');
+              resMenu.classList.add('hidden');
+            });
+
+            // 初始执行一次（默认最近7日）
+            applyFilters();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据总览</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- Custom CSS - 飞书风格 -->
+  <link rel="stylesheet" href="../assets/css/feishu-style.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg-gray-1);
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 全局筛选器 -->
+    <div class="search-bar" style="margin-bottom: 24px;">
+      <el-form :inline="true" :model="filterForm">
+        <el-form-item label="时间范围">
+          <el-select v-model="filterForm.timeRange" @change="handleFilterChange" style="width: 150px">
+            <el-option label="最近7天" value="7"></el-option>
+            <el-option label="最近30天" value="30"></el-option>
+            <el-option label="最近90天" value="90"></el-option>
+            <el-option label="最近180天" value="180"></el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="计费租户">
+          <el-select 
+            v-model="filterForm.tenantId" 
+            @change="handleFilterChange"
+            clearable
+            placeholder="全部租户"
+            style="width: 200px"
+          >
+            <el-option label="全部租户" value=""></el-option>
+            <el-option 
+              v-for="tenant in userTenants" 
+              :key="tenant.tenantId" 
+              :label="tenant.tenantName" 
+              :value="tenant.tenantId"
+            ></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <!-- 顶层核心指标 -->
+    <div class="kpi-cards">
+      <div class="kpi-card">
+        <div class="kpi-card-header">
+          <span class="kpi-card-title">
+            活跃天数
+            <el-tooltip content="统计周期内，用户有任何操作记录的天数，反映用户活跃度" placement="top">
+              <el-icon><question-filled /></el-icon>
+            </el-tooltip>
+          </span>
+          <div class="kpi-card-icon">
+            <el-icon><calendar /></el-icon>
+          </div>
+        </div>
+        <div class="kpi-card-value">{{ kpiData.activeDays }}</div>
+        <div class="kpi-card-subtitle">周期内有活动记录的天数</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-header">
+          <span class="kpi-card-title">
+            资产调用总次数
+            <el-tooltip content="用户创建的所有智能体、工作流、工具的累计调用次数" placement="top">
+              <el-icon><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </span>
+          <div class="kpi-card-icon success">
+            <el-icon><Operation /></el-icon>
+          </div>
+        </div>
+        <div class="kpi-card-value">{{ Utils.formatNumber(kpiData.totalAssetCalls) }}</div>
+        <div class="kpi-card-subtitle">智能体、工作流、工具调用总数</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-header">
+          <span class="kpi-card-title">
+            总消耗积分
+            <el-tooltip content="周期内所有消费行为（Token、设备时长等）产生的积分消耗总和" placement="top">
+              <el-icon><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </span>
+          <div class="kpi-card-icon warning">
+            <el-icon><Coin /></el-icon>
+          </div>
+        </div>
+        <div class="kpi-card-value">{{ Utils.formatNumber(kpiData.totalPoints, 2) }}</div>
+        <div class="kpi-card-subtitle">所有消费行为产生的积分总和</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-card-header">
+          <span class="kpi-card-title">
+            资产使用率
+            <el-tooltip content="实际被调用过的资产数量占总资产数的比例，反映资产利用效率" placement="top">
+              <el-icon><question-filled /></el-icon>
+            </el-tooltip>
+          </span>
+          <div class="kpi-card-icon">
+            <el-icon><histogram /></el-icon>
+          </div>
+        </div>
+        <div class="kpi-card-value">{{ Utils.formatPercent(kpiData.assetUsageRate, 1) }}</div>
+        <div class="kpi-card-subtitle">被调用的资产数 / 总资产数</div>
+      </div>
+    </div>
+
+    <!-- 用户价值与活跃分析 -->
+    <div style="margin-top: 24px;">
+      <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+        <el-icon><trend-charts /></el-icon>
+        用户价值与活跃分析
+      </h3>
+
+      <el-row :gutter="24">
+        <el-col :span="24" style="margin-bottom: 24px;">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">
+                <el-icon><calendar /></el-icon>
+                活跃度日历热力图
+                <el-tooltip content="以日历形式展示用户每日的活跃次数，颜色深浅代表活跃度高低" placement="top">
+                  <el-icon class="help-icon"><question-filled /></el-icon>
+                </el-tooltip>
+              </div>
+            </div>
+            <div class="chart-body" id="activityCalendar" style="height: 180px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="24">
+        <el-col :span="16" style="margin-bottom: 24px;">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">
+                <el-icon><trend-charts /></el-icon>
+                资产调用趋势
+                <el-tooltip 
+                  content="展示智能体、工作流、工具在不同时间段的调用次数变化趋势，帮助分析用户的资产使用习惯和偏好" 
+                  placement="top"
+                  effect="dark"
+                >
+                  <el-icon class="help-icon"><question-filled /></el-icon>
+                </el-tooltip>
+              </div>
+            </div>
+            <div class="chart-body" id="assetCallTrend" style="height: 350px;"></div>
+          </div>
+        </el-col>
+
+        <el-col :span="8" style="margin-bottom: 24px;">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">
+                <el-icon><star /></el-icon>
+                最活跃资产排行
+                <el-tooltip 
+                  content="统计周期内调用次数最多的前10个资产（智能体/工作流/工具），帮助识别用户最常用的核心资产" 
+                  placement="top"
+                  effect="dark"
+                >
+                  <el-icon class="help-icon"><question-filled /></el-icon>
+                </el-tooltip>
+              </div>
+            </div>
+            <div class="chart-body" id="topAssets" style="height: 350px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+
+    <!-- 核心成本分析 -->
+    <div style="margin-top: 24px;">
+      <h3 style="margin-bottom: 16px; color: var(--text-primary);">
+        <el-icon><coin /></el-icon>
+        核心成本分析
+      </h3>
+
+      <el-row :gutter="24">
+        <el-col :span="14" style="margin-bottom: 24px;">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">
+                <el-icon><trend-charts /></el-icon>
+                积分消耗趋势
+                <el-tooltip 
+                  content="展示不同资源类型（Token、云电脑、云手机等）的积分消耗随时间的变化趋势，帮助识别成本支出的波动和异常" 
+                  placement="top"
+                  effect="dark"
+                >
+                  <el-icon class="help-icon"><question-filled /></el-icon>
+                </el-tooltip>
+              </div>
+            </div>
+            <div class="chart-body" id="pointsTrend" style="height: 350px;"></div>
+          </div>
+        </el-col>
+
+        <el-col :span="10" style="margin-bottom: 24px;">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">
+                <el-icon><pie-chart /></el-icon>
+                积分消耗构成
+                <el-tooltip 
+                  content="统计周期内各类资源消耗的积分占比分布，帮助了解用户成本结构和主要支出项" 
+                  placement="top"
+                  effect="dark"
+                >
+                  <el-icon class="help-icon"><question-filled /></el-icon>
+                </el-tooltip>
+              </div>
+            </div>
+            <div class="chart-body" id="pointsComposition" style="height: 350px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="24">
+        <el-col :span="24">
+          <div class="chart-container">
+            <div class="chart-header">
+              <div class="chart-title">
+                <el-icon><warning /></el-icon>
+                主要成本动因排行
+                <el-tooltip 
+                  content="统计消耗积分最多的前10个成本项（包括具体模型和资源类型），帮助定位高成本来源和优化方向" 
+                  placement="top"
+                  effect="dark"
+                >
+                  <el-icon class="help-icon"><question-filled /></el-icon>
+                </el-tooltip>
+              </div>
+            </div>
+            <div class="chart-body" id="costDrivers" style="height: 350px;"></div>
+          </div>
+        </el-col>
+      </el-row>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  
+  <!-- Element Plus 图标 -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- ECharts -->
+  <script src="https://unpkg.com/echarts@5.4.3/dist/echarts.min.js"></script>
+  
+  <!-- 自定义JS -->
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/data/static-data.js"></script>
+  <script src="../assets/js/charts.js"></script>
+
+  <script>
+    const { createApp, ref, computed, reactive, onMounted, watch } = Vue;
+    const { ElMessage } = ElementPlus;
+
+    const app = createApp({
+      setup() {
+        const userId = ref(Utils.getQueryParam('userId'));
+        const filterForm = reactive({
+          timeRange: '30',
+          tenantId: ''
+        });
+
+        const currentUser = computed(() => {
+          return MockData.users.find(u => u.id === userId.value);
+        });
+
+        const userTenants = computed(() => {
+          return currentUser.value?.tenants || [];
+        });
+
+        const userConsumptions = computed(() => {
+          let consumptions = MockData.consumptions.filter(c => c.userId === userId.value);
+          
+          // 时间范围筛选
+          const days = parseInt(filterForm.timeRange);
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() - days);
+          consumptions = consumptions.filter(c => c.date >= startDate);
+          
+          // 租户筛选
+          if (filterForm.tenantId) {
+            consumptions = consumptions.filter(c => c.tenantId === filterForm.tenantId);
+          }
+          
+          return consumptions;
+        });
+
+        const userAssets = computed(() => {
+          return {
+            bots: MockData.assets.bots.filter(b => b.userId === userId.value),
+            workflows: MockData.assets.workflows.filter(w => w.userId === userId.value),
+            tools: MockData.assets.tools.filter(t => t.userId === userId.value)
+          };
+        });
+
+        // KPI数据计算
+        const kpiData = computed(() => {
+          const consumptions = userConsumptions.value;
+          
+          // 活跃天数
+          const activeDays = new Set(
+            consumptions.map(c => Utils.formatDate(c.date, 'YYYY-MM-DD'))
+          ).size;
+          
+          // 资产调用总次数
+          const totalAssetCalls = consumptions.filter(c => 
+            ['智能体', '工作流', '工具'].includes(c.resourceType)
+          ).length;
+          
+          // 总消耗积分
+          const totalPoints = consumptions.reduce((sum, c) => sum + c.pointsUsed, 0);
+          
+          // 资产使用率
+          const allAssets = [
+            ...userAssets.value.bots,
+            ...userAssets.value.workflows,
+            ...userAssets.value.tools
+          ];
+          const usedAssets = new Set(
+            consumptions.filter(c => c.assetId).map(c => c.assetId)
+          );
+          const assetUsageRate = allAssets.length > 0 
+            ? usedAssets.size / allAssets.length 
+            : 0;
+          
+          return {
+            activeDays,
+            totalAssetCalls,
+            totalPoints,
+            assetUsageRate
+          };
+        });
+
+        // 图表数据准备
+        const prepareChartData = () => {
+          const consumptions = userConsumptions.value;
+          const days = parseInt(filterForm.timeRange);
+          
+          // 活跃度日历数据
+          const activityData = {};
+          consumptions.forEach(c => {
+            const dateKey = Utils.formatDate(c.date, 'YYYY-MM-DD');
+            activityData[dateKey] = (activityData[dateKey] || 0) + 1;
+          });
+          
+          const calendarData = Object.keys(activityData).map(date => ({
+            date: date,
+            value: activityData[date]
+          }));
+          
+          // 填充没有活动的日期
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() - days);
+          const dates = Utils.generateDateArray(startDate, new Date());
+          dates.forEach(date => {
+            const dateKey = Utils.formatDate(date, 'YYYY-MM-DD');
+            if (!activityData[dateKey]) {
+              calendarData.push({ date: dateKey, value: 0 });
+            }
+          });
+          
+          // 资产调用趋势数据
+          const assetCallsByDate = {};
+          consumptions.forEach(c => {
+            if (['智能体', '工作流', '工具'].includes(c.resourceType)) {
+              const dateKey = Utils.formatDate(c.date, 'YYYY-MM-DD');
+              if (!assetCallsByDate[dateKey]) {
+                assetCallsByDate[dateKey] = { bots: 0, workflows: 0, tools: 0 };
+              }
+              if (c.resourceType === '智能体') assetCallsByDate[dateKey].bots++;
+              if (c.resourceType === '工作流') assetCallsByDate[dateKey].workflows++;
+              if (c.resourceType === '工具') assetCallsByDate[dateKey].tools++;
+            }
+          });
+          
+          const assetCallDates = dates.map(d => Utils.formatDate(d, 'YYYY-MM-DD')).reverse();
+          const botCalls = assetCallDates.map(d => assetCallsByDate[d]?.bots || 0);
+          const workflowCalls = assetCallDates.map(d => assetCallsByDate[d]?.workflows || 0);
+          const toolCalls = assetCallDates.map(d => assetCallsByDate[d]?.tools || 0);
+          
+          // 最活跃资产排行
+          const assetCalls = {};
+          consumptions.forEach(c => {
+            if (c.assetId && c.assetName) {
+              assetCalls[c.assetId] = {
+                name: c.assetName,
+                count: (assetCalls[c.assetId]?.count || 0) + 1
+              };
+            }
+          });
+          
+          const topAssets = Object.values(assetCalls)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10);
+          
+          // 积分消耗趋势
+          const pointsByDate = {};
+          consumptions.forEach(c => {
+            const dateKey = Utils.formatDate(c.date, 'YYYY-MM-DD');
+            if (!pointsByDate[dateKey]) {
+              pointsByDate[dateKey] = { token: 0, cloudPC: 0, cloudPhone: 0, other: 0 };
+            }
+            if (c.resourceType === 'Token') {
+              pointsByDate[dateKey].token += c.pointsUsed;
+            } else if (c.resourceType === '云电脑设备时长') {
+              pointsByDate[dateKey].cloudPC += c.pointsUsed;
+            } else if (c.resourceType === '云手机设备时长') {
+              pointsByDate[dateKey].cloudPhone += c.pointsUsed;
+            } else {
+              pointsByDate[dateKey].other += c.pointsUsed;
+            }
+          });
+          
+          const pointsDates = dates.map(d => Utils.formatDate(d, 'YYYY-MM-DD')).reverse();
+          const tokenPoints = pointsDates.map(d => Math.max(0, pointsByDate[d]?.token || 0));
+          const cloudPCPoints = pointsDates.map(d => Math.max(0, pointsByDate[d]?.cloudPC || 0));
+          const cloudPhonePoints = pointsDates.map(d => Math.max(0, pointsByDate[d]?.cloudPhone || 0));
+          const otherPoints = pointsDates.map(d => Math.max(0, pointsByDate[d]?.other || 0));
+          
+          // 积分消耗构成
+          const totalTokenPoints = tokenPoints.reduce((a, b) => a + b, 0);
+          const totalCloudPCPoints = cloudPCPoints.reduce((a, b) => a + b, 0);
+          const totalCloudPhonePoints = cloudPhonePoints.reduce((a, b) => a + b, 0);
+          const totalOtherPoints = otherPoints.reduce((a, b) => a + b, 0);
+          
+          const pointsComposition = [
+            { name: 'Token消耗', value: totalTokenPoints },
+            { name: '云电脑抵扣', value: totalCloudPCPoints },
+            { name: '云手机抵扣', value: totalCloudPhonePoints },
+            { name: '其他消耗', value: totalOtherPoints }
+          ].filter(item => item.value > 0);
+          
+          // 主要成本动因
+          const costDrivers = {};
+          consumptions.forEach(c => {
+            if (c.pointsUsed > 0) {
+              let key = c.resourceType;
+              if (c.resourceType === 'Token' && c.model) {
+                key = `模型:${c.model}`;
+              }
+              costDrivers[key] = (costDrivers[key] || 0) + c.pointsUsed;
+            }
+          });
+          
+          const topCostDrivers = Object.entries(costDrivers)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 10);
+          
+          return {
+            calendarData,
+            assetCallTrend: {
+              dates: assetCallDates,
+              botCalls,
+              workflowCalls,
+              toolCalls
+            },
+            topAssets,
+            pointsTrend: {
+              dates: pointsDates,
+              tokenPoints,
+              cloudPCPoints,
+              cloudPhonePoints,
+              otherPoints
+            },
+            pointsComposition,
+            topCostDrivers
+          };
+        };
+
+        // 渲染图表
+        const renderCharts = () => {
+          console.log('=== 开始渲染图表 ===');
+          
+          const data = prepareChartData();
+          console.log('prepareChartData result:', data);
+          
+          console.log('calendarData length:', data.calendarData.length);
+          console.log('topAssets length:', data.topAssets.length);
+          console.log('pointsComposition length:', data.pointsComposition.length);
+          
+          // 活跃度日历
+          const calendarChart = echarts.init(document.getElementById('activityCalendar'));
+          calendarChart.setOption(Charts.activityCalendar(data.calendarData));
+          
+          // 资产调用趋势
+          const assetCallChart = echarts.init(document.getElementById('assetCallTrend'));
+          assetCallChart.setOption(Charts.stackedAreaChart(
+            data.assetCallTrend.dates,
+            [
+              { name: '智能体调用', data: data.assetCallTrend.botCalls },
+              { name: '工作流运行', data: data.assetCallTrend.workflowCalls },
+              { name: '工具调用', data: data.assetCallTrend.toolCalls }
+            ]
+          ));
+          
+          // 最活跃资产
+          const topAssetsChart = echarts.init(document.getElementById('topAssets'));
+          topAssetsChart.setOption(Charts.horizontalBarChart(data.topAssets, '次'));
+          
+          // 积分消耗趋势
+          const pointsTrendChart = echarts.init(document.getElementById('pointsTrend'));
+          pointsTrendChart.setOption(Charts.stackedAreaChart(
+            data.pointsTrend.dates,
+            [
+              { name: 'Token消耗', data: data.pointsTrend.tokenPoints },
+              { name: '云电脑抵扣', data: data.pointsTrend.cloudPCPoints },
+              { name: '云手机抵扣', data: data.pointsTrend.cloudPhonePoints },
+              { name: '其他消耗', data: data.pointsTrend.otherPoints }
+            ]
+          ));
+          
+          // 积分消耗构成
+          const pointsCompositionChart = echarts.init(document.getElementById('pointsComposition'));
+          pointsCompositionChart.setOption(Charts.doughnutChart(data.pointsComposition));
+          
+          // 主要成本动因
+          const costDriversChart = echarts.init(document.getElementById('costDrivers'));
+          costDriversChart.setOption(Charts.horizontalBarChart(data.topCostDrivers, '积分'));
+          
+          console.log('=== 图表渲染完成 ===');
+          
+          // 响应式
+          window.addEventListener('resize', () => {
+            calendarChart.resize();
+            assetCallChart.resize();
+            topAssetsChart.resize();
+            pointsTrendChart.resize();
+            pointsCompositionChart.resize();
+            costDriversChart.resize();
+          });
+        };
+
+        const handleFilterChange = () => {
+          setTimeout(renderCharts, 100);
+        };
+
+        onMounted(() => {
+          console.log('=== Overview Page Debug ===');
+          console.log('userId:', userId.value);
+          console.log('currentUser:', currentUser.value);
+          console.log('userConsumptions:', userConsumptions.value.length);
+          console.log('userAssets:', userAssets.value);
+          console.log('kpiData:', kpiData.value);
+          console.log('MockData:', MockData);
+          
+          setTimeout(renderCharts, 100);
+        });
+
+        return {
+          filterForm,
+          userTenants,
+          kpiData,
+          handleFilterChange,
+          Utils
+        };
+      }
+    });
+
+    // 使用Element Plus
+    app.use(ElementPlus);
+
+    // 注册所有Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+
+    // 挂载应用
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

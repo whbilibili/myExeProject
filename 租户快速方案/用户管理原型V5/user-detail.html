@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户详情 - 运营后台</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义飞书设计系统 -->
+  <link rel="stylesheet" href="./assets/css/feishu-design.css">
+  
+  <style>
+    /* 详情页头部 */
+    .detail-header {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-6);
+      box-shadow: var(--shadow-1);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .user-info-wrapper {
+      display: flex;
+      gap: var(--spacing-6);
+    }
+    
+    .user-avatar-section {
+      flex-shrink: 0;
+    }
+    
+    .user-avatar-large {
+      width: 120px;
+      height: 120px;
+      border-radius: var(--radius-large);
+      object-fit: cover;
+      border: 2px solid var(--border-2);
+    }
+    
+    .user-info-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
+    }
+    
+    .user-name-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .user-name-large {
+      font-size: var(--font-size-24);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--spacing-4);
+    }
+    
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .info-label {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+      min-width: 100px;
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .info-value {
+      font-size: var(--font-size-14);
+      color: var(--text-1);
+      font-family: var(--font-family-mono);
+    }
+    
+    .info-value.large {
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-semibold);
+    }
+    
+    /* 标签页容器 */
+    .tabs-wrapper {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      box-shadow: var(--shadow-1);
+      overflow: hidden;
+    }
+    
+    .tab-content-iframe {
+      width: 100%;
+      min-height: 800px;
+      border: none;
+      display: block;
+      background: var(--bg-2);
+    }
+    
+    /* 状态标签 */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-1);
+      padding: var(--spacing-1) var(--spacing-3);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-13);
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .status-badge.normal {
+      background-color: var(--success-lightest);
+      color: var(--success-color);
+    }
+    
+    .status-badge.disabled {
+      background-color: var(--fill-2);
+      color: var(--text-3);
+    }
+    
+    .status-badge .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: var(--radius-circle);
+    }
+    
+    .status-badge.normal .status-dot {
+      background-color: var(--success-color);
+    }
+    
+    .status-badge.disabled .status-dot {
+      background-color: var(--text-3);
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="page-wrapper">
+    <!-- 顶部导航栏 -->
+    <div class="navbar">
+      <div class="navbar-container">
+        <div class="navbar-left">
+          <el-button text @click="goBack">
+            <el-icon :size="18"><el-icon-arrow-left /></el-icon>
+            <span style="margin-left: 4px;">返回</span>
+          </el-button>
+          <el-divider direction="vertical" />
+          <div class="navbar-title">
+            <el-icon :size="24" color="#3370FF">
+              <el-icon-user-filled />
+            </el-icon>
+            <span>{{ userInfo.name }}</span>
+          </div>
+        </div>
+        <div class="navbar-right">
+          <el-button
+            :type="userInfo.status === '正常' ? 'warning' : 'success'"
+            @click="toggleStatus"
+          >
+            {{ userInfo.status === '正常' ? '禁用用户' : '启用用户' }}
+          </el-button>
+          <el-button @click="resetPassword">重置密码</el-button>
+          <el-button type="danger" @click="deleteUser">注销用户</el-button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="main-container fade-in">
+      <!-- 用户详情头部 -->
+      <div class="detail-header">
+        <div class="user-info-wrapper">
+          <div class="user-avatar-section">
+            <img :src="userInfo.avatar" :alt="userInfo.name" class="user-avatar-large" />
+          </div>
+          
+          <div class="user-info-section">
+            <div class="user-name-row">
+              <div style="display: flex; align-items: center; gap: var(--spacing-3);">
+                <h1 class="user-name-large">{{ userInfo.name }}</h1>
+                <span :class="['status-badge', userInfo.status === '正常' ? 'normal' : 'disabled']">
+                  <span class="status-dot"></span>
+                  {{ userInfo.status }}
+                </span>
+              </div>
+              <el-button type="primary" @click="editUserInfo">
+                <el-icon><el-icon-edit /></el-icon>
+                编辑信息
+              </el-button>
+            </div>
+            
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">用户ID:</span>
+                <span class="info-value">{{ userInfo.id }}</span>
+                <el-icon class="copy-btn" @click="copyText(userInfo.id)">
+                  <el-icon-document-copy />
+                </el-icon>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">绑定手机:</span>
+                <span class="info-value">{{ userInfo.phone }}</span>
+                <el-icon class="copy-btn" @click="copyText(userInfo.phone)">
+                  <el-icon-document-copy />
+                </el-icon>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">绑定邮箱:</span>
+                <span class="info-value">{{ userInfo.email }}</span>
+                <el-icon class="copy-btn" @click="copyText(userInfo.email)">
+                  <el-icon-document-copy />
+                </el-icon>
+              </div>
+              
+              <div class="info-item" v-if="userInfo.mis">
+                <span class="info-label">绑定MIS:</span>
+                <span class="info-value">{{ userInfo.mis }}</span>
+                <el-icon class="copy-btn" @click="copyText(userInfo.mis)">
+                  <el-icon-document-copy />
+                </el-icon>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">创建时间:</span>
+                <span class="info-value">{{ Utils.formatDate(userInfo.createTime) }}</span>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">最后登录:</span>
+                <span class="info-value">{{ Utils.formatDate(userInfo.lastLoginTime) }}</span>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">最后活跃:</span>
+                <span class="info-value">{{ Utils.formatDate(userInfo.lastActiveTime) }}</span>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-label">账号金额:</span>
+                <span class="info-value text-primary">{{ Utils.formatNumber(userInfo.balance) }} w币</span>
+                <el-button text type="primary" @click="editBalance">
+                  <el-icon><el-icon-edit /></el-icon>
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 标签页区域 -->
+      <div class="tabs-wrapper">
+        <el-tabs v-model="activeTab" type="card">
+          <el-tab-pane label="数据总览" name="overview">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-data-analysis /></el-icon>
+                数据总览
+                <el-tooltip content="本页所有数据均受页面顶部的"时间范围"和"租户"筛选器影响。" placement="top">
+                  <i class="tooltip-icon">i</i>
+                </el-tooltip>
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'overview'"
+              :src="`pages/overview.html?userId=${userId}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+          
+          <el-tab-pane label="资源消耗账单" name="consumption">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-coin /></el-icon>
+                资源消耗账单
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'consumption'"
+              :src="`pages/consumption.html?userId=${userId}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+          
+          <el-tab-pane label="资产明细" name="assets">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-box /></el-icon>
+                资产明细
+                <el-tooltip content="本页签内所有统计数据均遵循页面顶部的全局"时间范围"和"租户"筛选条件。" placement="top">
+                  <i class="tooltip-icon">i</i>
+                </el-tooltip>
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'assets'"
+              :src="`pages/assets.html?userId=${userId}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+          
+          <el-tab-pane label="个人付费记录" name="personal-payment">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-credit-card /></el-icon>
+                个人付费记录
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'personal-payment'"
+              :src="`pages/personal-payment.html?userId=${userId}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+          
+          <el-tab-pane label="加入的租户" name="tenants">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-office-building /></el-icon>
+                加入的租户
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'tenants'"
+              :src="`pages/tenants.html?userId=${userId}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </div>
+    
+    <!-- 编辑用户信息抽屉 -->
+    <el-drawer
+      v-model="editDrawer.visible"
+      title="编辑用户信息"
+      direction="rtl"
+      size="500px"
+    >
+      <el-form :model="editDrawer.form" label-width="100px">
+        <el-form-item label="用户头像">
+          <el-upload
+            class="avatar-uploader"
+            :show-file-list="false"
+            :auto-upload="false"
+          >
+            <img v-if="editDrawer.form.avatar" :src="editDrawer.form.avatar" style="width: 80px; height: 80px; border-radius: 8px;" />
+            <el-icon v-else class="avatar-uploader-icon"><el-icon-plus /></el-icon>
+          </el-upload>
+        </el-form-item>
+        
+        <el-form-item label="用户名称">
+          <el-input v-model="editDrawer.form.name" placeholder="请输入用户名称" />
+        </el-form-item>
+        
+        <el-form-item label="绑定手机">
+          <el-input v-model="editDrawer.form.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        
+        <el-form-item label="绑定邮箱">
+          <el-input v-model="editDrawer.form.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        
+        <!-- <el-form-item label="绑定MIS">
+          <el-input v-model="editDrawer.form.mis" placeholder="请输入MIS号（可选）" />
+        </el-form-item>
+         -->
+        <!-- <el-form-item label="账号金额">
+          <el-input-number
+            v-model="editDrawer.form.balance"
+            :min="0"
+            :max="10000000"
+            style="width: 100%;"
+          />
+        </el-form-item> -->
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="editDrawer.visible = false">取消</el-button>
+        <el-button type="primary" @click="saveUserInfo">保存</el-button>
+      </template>
+    </el-drawer>
+    
+    <!-- 修改账号金额对话框 -->
+    <el-dialog
+      v-model="balanceDialog.visible"
+      title="修改账号金额"
+      width="500px"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="balanceDialog.form" label-width="120px">
+        <el-form-item label="当前余额">
+          <span class="text-20 font-semibold text-primary">
+            {{ Utils.formatNumber(userInfo.balance) }} w币
+          </span>
+        </el-form-item>
+        
+        <el-form-item label="操作类型">
+          <el-radio-group v-model="balanceDialog.form.type">
+            <el-radio value="add">充值</el-radio>
+            <el-radio value="deduct">扣除</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        
+        <el-form-item label="变动金额">
+          <el-input-number
+            v-model="balanceDialog.form.amount"
+            :min="1"
+            :max="1000000"
+            :step="100"
+            placeholder="请输入金额"
+            style="width: 100%;"
+          />
+        </el-form-item>
+        
+        <el-form-item label="操作原因">
+          <el-input
+            v-model="balanceDialog.form.reason"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入操作原因（必填）"
+            maxlength="200"
+            show-word-limit
+          />
+        </el-form-item>
+        
+        <el-form-item label="操作后余额">
+          <span class="text-18 font-semibold text-success">
+            {{ calculatedBalance }} w币
+          </span>
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="balanceDialog.visible = false">取消</el-button>
+        <el-button
+          type="primary"
+          @click="confirmBalanceChange"
+          :disabled="!balanceDialog.form.reason"
+        >
+          确认修改
+        </el-button>
+      </template>
+    </el-dialog>
+  </div>
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  
+  <!-- 工具函数 -->
+  <script src="./assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="./assets/js/mock-data.js"></script>
+  
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+    
+    const app = createApp({
+      setup() {
+        // 获取用户ID
+        const userId = ref(Utils.getUrlParam('userId'));
+        const activeTab = ref('overview');
+        const userInfo = ref({
+          id: '',
+          name: '',
+          avatar: '',
+          phone: '',
+          email: '',
+          mis: '',
+          createTime: null,
+          lastLoginTime: null,
+          lastActiveTime: null,
+          status: '正常',
+          balance: 0
+        });
+        
+        const editDrawer = ref({
+          visible: false,
+          form: {
+            avatar: '',
+            name: '',
+            phone: '',
+            email: '',
+            mis: '',
+            balance: 0
+          }
+        });
+        
+        const balanceDialog = ref({
+          visible: false,
+          form: {
+            type: 'add',
+            amount: 100,
+            reason: ''
+          }
+        });
+        
+        // 计算属性
+        const calculatedBalance = computed(() => {
+          const current = userInfo.value.balance;
+          const amount = balanceDialog.value.form.amount || 0;
+          const type = balanceDialog.value.form.type;
+          
+          const newBalance = type === 'add'
+            ? current + amount
+            : Math.max(0, current - amount);
+          
+          return Utils.formatNumber(newBalance);
+        });
+        
+        // 加载用户信息
+        const loadUserInfo = () => {
+          const user = MockData.getUserDetail(userId.value);
+          if (user) {
+            userInfo.value = user;
+          } else {
+            ElementPlus.ElMessage.error('用户不存在');
+            setTimeout(() => {
+              window.location.href = 'index.html';
+            }, 1500);
+          }
+        };
+        
+        // 返回列表
+        const goBack = () => {
+          window.location.href = 'index.html';
+        };
+        
+        // 复制文本
+        const copyText = async (text) => {
+          const success = await Utils.copyToClipboard(text);
+          if (success) {
+            ElementPlus.ElMessage.success('复制成功');
+          } else {
+            ElementPlus.ElMessage.error('复制失败');
+          }
+        };
+        
+        // 编辑用户信息
+        const editUserInfo = () => {
+          editDrawer.value.form = {
+            avatar: userInfo.value.avatar,
+            name: userInfo.value.name,
+            phone: userInfo.value.phone,
+            email: userInfo.value.email,
+            mis: userInfo.value.mis,
+            balance: userInfo.value.balance
+          };
+          editDrawer.value.visible = true;
+        };
+        
+        // 保存用户信息
+        const saveUserInfo = () => {
+          // 更新本地数据
+          Object.assign(userInfo.value, editDrawer.value.form);
+          ElementPlus.ElMessage.success('用户信息已更新');
+          editDrawer.value.visible = false;
+        };
+        
+        // 修改余额
+        const editBalance = () => {
+          balanceDialog.value.form = {
+            type: 'add',
+            amount: 100,
+            reason: ''
+          };
+          balanceDialog.value.visible = true;
+        };
+        
+        // 确认余额修改
+        const confirmBalanceChange = () => {
+          const { form } = balanceDialog.value;
+          const amount = form.type === 'add' ? form.amount : -form.amount;
+          
+          MockData.updateUserBalance(userId.value, amount, form.reason);
+          userInfo.value.balance = Math.max(0, userInfo.value.balance + amount);
+          
+          ElementPlus.ElMessage.success('账号金额修改成功');
+          balanceDialog.value.visible = false;
+        };
+        
+        // 切换状态
+        const toggleStatus = () => {
+          const action = userInfo.value.status === '正常' ? '禁用' : '启用';
+          
+          ElementPlus.ElMessageBox.confirm(
+            `确认${action}用户 "${userInfo.value.name}" 吗？`,
+            `${action}用户`,
+            {
+              confirmButtonText: '确认',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            MockData.toggleUserStatus(userId.value);
+            userInfo.value.status = userInfo.value.status === '正常' ? '已禁用' : '正常';
+            ElementPlus.ElMessage.success(`用户已${action}`);
+          }).catch(() => {});
+        };
+        
+        // 重置密码
+        const resetPassword = () => {
+          ElementPlus.ElMessageBox.prompt('请输入新密码', '重置密码', {
+            confirmButtonText: '确认',
+            cancelButtonText: '取消',
+            inputType: 'password',
+            inputPattern: /.{6,}/,
+            inputErrorMessage: '密码至少6位',
+            inputPlaceholder: '请输入新密码'
+          }).then(({ value }) => {
+            ElementPlus.ElMessage.success(`用户 ${userInfo.value.name} 的密码已重置`);
+          }).catch(() => {});
+        };
+        
+        // 注销用户
+        const deleteUser = () => {
+          ElementPlus.ElMessageBox.prompt(
+            `注销用户是终极高危操作，将删除该用户的所有数据。请输入 "确认注销" 以继续`,
+            `注销用户 "${userInfo.value.name}"`,
+            {
+              confirmButtonText: '确认注销',
+              cancelButtonText: '取消',
+              inputPattern: /^确认注销$/,
+              inputErrorMessage: '请输入"确认注销"',
+              type: 'error'
+            }
+          ).then(() => {
+            ElementPlus.ElMessage.success(`用户 ${userInfo.value.name} 已注销`);
+            setTimeout(() => {
+              window.location.href = 'index.html';
+            }, 1500);
+          }).catch(() => {});
+        };
+        
+        // 初始化
+        onMounted(() => {
+          if (!userId.value) {
+            ElementPlus.ElMessage.error('缺少用户ID参数');
+            setTimeout(() => {
+              window.location.href = 'index.html';
+            }, 1500);
+            return;
+          }
+          
+          loadUserInfo();
+        });
+        
+        return {
+          userId,
+          activeTab,
+          userInfo,
+          editDrawer,
+          balanceDialog,
+          calculatedBalance,
+          goBack,
+          copyText,
+          editUserInfo,
+          saveUserInfo,
+          editBalance,
+          confirmBalanceChange,
+          toggleStatus,
+          resetPassword,
+          deleteUser,
+          Utils
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

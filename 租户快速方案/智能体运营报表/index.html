@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能体消耗分析仪表盘</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <!-- 引入 ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <!-- 引入 Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.js"></script>
+  <!-- 引入 Element Plus (可选，这里为了轻量化我们尽量手写或用简单的组件，但为了表格方便如果允许可以引入) -->
+  <!-- 这里我们纯手写简单样式，不依赖重型UI库以保持轻量和可控 -->
+</head>
+<body>
+  <div id="app" v-cloak>
+    
+    <!-- 1. 顶部导航与筛选 -->
+    <header class="app-header">
+      <div class="header-left">
+        <h1>智能体消耗分析</h1>
+        <span class="tag">PRD V1.0</span>
+      </div>
+      <div class="header-right">
+        <div class="filter-group">
+          <label>时间范围:</label>
+          <select v-model="filters.timeRange" @change="handleFilterChange">
+            <option value="today">今天</option>
+            <option value="7days">最近7天</option>
+            <option value="30days">最近30天</option>
+            <option value="180days">最近180天</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>租户:</label>
+          <select v-model="filters.department" @change="handleFilterChange">
+            <option value="all">全部租户</option>
+            <option v-for="dept in departments" :value="dept">{{ dept }}</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <!-- 快捷锚点 -->
+    <nav class="anchor-nav">
+      <a href="#kpi">关键指标</a>
+      <a href="#top10">Top10趋势</a>
+      <a href="#quadrant">成本使用分析</a>
+      <a href="#distribution">群体分布</a>
+      <a href="#detail">详细数据表</a>
+    </nav>
+
+    <!-- 2. KPI 关键指标 -->
+    <section id="kpi" class="section kpi-section">
+      <div class="kpi-card" v-for="kpi in kpiData" :key="kpi.label">
+        <div class="kpi-label">{{ kpi.label }}</div>
+        <div class="kpi-value" :class="{ 'highlight': kpi.highlight }">{{ kpi.value }}</div>
+        <div class="kpi-sub" v-if="kpi.sub">{{ kpi.sub }}</div>
+      </div>
+    </section>
+
+    <!-- 3. Top 10 趋势 -->
+    <section id="top10" class="section">
+      <div class="section-header">
+        <h2>Top 10 趋势分析</h2>
+        <div class="tabs">
+          <button :class="{ active: top10Tab === 'totalTokens' }" @click="top10Tab = 'totalTokens'">Token消耗</button>
+          <button :class="{ active: top10Tab === 'totalCost' }" @click="top10Tab = 'totalCost'">费用消耗</button>
+          <button :class="{ active: top10Tab === 'callCount' }" @click="top10Tab = 'callCount'">对话轮次</button>
+        </div>
+      </div>
+      <div class="chart-container-wrapper">
+        <div id="chart-top10" class="chart-box"></div>
+        <div class="top10-table">
+          <table>
+            <thead>
+              <tr>
+                <th>排名</th>
+                <th>智能体名称</th>
+                <th>数值</th>
+                <th>创建人</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in top10TableData" :key="item.id" @mouseenter="highlightAgent(item.id)" @mouseleave="clearHighlight">
+                <td>{{ index + 1 }}</td>
+                <td class="truncate" :title="item.name">{{ item.name }}</td>
+                <td>
+                  <span v-if="top10Tab === 'totalCost'">{{ formatCurrency(item[top10Tab]) }}</span>
+                  <span v-else-if="top10Tab === 'totalTokens'">{{ formatToken(item[top10Tab]) }}</span>
+                  <span v-else>{{ formatNumber(item[top10Tab]) }}</span>
+                </td>
+                <td>{{ item.creator }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 成本 vs 使用 (四象限) -->
+    <section id="quadrant" class="section">
+      <div class="section-header">
+        <h2>智能体成本 vs 使用效率分析</h2>
+        <div class="controls">
+           <label><input type="checkbox" v-model="quadrantConfig.xLog"> X轴对数</label>
+           <label><input type="checkbox" v-model="quadrantConfig.yLog"> Y轴对数</label>
+        </div>
+      </div>
+      
+      <div class="quadrant-layout">
+        <!-- 左侧图表 -->
+        <div class="quadrant-chart-wrapper">
+          <div id="chart-quadrant" class="chart-box large"></div>
+        </div>
+        
+        <!-- 右侧智能洞察侧边栏 -->
+        <div class="insights-sidebar" :class="sidebarState">
+          
+          <!-- 状态 A: 全局概览 -->
+          <div v-if="sidebarState === 'global'" class="sidebar-content">
+            <h3>🔍 全局洞察</h3>
+            <div class="benchmark-info">
+              <p><strong>成本中位数:</strong> {{ formatCurrency(quadrantStats.medianCost) }} /轮</p>
+              <p><strong>轮次中位数:</strong> {{ formatNumber(quadrantStats.medianCalls) }} 轮</p>
+            </div>
+            
+            <div class="quadrant-stat-list">
+              <div class="stat-item red">
+                <div class="title">🔴 重点优化 (高耗高频)</div>
+                <div class="desc">占比 {{ quadrantStats.q1.percent }}% ({{ quadrantStats.q1.count }}个), 消耗了大量预算。</div>
+              </div>
+              <div class="stat-item orange">
+                <div class="title">🟠 需排查 (高耗低频)</div>
+                <div class="desc">占比 {{ quadrantStats.q2.percent }}% ({{ quadrantStats.q2.count }}个), 单次成本过高。</div>
+              </div>
+              <div class="stat-item green">
+                <div class="title">🟢 明星应用 (低耗高频)</div>
+                <div class="desc">占比 {{ quadrantStats.q4.percent }}% ({{ quadrantStats.q4.count }}个), ROI 最佳。</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 状态 B: 个体诊断 -->
+          <div v-else class="sidebar-content">
+            <div class="sidebar-header">
+              <button class="back-btn" @click="clearSelection">← 返回</button>
+              <h3>个体诊断</h3>
+            </div>
+            
+            <div class="agent-profile" v-if="selectedAgent">
+              <div class="agent-name">{{ selectedAgent.name }}</div>
+              <div class="agent-meta">
+                <span class="badge">{{ selectedAgent.type }}</span>
+                <span class="author">by {{ selectedAgent.creator }}</span>
+              </div>
+            </div>
+
+            <div class="diagnosis-list" v-if="selectedAgentDiagnosis.length > 0">
+              <div v-for="(diag, idx) in selectedAgentDiagnosis" :key="idx" class="diagnosis-card" :class="diag.type">
+                <div class="diag-icon">{{ diag.icon }}</div>
+                <div class="diag-content">
+                  <strong>{{ diag.title }}</strong>
+                  <p>{{ diag.message }}</p>
+                </div>
+              </div>
+            </div>
+            <div v-else class="empty-diagnosis">
+              ✅ 该智能体各项指标正常
+            </div>
+
+            <div class="action-area" v-if="selectedAgent">
+               <button class="btn-primary" @click="alert('跳转到详情页: ' + selectedAgent.id)">查看详细数据</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 群体分布 -->
+    <section id="distribution" class="section">
+       <div class="section-header">
+        <h2>核心指标分布</h2>
+        <select v-model="histoMetric">
+          <option value="totalCost">费用消耗</option>
+          <option value="totalTokens">Token消耗</option>
+          <option value="callCount">对话轮次</option>
+          <option value="userCount">用户数</option>
+        </select>
+      </div>
+      <div id="chart-histogram" class="chart-box"></div>
+    </section>
+
+    <!-- 6. 详细数据表 -->
+    <section id="detail" class="section">
+      <div class="section-header">
+        <h2>智能体详细数据表</h2>
+        <div class="table-actions">
+          <input type="text" v-model="searchQuery" placeholder="搜索智能体名称/ID...">
+          <button @click="exportData">导出 CSV</button>
+        </div>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th @click="sort('name')">智能体名称 <span class="sort-icon">⇅</span></th>
+              <th @click="sort('totalCost')">总花费 <span class="sort-icon">⇅</span></th>
+              <th @click="sort('callCount')">对话轮次 <span class="sort-icon">⇅</span></th>
+              <th @click="sort('avgCostPerCall')">平均成本 <span class="sort-icon">⇅</span></th>
+              <th @click="sort('successRate')">成功率 <span class="sort-icon">⇅</span></th>
+              <th @click="sort('creator')">创建者 <span class="sort-icon">⇅</span></th>
+              <th @click="sort('status')">状态 <span class="sort-icon">⇅</span></th>
+              <th>模型</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="agent in paginatedData" :key="agent.id" 
+                :class="{ 'selected': selectedAgent && selectedAgent.id === agent.id }"
+                @click="selectAgent(agent)"
+                @mouseenter="highlightAgent(agent.id)"
+                @mouseleave="clearHighlight">
+              <td class="fw-bold">{{ agent.name }}</td>
+              <td>{{ formatCurrency(agent.totalCost) }}</td>
+              <td>{{ formatNumber(agent.callCount) }}</td>
+              <td>{{ formatCurrency(agent.avgCostPerCall) }}</td>
+              <td :class="{'text-danger': agent.successRate < 90}">{{ agent.successRate }}%</td>
+              <td>{{ agent.creator }}</td>
+              <td><span class="status-badge" :class="agent.status === '已发布' ? 'success' : 'draft'">{{ agent.status }}</span></td>
+              <td>{{ agent.primaryModel }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <button :disabled="currentPage === 1" @click="currentPage--">上一页</button>
+        <span>第 {{ currentPage }} / {{ totalPages }} 页</span>
+        <button :disabled="currentPage === totalPages" @click="currentPage++">下一页</button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 脚本引入 -->
+  <script src="./js/utils.js"></script>
+  <script src="./js/mock.js"></script>
+  <script src="./js/charts.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bots App市场</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for webkit browsers */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f8fafc; /* slate-50 */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* slate-300 */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* slate-400 */
+        }
+        [x-cloak] { display: none !important; }
+        
+        .focus-ring:focus-visible {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); /* blue-500 with opacity */
+        }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+        .line-clamp-2 {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+         .app-action-buttons {
+            display: flex;
+            gap: 0.5rem; /* 8px */
+            padding: 0.75rem; /* 12px */
+            border-top: 1px solid #e5e7eb; /* slate-200 */
+            background-color: #f9fafb; /* slate-50 */
+        }
+        .app-action-buttons button {
+            flex-grow: 1;
+            padding-top: 0.375rem; /* 6px */
+            padding-bottom: 0.375rem; /* 6px */
+            padding-left: 0.5rem; /* 8px */
+            padding-right: 0.5rem; /* 8px */
+            font-size: 0.75rem; /* 12px */
+            font-weight: 500;
+            border-radius: 0.375rem; /* 6px */
+            transition: background-color 0.15s ease-in-out;
+        }
+    </style>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 custom-scrollbar font-sans antialiased" x-data="appMarketSpace()">
+
+    <!-- Main Content Area -->
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+
+        <!-- Page Header (Static) -->
+        <div class="mb-8" x-show="!viewingAppPackages">
+            <h1 class="text-3xl font-bold text-slate-800">App市场</h1>
+            <p class="text-sm text-slate-600 mt-1">发现、管理App及贡献App包。</p>
+        </div>
+        
+        <!-- Tabs Navigation, Search, Filters (Hidden when viewing app packages) -->
+        <div x-show="!viewingAppPackages">
+            <div class="border-b border-slate-200">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <template x-for="tabDefinition in tabDefinitions" :key="tabDefinition.id">
+                        <button @click="currentTab = tabDefinition.id; searchTerm = ''; selectedFilters.source = 'all'; selectedFilters.myAppStatus = 'all'; selectedFilters.platform = 'all';"
+                                :class="currentTab === tabDefinition.id ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'"
+                                class="whitespace-nowrap py-4 px-1 border-b-2 text-sm transition-all duration-150 ease-in-out focus-ring rounded-t-md">
+                            <span x-text="tabDefinition.name"></span>
+                            <span x-show="getTabCount(tabDefinition.id) > 0"
+                                  x-text="'(' + getTabCount(tabDefinition.id) + ')'"
+                                  class="ml-1.5 text-xs"
+                                  :class="currentTab === tabDefinition.id ? 'bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full' : 'bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full'">
+                            </span>
+                        </button>
+                    </template>
+                </nav>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="mt-6 mb-6 flex items-center gap-4">
+                <!-- 搜索框 - 左侧占主要空间 -->
+                <div class="relative flex-grow">
+                    <input type="search" x-model="searchTerm" @input.debounce.300ms="filterCurrentView"
+                           class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm placeholder-slate-500 bg-white"
+                           :placeholder="currentSearchPlaceholder">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- 筛选器下拉按钮 - 仅为旧的 internalMarket 保留，App市场不显示筛选按钮 -->
+                <div x-show="false && currentTab === 'internalMarket'" class="relative" x-data="{ isFilterOpen: false }" @keydown.escape.window="isFilterOpen = false" @click.away="isFilterOpen = false">
+                    <button @click="isFilterOpen = !isFilterOpen" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 py-2.5 px-4 rounded-lg shadow-sm transition-colors duration-200 flex items-center text-sm focus-ring whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                        </svg>
+                        筛选
+                        <span x-show="getActiveFilterCount() > 0" 
+                              x-text="'(' + getActiveFilterCount() + ')'"
+                              class="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full"></span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.29a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    
+                    <!-- 筛选器下拉菜单 -->
+                    <div x-show="isFilterOpen"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute left-0 mt-2 w-80 origin-top-left bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-30 border border-slate-200">
+                        <div class="p-4">
+                            <div class="space-y-4 text-sm">
+                                <!-- 来源筛选 -->
+                                <div>
+                                    <label for="filter-source-dropdown-internal" class="block font-medium text-slate-600 mb-2">来源</label>
+                                    <select x-model="selectedFilters.source" @change="filterCurrentView" id="filter-source-dropdown-internal" class="w-full p-2.5 border border-slate-300 rounded-md focus-ring bg-white text-sm">
+                                        <option value="all">全部</option>
+                                        <option value="official">Bots官方</option>
+                                        <option value="currentUser">我创建的</option>
+                                        <option value="othersShared">他人共享的</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- 我创建的应用状态筛选 -->
+                                <div x-show="selectedFilters.source === 'currentUser' || selectedFilters.source === 'all'">
+                                    <label for="filter-my-app-status-dropdown-internal" class="block font-medium text-slate-600 mb-2">我创建的应用状态</label>
+                                    <select x-model="selectedFilters.myAppStatus" @change="filterCurrentView" id="filter-my-app-status-dropdown-internal" 
+                                            :disabled="selectedFilters.source !== 'currentUser' && selectedFilters.source !== 'all'" 
+                                            class="w-full p-2.5 border border-slate-300 rounded-md focus-ring bg-white disabled:bg-slate-100 disabled:text-slate-400 text-sm">
+                                        <option value="all">全部</option>
+                                        <option value="sharedToInternal">已共享</option>
+                                        <option value="private">私有</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- 平台类型筛选 -->
+                                <div>
+                                    <label for="filter-platform-dropdown-internal" class="block font-medium text-slate-600 mb-2">平台类型</label>
+                                    <select x-model="selectedFilters.platform" @change="filterCurrentView" id="filter-platform-dropdown-internal" class="w-full p-2.5 border border-slate-300 rounded-md focus-ring bg-white text-sm">
+                                        <option value="all">全部平台</option>
+                                        <option value="Android">Android</option>
+                                        <option value="iOS">iOS</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- 重置按钮 -->
+                                <div class="pt-2 border-t border-slate-200">
+                                    <button @click="resetFilters(); isFilterOpen = false;" class="w-full text-sm text-blue-600 hover:text-blue-700 py-2 px-3 rounded-md border border-slate-300 hover:bg-slate-50 transition-colors">
+                                        重置筛选
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新建应用按钮 - 不再显示 -->
+                <div x-show="false && currentTab === 'appMarket'" class="flex-shrink-0">
+                    <button @click="openCreateAppModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-colors duration-200 flex items-center text-sm focus-ring whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                        </svg>
+                        新建应用
+                    </button>
+                </div>
+                
+                <!-- 我上传的包tab的上传按钮 - 右侧 -->
+                <div x-show="currentTab === 'myUploads'" class="flex-shrink-0">
+                    <button @click="openMyUploadPackageModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-colors duration-200 flex items-center text-sm focus-ring whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        上传新包
+                            </button>
+                </div>
+            </div>
+
+            <!-- 删除原来的筛选器区域 -->
+        </div>
+
+        <!-- Content Area based on Tab or App Details View -->
+        <div x-show="!isLoading">
+            <!-- App市场 (App Market) App Cards -->
+            <div x-show="currentTab === 'appMarket' && !viewingAppPackages">
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <template x-for="app in displayedAppMarketApps" :key="app.id">
+                        <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col overflow-hidden border border-slate-200">
+                            <div @click="viewPackagesForApp(app.id, 'appMarket')" class="p-6 flex-grow cursor-pointer">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center space-x-4 flex-1 min-w-0">
+                                        <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl flex-shrink-0 border border-slate-200"
+                                             :class="getAppIconBgColor(app.baseName)"
+                                             x-text="app.iconUrl ? '' : app.baseName.charAt(0).toUpperCase()">
+                                             <img x-if="app.iconUrl" :src="app.iconUrl" alt="icon" class="w-full h-full object-cover rounded-lg">
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <h3 class="text-md font-semibold text-slate-800 truncate" x-text="app.name" :title="app.name"></h3>
+                                            <div class="flex items-center mt-1 space-x-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                                  :class="getPlatformChipClass(app.platform)"
+                                                  x-text="app.platform"></span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                                      :class="app.type === 'internal' ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-purple-100 text-purple-700 border border-purple-200'"
+                                                      x-text="app.type === 'internal' ? '司内来源' : '司外来源'"></span>
+                                        </div>
+                                    </div>
+                                        </div>
+                                    <!-- Dropdown for app actions - removed for AppMarket as it's official-managed -->
+                                </div>
+                                <p class="text-sm text-slate-600 mb-3 line-clamp-2 leading-relaxed" :title="app.description" x-text="truncateText(app.description, 80)"></p>
+                                <div class="text-xs text-slate-500 space-y-1">
+                                    <p><strong>最新版本:</strong> <span class="font-medium text-slate-700" x-text="getAppLatestVersion(app.id) || 'N/A'"></span></p>
+                                    <p><strong>最近更新:</strong> <span class="font-medium text-slate-700" x-text="getAppLastUpdateTime(app.id) || 'N/A'"></span></p>
+                                    <p><strong>创建者:</strong> <span class="font-medium text-slate-700" x-text="app.creatorDisplayName"></span></p>
+                                </div>
+                            </div>
+                            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 text-right">
+                                <button @click="viewPackagesForApp(app.id, 'appMarket')" class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                                    查看版本列表 &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                    <div x-show="displayedAppMarketApps.length === 0 && !isLoading" class="col-span-full text-center py-16 text-slate-500">
+                        <svg class="mx-auto h-16 w-16 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" /></svg>
+                        <h3 class="text-lg font-medium text-slate-700">App市场暂无匹配应用</h3>
+                        <p class="text-sm" x-show="searchTerm">请调整搜索条件。</p>
+                        <p class="text-sm" x-show="!searchTerm">官方应用会在这里显示。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 我上传的包 (My Uploaded Packages) List -->
+            <div x-show="currentTab === 'myUploads' && !viewingAppPackages">
+                <div class="bg-white shadow-lg rounded-xl border border-slate-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">包名称</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">版本号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider max-w-xs">版本描述</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">PackageID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider max-w-sm">PackageURL</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">环境</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">上传时间</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">状态</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            <template x-for="pkg in displayedMyUploadedPackages" :key="pkg.id">
+                                <tr class="hover:bg-slate-50 transition-colors duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800" x-text="pkg.packageName || 'N/A'"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800" x-text="pkg.version"></td>
+                                    <td class="px-6 py-4 text-sm text-slate-600 max-w-xs"><div class="truncate" :title="pkg.description" x-text="truncateText(pkg.description, 60)"></div></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <div class="flex items-center space-x-1.5" x-show="pkg.packageId">
+                                            <span class="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded" x-text="truncateText(pkg.packageId, 20)" :title="pkg.packageId"></span>
+                                            <button @click="copyToClipboard(pkg.packageId, 'PackageID')" title="复制PackageID" class="text-slate-400 hover:text-blue-500 transition-colors focus-ring rounded"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                                        </div>
+                                        <span x-show="!pkg.packageId" class="text-xs text-slate-400">N/A</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm max-w-sm">
+                                        <div class="flex items-center space-x-1.5" x-show="pkg.packageUrl">
+                                            <span class="font-mono text-xs text-slate-600 truncate" x-text="truncateText(pkg.packageUrl, 30)" :title="pkg.packageUrl"></span>
+                                            <button @click="copyToClipboard(pkg.packageUrl, 'PackageURL')" title="复制PackageURL" class="text-slate-400 hover:text-blue-500 transition-colors focus-ring rounded flex-shrink-0"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                                        </div>
+                                         <span x-show="!pkg.packageUrl" class="text-xs text-slate-400">N/A</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" x-text="getEnvironmentText(pkg.environment)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" x-text="formatDate(pkg.uploadTime)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                                  :class="{
+                                                  'bg-yellow-100 text-yellow-800': pkg.status === 'pending_approval',
+                                                  'bg-green-100 text-green-800': pkg.status === 'approved',
+                                                  'bg-red-100 text-red-800': pkg.status === 'rejected',
+                                                  'bg-slate-100 text-slate-800': !pkg.status
+                                              }"
+                                              x-text="getPackageStatusText(pkg.status)">
+                                            </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex items-center space-x-3">
+                                            <button @click="downloadPackage(pkg.packageUrl)" class="text-blue-600 hover:text-blue-700 focus-ring rounded p-0.5" title="下载 (模拟)"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+                                            <button x-show="pkg.status === 'pending_approval' || pkg.status === 'rejected'" @click="openMyPackageEditor(pkg.id)" class="text-amber-600 hover:text-amber-700 focus-ring rounded p-0.5" title="编辑"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                                            <button x-show="pkg.status === 'pending_approval' || pkg.status === 'rejected'" @click="confirmDeleteMyPackage(pkg.id)" class="text-red-600 hover:text-red-700 focus-ring rounded p-0.5" title="删除"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr x-show="displayedMyUploadedPackages.length === 0 && !isLoading">
+                                <td colspan="9" class="px-6 py-16 text-center text-slate-500">
+                                    <svg class="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75h6.5m-6.5 3h6.5m-6.5 3h6.5m3-12.75l-3.75-3.75M17.25 3L21 6.75M17.25 3v3.75H13.5M6 20.25h12A2.25 2.25 0 0020.25 18V7.5A2.25 2.25 0 0018 5.25H6A2.25 2.25 0 003.75 7.5v10.5A2.25 2.25 0 006 20.25z" /></svg>
+                                    <p class="text-lg font-medium text-slate-700">您还没有上传任何包</p>
+                                    <p class="text-sm mt-1" x-show="searchTerm">请调整搜索条件。</p>
+                                    <p class="text-sm mt-1" x-show="!searchTerm">点击右上角的 "上传新包" 开始贡献吧！</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- App Packages Detail View -->
+            <div x-show="viewingAppPackages" x-cloak>
+                <div class="mb-6">
+                    <button @click="viewingAppPackages = null; packageSearchTerm = '';" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200 focus-ring rounded">
+                        <svg class="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                        返回 <span x-text="viewingAppPackages && viewingAppPackages.sourceTab === 'appMarket' ? 'App市场' : '应用列表'"></span>
+                    </button>
+                </div>
+
+                <div class="bg-white shadow-lg rounded-xl border border-slate-200 p-6 mb-8">
+                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="flex items-center space-x-4">
+                            <div x-show="viewingAppPackages" class="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl flex-shrink-0 border border-slate-200"
+                                 :class="getAppIconBgColor(viewingAppPackages ? viewingAppPackages.baseName : '')"
+                                 x-text="viewingAppPackages && viewingAppPackages.iconUrl ? '' : (viewingAppPackages ? viewingAppPackages.baseName.charAt(0).toUpperCase() : '')">
+                                 <img x-if="viewingAppPackages && viewingAppPackages.iconUrl" :src="viewingAppPackages.iconUrl" alt="icon" class="w-full h-full object-cover rounded-lg">
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800" x-text="viewingAppPackages ? viewingAppPackages.name : ''"></h2>
+                                <p class="text-sm text-slate-600 mt-1" x-text="viewingAppPackages ? viewingAppPackages.description : ''"></p>
+                                <p class="text-xs text-slate-500 mt-1">创建者: <span class="font-medium" x-text="viewingAppPackages ? viewingAppPackages.creatorDisplayName : ''"></span></p>
+                                <p x-show="viewingAppPackages && viewingAppPackages.sourceTab === 'appMarket' && viewingAppPackages.type" class="text-xs mt-0.5">来源: <span class="font-medium" :class="viewingAppPackages.type === 'internal' ? 'text-blue-600' : 'text-purple-600'" x-text="viewingAppPackages.type === 'internal' ? '司内来源' : '司外来源'"></span></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4 w-full sm:w-auto">
+                             <div class="relative flex-grow sm:flex-grow-0 sm:w-72">
+                                <input type="search" x-model="packageSearchTerm" @input.debounce.300ms="filterCurrentView"
+                                       class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm placeholder-slate-500 bg-white"
+                                       placeholder="搜索包版本、描述、PackageID...">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </div>
+                            <!-- "为此应用上传包" button - now hidden for AppMarket apps -->
+                            <div x-show="viewingAppPackages && viewingAppPackages.sourceTab !== 'appMarket' && ( (viewingAppPackages.type === 'internal' && (viewingAppPackages.owner === 'currentUser' || viewingAppPackages.owner === 'official')) )"> 
+                                <button @click="openUploadPackageModal(viewingAppPackages.id)" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-colors duration-200 flex items-center text-sm focus-ring whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                    为此应用上传包
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white shadow-lg rounded-xl border border-slate-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">版本号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider max-w-sm">包描述</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">PackageID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider max-w-sm">PackageURL</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">环境</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">上传者</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">上传时间</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            <template x-for="pkg in displayedAppPackages" :key="pkg.id">
+                                <tr class="hover:bg-slate-50 transition-colors duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800" x-text="pkg.version"></td>
+                                    <td class="px-6 py-4 text-sm text-slate-600 max-w-sm"><div class="truncate" :title="pkg.description" x-text="truncateText(pkg.description, 80)"></div></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <div class="flex items-center space-x-1.5">
+                                            <span class="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded" x-text="truncateText(pkg.packageId, 20)" :title="pkg.packageId"></span>
+                                            <button @click="copyToClipboard(pkg.packageId, 'PackageID')" title="复制PackageID" class="text-slate-400 hover:text-blue-500 transition-colors focus-ring rounded"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm max-w-sm">
+                                        <div class="flex items-center space-x-1.5">
+                                            <span class="font-mono text-xs text-slate-600 truncate" x-text="truncateText(pkg.packageUrl, 30)" :title="pkg.packageUrl"></span>
+                                            <button @click="copyToClipboard(pkg.packageUrl, 'PackageURL')" title="复制PackageURL" class="text-slate-400 hover:text-blue-500 transition-colors focus-ring rounded flex-shrink-0"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                                        </div>
+                                         <span x-show="!pkg.packageUrl" class="text-xs text-slate-400">N/A</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" x-text="getEnvironmentText(pkg.environment)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600" x-text="pkg.uploaderDisplayName"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" x-text="formatDate(pkg.uploadTime)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex items-center space-x-3">
+                                            <button @click="downloadPackage(pkg.packageUrl)" class="text-blue-600 hover:text-blue-700 focus-ring rounded p-0.5" title="下载 (模拟)"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+                                            <button x-show="pkg.status === 'pending_approval' || pkg.status === 'rejected'" @click="openMyPackageEditor(pkg.id)" class="text-amber-600 hover:text-amber-700 focus-ring rounded p-0.5" title="编辑"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                                            <button x-show="pkg.status === 'pending_approval' || pkg.status === 'rejected'" @click="confirmDeleteMyPackage(pkg.id)" class="text-red-600 hover:text-red-700 focus-ring rounded p-0.5" title="删除"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr x-show="displayedAppPackages.length === 0 && !isLoading">
+                                <td colspan="8" class="px-6 py-16 text-center text-slate-500"> 
+                                   <svg class="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                    <p class="text-lg font-medium text-slate-700">此应用下暂无匹配的包</p>
+                                    <p class="text-sm mt-1" x-show="packageSearchTerm">请调整搜索条件。</p>
+                                    <p class="text-sm mt-1" x-show="!packageSearchTerm && viewingAppPackages && viewingAppPackages.type === 'internal' && (viewingAppPackages.owner === 'currentUser' || viewingAppPackages.owner === 'official')">您可以为此应用上传第一个包。</p>
+                                    <p class="text-sm mt-1" x-show="!packageSearchTerm && viewingAppPackages && viewingAppPackages.type === 'external'">官方暂未提供包。</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading State -->
+        <div x-show="isLoading" class="py-16 text-center">
+            <div class="inline-flex items-center text-slate-500">
+                <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                正在加载应用市场数据...
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Create/Edit App Modal -->
+
+
+
+    <!-- Upload New Package Modal -->
+    <div x-show="isUploadPackageModalOpen" x-cloak class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" @click.self="closeUploadPackageModal()" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar modal-content" @click.stop x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+            <div class="px-6 py-4 border-b border-slate-200 sticky top-0 bg-white z-10">
+                <h3 class="text-lg font-semibold text-slate-800">上传新包</h3>
+                <p class="text-sm text-slate-600 mt-0.5" x-show="newPackage.uploadContextAppId && !newPackage.selectOrCreateApp" x-text="'为应用: ' + getAppNameById(newPackage.uploadContextAppId)"></p>
+            </div>
+            <form @submit.prevent="handleUploadNewPackage" class="p-6">
+                <div class="space-y-5">
+                    <div x-show="newPackage.selectOrCreateApp"> <!-- Only show app selection if specifically for "仅上传包" -->
+                        <label for="belongingApp" class="block text-sm font-medium text-slate-700 mb-1">归属应用 <span class="text-red-500">*</span></label>
+                        <select x-model="newPackage.appId" id="belongingApp" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm bg-white">
+                            <option value="">-- 请选择一个应用 --</option>
+                            <!-- REMOVED "[+] 新建应用并上传包" option from here -->
+                            <template x-for="app in allApps.filter(a => (a.type === 'internal' && (a.owner === 'currentUser' || a.owner === 'official')) || a.type === 'external')" :key="app.id">
+                                <option :value="app.id" x-text="app.name + (app.type === 'internal' ? (app.owner === USER_ID ? ' (我创建的)' : (app.owner === 'official' ? ' (官方司内)' : '')) : ' (司外)')"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div x-show="newPackage.isMyUploadFlow">
+                        <label for="newPackageName" class="block text-sm font-medium text-slate-700 mb-1">包名称 <span class="text-red-500">*</span></label>
+                        <input type="text" x-model.trim="newPackage.packageName" id="newPackageName" placeholder="例如: 我的Excel助手" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm">
+                        <p class="mt-1 text-xs text-slate-500">为您的包指定一个易于识别的名称。</p>
+                    </div>
+
+                    <div x-show="newPackage.isMyUploadFlow">
+                        <label for="newPackageEnvironment" class="block text-sm font-medium text-slate-700 mb-1">环境 <span class="text-red-500">*</span></label>
+                        <select x-model="newPackage.environment" id="newPackageEnvironment" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm bg-white">
+                            <option value="online">线上环境</option>
+                            <option value="offline">线下环境</option>
+                            <option value="backup">备机环境</option>
+                        </select>
+                        <p class="mt-1 text-xs text-slate-500">选择此包适用的部署环境。</p>
+                    </div>
+
+                    <div>
+                        <label for="newPackageFile" class="block text-sm font-medium text-slate-700 mb-1">应用包文件 <span class="text-red-500">*</span></label>
+                        <input type="file" id="newPackageFile" @change="newPackage.file = $event.target.files[0]" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer focus-ring">
+                         <p x-show="newPackage.file" class="mt-1 text-xs text-slate-500" x-text="'已选择: ' + (newPackage.file ? newPackage.file.name : '')"></p>
+                    </div>
+                    <div>
+                        <label for="newPackageVersion" class="block text-sm font-medium text-slate-700 mb-1">版本号 <span class="text-red-500">*</span></label>
+                        <input type="text" x-model.trim="newPackage.version" id="newPackageVersion" placeholder="例如: 1.0.0 或 24.3.12" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm">
+                    </div>
+                    <div>
+                        <label for="newPackageDescription" class="block text-sm font-medium text-slate-700 mb-1">包描述</label>
+                        <textarea x-model="newPackage.description" id="newPackageDescription" rows="3" placeholder="简要说明此版本的更新内容或特性..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm resize-y"></textarea>
+                    </div>
+                    <!-- <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">在应用内共享状态</label>
+                        <div class="flex space-x-6">
+                            <label class="flex items-center">
+                                <input type="radio" x-model="newPackage.isSharedInApp" :value="true" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">共享 (应用内默认可见)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" x-model="newPackage.isSharedInApp" :value="false" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">私有 (应用内仅自己可见)</span>
+                            </label>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500">包的最终市场可见性还取决于其归属应用的共享状态。</p>
+                    </div> -->
+                </div>
+                <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                    <button type="button" @click="closeUploadPackageModal()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200 focus-ring">取消</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors duration-200 focus-ring">确认上传</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Package Modal -->
+    <div x-show="isEditPackageModalOpen" x-cloak class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" @click.self="isEditPackageModalOpen = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar modal-content" @click.stop x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+            <div class="px-6 py-4 border-b border-slate-200 sticky top-0 bg-white z-10">
+                <h3 class="text-lg font-semibold text-slate-800">编辑包信息 (旧)</h3>
+                <p class="text-sm text-slate-600 mt-0.5" x-show="editingPackage">
+                    <span x-show="editingPackage.uploader === USER_ID && editingPackage.packageName">
+                        包: <span x-text="editingPackage.packageName"></span> - 版本: <span x-text="editingPackage.version"></span>
+                    </span>
+                    <span x-show="!(editingPackage.uploader === USER_ID && editingPackage.packageName)">
+                        应用: <span x-text="getAppNameById(editingPackage.appId) || 'N/A'"></span> - 版本: <span x-text="editingPackage.version"></span>
+                    </span>
+                </p>
+            </div>
+            <form @submit.prevent="handleUpdatePackageInfo" x-if="editingPackage" class="p-6">
+                <div class="space-y-5">
+                    <div x-show="editingPackage.uploader === USER_ID">
+                        <label for="editPackageName" class="block text-sm font-medium text-slate-700 mb-1">包名称 <span class="text-red-500">*</span></label>
+                        <input type="text" x-model.trim="editingPackage.packageName" id="editPackageName" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm" placeholder="例如: 我的Excel助手">
+                    </div>
+                    <div x-show="editingPackage.uploader === USER_ID">
+                        <label for="editPackageEnvironment" class="block text-sm font-medium text-slate-700 mb-1">环境 <span class="text-red-500">*</span></label>
+                        <select x-model="editingPackage.environment" id="editPackageEnvironment" required 
+                                :disabled="!(editingPackage.uploader === USER_ID && (editingPackage.status === 'pending_approval' || editingPackage.status === 'rejected'))"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm bg-white"
+                                :class="!(editingPackage.uploader === USER_ID && (editingPackage.status === 'pending_approval' || editingPackage.status === 'rejected')) ? 'disabled:bg-slate-100 disabled:text-slate-500' : ''">
+                            <option value="online">线上环境</option>
+                            <option value="offline">线下环境</option>
+                            <option value="backup">备机环境</option>
+                        </select>
+                        <p class="mt-1 text-xs text-slate-500">选择此包适用的部署环境。</p>
+                    </div>
+                    <div>
+                        <label for="editPackageVersion" class="block text-sm font-medium text-slate-700 mb-1">版本号 <span class="text-red-500" x-show="editingPackage.uploader === USER_ID && (editingPackage.status === 'pending_approval' || editingPackage.status === 'rejected')">*</span></label>
+                        <input type="text" x-model.trim="editingPackage.version" id="editPackageVersion" 
+                               :disabled="!(editingPackage.uploader === USER_ID && (editingPackage.status === 'pending_approval' || editingPackage.status === 'rejected'))"
+                               :required="editingPackage.uploader === USER_ID && (editingPackage.status === 'pending_approval' || editingPackage.status === 'rejected')"
+                               class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm"
+                               :class="!(editingPackage.uploader === USER_ID && (editingPackage.status === 'pending_approval' || editingPackage.status === 'rejected')) ? 'bg-slate-100 text-slate-500' : ''">
+                    </div>
+                    <div>
+                        <label for="editPackageDescription" class="block text-sm font-medium text-slate-700 mb-1">包描述</label>
+                        <textarea x-model="editingPackage.description" id="editPackageDescription" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm resize-y"></textarea>
+                    </div>
+                    <!-- PackageURL is now auto-generated and not editable by user -->
+                    <!-- <div x-show="canManagePackage(editingPackage)"> 
+                        <label class="block text-sm font-medium text-slate-700 mb-2">在应用内共享状态</label>
+                        <div class="flex space-x-6">
+                            <label class="flex items-center">
+                                <input type="radio" x-model="editingPackage.isSharedInApp" :value="true" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">共享 (应用内默认可见)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" x-model="editingPackage.isSharedInApp" :value="false" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">私有 (应用内仅自己可见)</span>
+                            </label>
+                        </div>
+                         <p class="mt-1 text-xs text-slate-500">包的最终市场可见性还取决于其归属应用的共享状态。</p>
+                    </div> -->
+                </div>
+                <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                    <button type="button" @click="isEditPackageModalOpen = false" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200 focus-ring">取消</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors duration-200 focus-ring">保存更改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- START: New Dedicated Modal for Editing "My Uploaded Packages" -->
+    <div x-show="isMyPackageEditModalOpen" x-cloak class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" @click.self="isMyPackageEditModalOpen = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar modal-content" @click.stop x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+            <div class="px-6 py-4 border-b border-slate-200 sticky top-0 bg-white z-10">
+                <h3 class="text-lg font-semibold text-slate-800">编辑我上传的包</h3>
+                <p class="text-sm text-slate-600 mt-0.5" x-show="myPackageToEdit && myPackageToEdit.packageName">
+                    包: <span x-text="myPackageToEdit.packageName"></span> - 版本: <span x-text="myPackageToEdit.version"></span>
+                </p>
+            </div>
+            <form @submit.prevent="saveMyEditedPackage" x-if="myPackageToEdit" class="p-6">
+                <div class="space-y-5">
+                    <div>
+                        <label for="myEditPackageName" class="block text-sm font-medium text-slate-700 mb-1">包名称 <span class="text-red-500">*</span></label>
+                        <input type="text" x-model.trim="myPackageToEdit.packageName" id="myEditPackageName" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm" placeholder="例如: 我的Excel助手">
+                    </div>
+                    <div>
+                        <label for="myEditPackageEnvironment" class="block text-sm font-medium text-slate-700 mb-1">环境 <span class="text-red-500">*</span></label>
+                        <select x-model="myPackageToEdit.environment" id="myEditPackageEnvironment" required 
+                                :disabled="!(myPackageToEdit.status === 'pending_approval' || myPackageToEdit.status === 'rejected')"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm bg-white"
+                                :class="!(myPackageToEdit.status === 'pending_approval' || myPackageToEdit.status === 'rejected') ? 'disabled:bg-slate-100 disabled:text-slate-500' : ''">
+                            <option value="online">线上环境</option>
+                            <option value="offline">线下环境</option>
+                            <option value="backup">备机环境</option>
+                        </select>
+                        <p class="mt-1 text-xs text-slate-500">仅在"待审批"或"已拒绝"状态下可修改环境。</p>
+                    </div>
+                    <div>
+                        <label for="myEditPackageVersion" class="block text-sm font-medium text-slate-700 mb-1">版本号 <span class="text-red-500">*</span></label>
+                        <input type="text" x-model.trim="myPackageToEdit.version" id="myEditPackageVersion" 
+                               :disabled="!(myPackageToEdit.status === 'pending_approval' || myPackageToEdit.status === 'rejected')"
+                               required
+                               class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm"
+                               :class="!(myPackageToEdit.status === 'pending_approval' || myPackageToEdit.status === 'rejected') ? 'bg-slate-100 text-slate-500' : ''">
+                        <p class="mt-1 text-xs text-slate-500">仅在"待审批"或"已拒绝"状态下可修改版本号。</p>
+                    </div>
+                    <div>
+                        <label for="myEditPackageDescription" class="block text-sm font-medium text-slate-700 mb-1">包描述</label>
+                        <textarea x-model="myPackageToEdit.description" id="myEditPackageDescription" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm resize-y"></textarea>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                    <button type="button" @click="isMyPackageEditModalOpen = false" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200 focus-ring">取消</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors duration-200 focus-ring">保存更改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- END: New Dedicated Modal -->
+
+    <!-- Generic Confirmation Modal -->
+    <div x-show="isConfirmModalOpen" x-cloak class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" @click.self="closeConfirmModal()" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md modal-content" @click.stop x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+            <div class="p-6 text-center">
+                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full" :class="confirmModalContent.iconBgClass || 'bg-red-100'">
+                    <svg :class="confirmModalContent.iconColorClass || 'text-red-600'" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" x-html="confirmModalContent.iconPath || '<path stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; d=&quot;M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z&quot; />'"></svg>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-800 mt-5" x-text="confirmModalContent.title"></h3>
+                <p class="text-sm text-slate-600 mt-2 mb-6 whitespace-pre-line" x-text="confirmModalContent.message"></p>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 rounded-b-xl">
+                <button type="button" @click="closeConfirmModal()" class="w-full sm:w-auto mt-2 sm:mt-0 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200 focus-ring" x-text="confirmModalContent.cancelButtonText || '取消'"></button>
+                <button type="button" @click="confirmModalContent.onConfirm(); closeConfirmModal();"
+                        :class="confirmModalContent.confirmButtonClass || 'bg-red-600 hover:bg-red-700 text-white'"
+                        class="w-full sm:w-auto px-4 py-2 text-sm font-medium border border-transparent rounded-lg transition-colors duration-200 focus-ring"
+                        x-text="confirmModalContent.confirmButtonText || '确认'"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div x-show="toast.show" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 transform translate-y-0 sm:scale-100" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 transform translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 transform translate-y-4 sm:translate-y-0 sm:scale-95" 
+        class="fixed bottom-5 right-5 bg-slate-800 text-white py-3 px-5 rounded-lg shadow-xl z-[100] flex items-center space-x-3 max-w-xs sm:max-w-sm" role="alert">
+       <div x-show="toast.type === 'success'" class="text-green-400"><svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></div>
+       <div x-show="toast.type === 'error'" class="text-red-400"><svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></div>
+        <div x-show="toast.type === 'warning'" class="text-amber-400"><svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg></div>
+       <p class="text-sm font-medium" x-text="toast.message"></p>
+       <button @click="toast.show = false" class="text-slate-400 hover:text-slate-200 transition-colors -mr-1 p-1 rounded-full focus-ring"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+   </div>
+
+    <!-- NEW: Create App AND Upload First Package Composite Modal -->
+    <div x-show="isCreateAppAndUploadPackageModalOpen" x-cloak class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" @click.self="closeCreateAppAndUploadPackageModal()" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto custom-scrollbar modal-content" @click.stop x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+            <div class="px-6 py-4 border-b border-slate-200 sticky top-0 bg-white z-10">
+                <h3 class="text-xl font-semibold text-slate-800">新建应用并上传首个包</h3>
+                <p class="text-sm text-slate-600 mt-0.5">填写新应用的信息及其第一个应用包的详细信息。</p>
+            </div>
+            <form @submit.prevent="handleCreateAppAndFirstPackage" class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                    <!-- App Information Section -->
+                    <div class="md:col-span-2 pb-3 mb-3 border-b border-slate-200">
+                        <h4 class="text-md font-semibold text-blue-700">1. 应用信息</h4>
+                    </div>
+                    <div>
+                        <label for="compAppName" class="block text-sm font-medium text-slate-700 mb-1">应用名称 <span class="text-red-500">*</span></label>
+                        <input type="text" x-model.trim="newAppWithFirstPackage.appName" id="compAppName" placeholder="例如: 智能助手 (Android)" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm">
+                        <p class="mt-1 text-xs text-slate-500">建议包含平台，如 "(Android)"。</p>
+                    </div>
+                    <div>
+                        <label for="compAppPlatform" class="block text-sm font-medium text-slate-700 mb-1">平台类型 <span class="text-red-500">*</span></label>
+                        <select x-model="newAppWithFirstPackage.appPlatform" id="compAppPlatform" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm bg-white">
+                            <option value="">-- 选择平台 --</option>
+                            <option value="Android">Android</option>
+                            <option value="iOS">iOS</option>
+                            <!-- Other platforms if needed -->
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="compAppDescription" class="block text-sm font-medium text-slate-700 mb-1">应用描述</label>
+                        <textarea x-model="newAppWithFirstPackage.appDescription" id="compAppDescription" rows="2" placeholder="详细描述应用的功能、用途等..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm resize-y"></textarea>
+                    </div>
+                    <div>
+                        <label for="compAppIcon" class="block text-sm font-medium text-slate-700 mb-1">应用图标 (图片文件)</label>
+                        <input type="file" id="compAppIcon" @change="newAppWithFirstPackage.appIconFile = $event.target.files[0]; newAppWithFirstPackage.appIconUrl = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null" accept="image/png, image/jpeg, image/gif, image/svg+xml" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer focus-ring">
+                        <div x-show="newAppWithFirstPackage.appIconUrl" class="mt-2">
+                            <img :src="newAppWithFirstPackage.appIconUrl" alt="图标预览" class="h-12 w-12 rounded-lg object-cover border border-slate-200">
+                            <button type="button" @click="newAppWithFirstPackage.appIconFile = null; newAppWithFirstPackage.appIconUrl = null" class="mt-1 text-xs text-red-500 hover:text-red-700" x-show="newAppWithFirstPackage.appIconFile">清除</button>
+                        </div>
+                        <!-- <p class="mt-1 text-xs text-slate-500">可选。建议正方形。</p> -->
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">应用初始共享状态</label>
+                        <div class="flex space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" x-model="newAppWithFirstPackage.appIsSharedToInternal" :value="true" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">共享到司内</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" x-model="newAppWithFirstPackage.appIsSharedToInternal" :value="false" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">私有</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Package Information Section -->
+                    <div class="md:col-span-2 pt-4 mt-4 border-t border-slate-200">
+                         <h4 class="text-md font-semibold text-blue-700">2. 首个包信息</h4>
+                    </div>
+                    <div>
+                        <label for="compPackageFile" class="block text-sm font-medium text-slate-700 mb-1">应用包文件 <span class="text-red-500">*</span></label>
+                        <input type="file" id="compPackageFile" @change="newAppWithFirstPackage.packageFile = $event.target.files[0]" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer focus-ring">
+                         <p x-show="newAppWithFirstPackage.packageFile" class="mt-1 text-xs text-slate-500" x-text="'已选择: ' + (newAppWithFirstPackage.packageFile ? newAppWithFirstPackage.packageFile.name : '')"></p>
+                    </div>
+                     <div>
+                        <label for="compPackageVersion" class="block text-sm font-medium text-slate-700 mb-1">版本号 <span class="text-red-500">*</span></label>
+                        <input type="text" x-model.trim="newAppWithFirstPackage.packageVersion" id="compPackageVersion" placeholder="例如: 1.0.0" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="compPackageDescription" class="block text-sm font-medium text-slate-700 mb-1">包描述</label>
+                        <textarea x-model="newAppWithFirstPackage.packageDescription" id="compPackageDescription" rows="2" placeholder="简要说明此版本的更新内容或特性..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm resize-y"></textarea>
+                    </div>
+                     <!-- <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">包在应用内共享状态</label>
+                        <div class="flex space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" x-model="newAppWithFirstPackage.packageIsSharedInApp" :value="true" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">共享</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" x-model="newAppWithFirstPackage.packageIsSharedInApp" :value="false" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">私有</span>
+                            </label>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-500">若应用为私有状态，则包的最终可见性为私有。</p>
+                    </div> -->
+                </div>
+                <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                    <button type="button" @click="closeCreateAppAndUploadPackageModal()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200 focus-ring">取消</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors duration-200 focus-ring">创建应用并上传包</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function appMarketSpace() {
+        const USER_ID = 'currentUser'; // Simulate current user ID
+
+        return {
+            // State
+            currentTab: 'appMarket', // Default to new AppMarket tab
+            searchTerm: '',
+            packageSearchTerm: '', 
+            isLoading: true,
+            allApps: [],        
+            allPackages: [],    
+
+            selectedFilters: { 
+                source: 'all', 
+                myAppStatus: 'all', 
+                platform: 'all' 
+            },
+
+            viewingAppPackages: null, // Stores { ...app, sourceTab: 'appMarket'/'myUploads' }
+
+            isCreateAppModalOpen: false,
+            currentAppEditingId: null, 
+            newOrEditingApp: {
+                name: '',
+                description: '',
+                iconFile: null, 
+                iconUrl: null,  
+                platform: '',
+                isSharedToInternal: true, 
+            },
+
+            isUploadPackageModalOpen: false,
+            newPackage: { 
+                appId: '', 
+                uploadContextAppId: null, 
+                selectOrCreateApp: false, 
+                isMyUploadFlow: false, // New flag for "我上传的包" uploads
+                packageName: '',       // New field for "我上传的包"
+                file: null, 
+                version: '', 
+                description: '', 
+                isSharedInApp: true,
+                environment: 'online' // Added: Default environment
+            },
+
+            isEditPackageModalOpen: false,
+            editingPackage: null, 
+
+            isConfirmModalOpen: false,
+            confirmModalContent: { title: '', message: '', onConfirm: () => {}, onCancel: () => {}, confirmButtonText: '确认', cancelButtonText: '取消', confirmButtonClass: 'bg-red-600 hover:bg-red-700 text-white', iconPath: '', iconBgClass: '', iconColorClass: '' },
+            
+            toast: { show: false, message: '', type: 'success' },
+
+            isCreateAppAndUploadPackageModalOpen: false,
+            newAppWithFirstPackage: {
+                appName: '', appDescription: '', appIconFile: null, appIconUrl: null, appPlatform: '', appIsSharedToInternal: true,
+                packageFile: null, packageVersion: '', packageDescription: '', packageIsSharedInApp: true,
+            },
+
+            // START: New state and structure for dedicated "My Uploads" package edit modal
+            isMyPackageEditModalOpen: false,
+            myPackageToEdit: {
+                id: null,
+                packageName: '',
+                version: '',
+                description: '',
+                environment: 'online',
+                status: '' // Will be populated when opening modal
+            },
+            // END: New state
+
+            init() {
+                this.isLoading = true;
+                setTimeout(() => {
+                    this.allApps = [
+                        // Sample Data: Ensure 'type' is present ('internal' or 'external')
+                        { id: 'app-im-1', baseName: '美团', name: '美团 (Android)', platform: 'Android', type: 'internal', description: '聚合多种生活服务，吃喝玩乐一站解决。', iconUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80', owner: 'official', creatorDisplayName: 'Bots官方', isSharedToInternal: true, createdAt: '2023-07-15' },
+                        { id: 'app-em-1', baseName: '京东', name: '京东 (Android)', platform: 'Android', type: 'external', description: '综合性在线购物平台，提供各类商品和服务。', iconUrl: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80', owner: 'official', creatorDisplayName: 'Bots官方 (引入)', isSharedToInternal: true, createdAt: '2023-02-10' },
+                        // Add more sample apps with 'type'
+                    ];
+                    this.allPackages = [
+                        { id: 'pkg-mt-1', appId: 'app-im-1', packageName: null, version: '10.2.0', description: '美团App最新版，优化体验。', packageId: 'com.meituan.android.v1020', packageUrl: `https://example.com/pkg-mt-1_v10.2.0.apk`, uploader: 'official', uploaderDisplayName: 'Bots官方', uploadTime: '2023-10-25', isSharedInApp: true, status: 'approved', environment: 'online' },
+                        { id: 'pkg-jd-1', appId: 'app-em-1', packageName: null, version: '6.5.3', description: '官方最新稳定版。', packageId: 'com.jingdong.android.v653', packageUrl: `https://example.com/pkg-jd-1_v6.5.3.apk`, uploader: 'official', uploaderDisplayName: 'Bots官方', uploadTime: '2023-11-10', isSharedInApp: true, status: 'approved', environment: 'online' },
+                        // Example for "My Uploaded Package"
+                        { id: 'pkg-my-1', appId: null, packageName: '我的Excel助手', version: '1.0.1', description: '用于处理日常表格，提高效率，修复了之前版本的bug。', packageId: 'my.excel.helper.v101', packageUrl: `https://example.com/my-excel-helper_v1.0.1.zip`, uploader: USER_ID, uploaderDisplayName: '我', uploadTime: '2023-12-01', isSharedInApp: false, status: 'pending_approval', environment: 'offline' },
+                    ];
+                    this.allApps.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    this.isLoading = false;
+                }, 800);
+            },
+
+            tabDefinitions: [
+                { id: 'appMarket', name: 'App市场' },
+                { id: 'myUploads', name: '我上传的包' },
+            ],
+            
+            get currentSearchPlaceholder() {
+                if (this.currentTab === 'myUploads') return '搜索包名称、版本、描述、PackageID...';
+                if (this.viewingAppPackages) return '搜索包版本、描述、PackageID...';
+                // For AppMarket tab
+                return '搜索应用名称、描述、创建者...';
+            },
+
+            // Computed Properties for display counts
+            get appMarketAppsCount() { return this.displayedAppMarketApps.length; },
+            get myUploadedPackagesCount() { return this.displayedMyUploadedPackages.length; },
+
+            // Computed Properties for display lists
+            get displayedAppMarketApps() {
+                // All apps are shown in AppMarket, filtering by platform and search term
+                let apps = this.allApps; // No type filter here, shows all internal and external
+
+                // Filter by platform (if a platform filter is added back for AppMarket)
+                // if (this.selectedFilters.platform !== 'all') {
+                //     apps = apps.filter(app => app.platform === this.selectedFilters.platform);
+                // }
+                
+                        // Search term filter
+                if (this.searchTerm.trim() !== '') {
+                        const lowerSearch = this.searchTerm.toLowerCase();
+                    apps = apps.filter(app => 
+                        app.name.toLowerCase().includes(lowerSearch) || 
+                               app.description.toLowerCase().includes(lowerSearch) ||
+                        app.creatorDisplayName.toLowerCase().includes(lowerSearch)
+                    );
+                    }
+                return apps.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+            },
+            
+            get displayedMyUploadedPackages() {
+                const packages = this.allPackages.filter(pkg => pkg.uploader === USER_ID); // Only user's packages
+                if (this.searchTerm.trim() === '') return packages.sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+                const lowerSearch = this.searchTerm.toLowerCase();
+                return packages.filter(pkg => {
+                    const pkgName = pkg.packageName?.toLowerCase() || '';
+                    const appName = pkg.appId ? (this.getAppNameById(pkg.appId)?.toLowerCase() || '') : ''; // Keep for potential legacy data or future use
+                    return pkg.version.toLowerCase().includes(lowerSearch) ||
+                           pkg.description.toLowerCase().includes(lowerSearch) ||
+                           (pkg.packageId && pkg.packageId.toLowerCase().includes(lowerSearch)) ||
+                           pkgName.includes(lowerSearch) ||
+                           appName.includes(lowerSearch); // Search appName if it exists
+                }).sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+            },
+
+             get displayedAppPackages() { 
+                if (!this.viewingAppPackages) return [];
+                const parentAppId = this.viewingAppPackages.id;
+                // For "AppMarket", all packages of the selected app are shown.
+                // For "MyUploads" (if we ever view packages OF a "my uploaded package" item, which is not the current design)
+                // the logic would be different. Current design views packages of an *AppMarket app*.
+                
+                let packages = this.allPackages.filter(pkg => pkg.appId === parentAppId);
+                
+                // In AppMarket, all packages of an app are generally visible as they are "official"
+                // No complex sharing logic like before for internal apps, as users don't manage them here.
+
+                if (this.packageSearchTerm.trim() === '') return packages.sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime)); 
+                
+                const lowerSearch = this.packageSearchTerm.toLowerCase();
+                return packages.filter(pkg => 
+                    pkg.version.toLowerCase().includes(lowerSearch) ||
+                    pkg.description.toLowerCase().includes(lowerSearch) ||
+                    (pkg.packageId && pkg.packageId.toLowerCase().includes(lowerSearch))
+                ).sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+            },
+
+            getAppById(appId) {
+                return this.allApps.find(app => app.id === appId);
+            },
+            getAppNameById(appId) { // Remains useful for displaying app name if a package is linked
+                return this.getAppById(appId)?.name || '';
+            },
+            getPackagesForApp(appId) { 
+                return this.allPackages.filter(pkg => pkg.appId === appId).sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+            },
+            getAppLatestVersion(appId) { // For AppMarket, all packages are candidates
+                const appPackages = this.allPackages.filter(p => p.appId === appId)
+                                       .sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+                return appPackages.length > 0 ? appPackages[0].version : 'N/A'; 
+            },
+            getAppLastUpdateTime(appId) { // For AppMarket
+                const appPackages = this.allPackages.filter(p => p.appId === appId)
+                                       .sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+                return appPackages.length > 0 ? this.formatDate(appPackages[0].uploadTime) : 'N/A';
+            },
+            canManagePackage(pkg) { // User cannot manage packages in AppMarket. For "My Uploads", different rules apply.
+                if (!pkg) return false;
+                if (this.viewingAppPackages && this.viewingAppPackages.sourceTab === 'appMarket') {
+                    return false; // No management of packages from AppMarket apps
+                }
+                // For packages in "My Uploads" list
+                if (pkg.uploader === USER_ID && (pkg.status === 'pending_approval' || pkg.status === 'rejected')) {
+                    return true; // Can edit/delete if pending or rejected
+                }
+                return false;
+            },
+
+            filterCurrentView() { /* Triggers computed properties */ },
+            resetFilters() { // Simplified, as AppMarket has fewer filters now
+                this.searchTerm = '';
+                this.selectedFilters = { source: 'all', myAppStatus: 'all', platform: 'all' }; // Reset all for safety
+                this.filterCurrentView();
+            },
+            
+            viewPackagesForApp(appId, sourceTab) { // sourceTab indicates where user clicked from
+                const app = this.getAppById(appId);
+                if (app) {
+                    this.viewingAppPackages = { ...app, sourceTab: sourceTab }; 
+                    this.packageSearchTerm = ''; 
+                }
+            },
+
+            openCreateAppModal(appIdToEdit = null) {
+                // App creation is now disallowed from UI for users
+                this.showToast('不允许新建应用。应用由管理员统一创建。', 'warning');
+                        return;
+            },
+            closeCreateAppModal() {
+                this.isCreateAppModalOpen = false;
+                // ... (reset form)
+            },
+            async handleCreateOrUpdateApp() {
+                // This function would ideally not be called if UI prevents it.
+                // If somehow called, ensure it respects new rules (e.g. only admin can truly create)
+                this.showToast('操作无效。应用管理权限已变更。', 'error');
+                this.closeCreateAppModal();
+            },
+            
+            openMyUploadPackageModal() { // New function for "我上传的包" tab
+                this.newPackage = {
+                    appId: null, // Not linked to a market app
+                    uploadContextAppId: null,
+                    selectOrCreateApp: false,
+                    isMyUploadFlow: true, // Crucial flag
+                    packageName: '',    // User will fill this
+                    file: null,
+                    version: '',
+                    description: '',
+                    isSharedInApp: false, // Not applicable, will be pending approval
+                    status: 'pending_approval', // Default status
+                    environment: 'online' // Added: Default environment for new uploads
+                };
+                this.isUploadPackageModalOpen = true;
+            },
+
+            openUploadPackageModal(contextAppId = null) { // For uploading to an *existing app* (now restricted)
+                if (this.currentTab === 'appMarket' || (this.viewingAppPackages && this.viewingAppPackages.sourceTab === 'appMarket')) {
+                     this.showToast('不允许为App市场的应用上传包。', 'error');
+                        return;
+                    }
+                // Fallback for any other scenario (though UI should prevent this for AppMarket)
+                // This function is now largely superseded or restricted.
+                // For "My Uploads", openMyUploadPackageModal is used.
+                // For AppMarket apps, uploading is disallowed.
+                this.showToast('上传包功能已调整。请从"我上传的包"标签页操作。', 'info');
+
+            },
+            closeUploadPackageModal() {
+                this.isUploadPackageModalOpen = false;
+                this.newPackage = { appId: '', uploadContextAppId: null, selectOrCreateApp: false, isMyUploadFlow: false, packageName: '', file: null, version: '', description: '', isSharedInApp: true, environment: 'online' };
+            },
+            handleUploadNewPackage() {
+                if (this.newPackage.isMyUploadFlow) { // Uploading from "我上传的包"
+                    if (this.newPackage.packageName.trim() === '') { this.showToast('包名称不能为空。', 'error'); return; }
+                if (!this.newPackage.file) { this.showToast('请选择一个应用包文件。', 'error'); return; }
+                if (this.newPackage.version.trim() === '') { this.showToast('请输入版本号。', 'error'); return; }
+                    if (!this.newPackage.environment) { this.showToast('请选择包环境。', 'error'); return; } // Added validation
+                
+                    const simulatedPackageUrl = `https://example.com/user_uploads/${USER_ID}/${this.newPackage.file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}_v${this.newPackage.version.trim().replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+
+                const newPkg = {
+                        id: 'pkg-my-' + Date.now().toString(36) + Math.random().toString(36).substring(2),
+                        appId: null, // Not tied to a market app
+                        packageName: this.newPackage.packageName.trim(),
+                    version: this.newPackage.version.trim(),
+                    description: this.newPackage.description.trim(),
+                        packageId: `my.${this.newPackage.packageName.trim().toLowerCase().replace(/\s+/g, '')}.v${this.newPackage.version.trim().replace(/\./g, '')}.${Date.now().toString(36).slice(-5)}`, // Generate a unique ID
+                    packageUrl: simulatedPackageUrl, 
+                    uploader: USER_ID,
+                    uploaderDisplayName: '我',
+                    uploadTime: new Date().toISOString().split('T')[0],
+                        isSharedInApp: false, // Not applicable here
+                        status: 'pending_approval',
+                        environment: this.newPackage.environment // Added environment
+                };
+                this.allPackages.unshift(newPkg); 
+                this.allPackages.sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+                    this.showToast(`包 "${newPkg.packageName}" 已提交上传，状态：待审批。`);
+                this.closeUploadPackageModal();
+                if (this.currentTab === 'myUploads') {
+                        this.filterCurrentView();
+                    }
+                } else {
+                     // Logic for uploading to a specific app (now heavily restricted)
+                    const targetAppId = this.newPackage.selectOrCreateApp ? this.newPackage.appId : this.newPackage.uploadContextAppId;
+                    if (!targetAppId) { this.showToast('请选择一个归属应用。', 'error'); return; }
+                    const targetApp = this.getAppById(targetAppId);
+
+                    if (!targetApp) { this.showToast('未能找到归属应用，上传失败。', 'error'); return; }
+                     // Further checks if this path is ever re-enabled for some app types
+                    this.showToast('此上传路径已停用或受限。', 'warning');
+
+                }
+            },
+            
+            openEditMyPackageModal(packageId) { // For "My Uploads"
+                const pkg = this.allPackages.find(p => p.id === packageId && p.uploader === USER_ID && (p.status === 'pending_approval' || p.status === 'rejected'));
+                if (pkg) {
+                    this.editingPackage = JSON.parse(JSON.stringify(pkg));
+                    // Ensure editingPackage has packageName if it's from "My Uploads"
+                    if (!this.editingPackage.packageName && pkg.packageName) {
+                        this.editingPackage.packageName = pkg.packageName;
+                    }
+                    this.isEditPackageModalOpen = true; // Use the same modal, but it will show/hide fields based on editingPackage properties
+                } else {
+                    this.showToast('无法编辑此包，或当前状态不允许编辑。', 'error');
+                }
+            },
+
+            openEditPackageModal(packageId) { // Original function, now for context (e.g. if admin could edit market packages)
+                // For user, this path should not be reachable for AppMarket packages.
+                const pkg = this.allPackages.find(p => p.id === packageId);
+                if (pkg && this.canManagePackage(pkg)) { // canManagePackage will be false for AppMarket packages for users
+                    this.editingPackage = JSON.parse(JSON.stringify(pkg)); 
+                    this.isEditPackageModalOpen = true;
+                } else {
+                    this.showToast('无法编辑此包或无权限。', 'error');
+                }
+            },
+            handleUpdatePackageInfo() {
+                if (!this.editingPackage) { this.showToast('无包信息可更新。', 'error'); return;}
+
+                const index = this.allPackages.findIndex(p => p.id === this.editingPackage.id);
+                if (index === -1) { this.showToast('更新失败，未找到包。', 'error'); this.editingPackage = null; this.isEditPackageModalOpen = false; return; }
+
+                if (this.editingPackage.uploader === USER_ID && (this.allPackages[index].status === 'pending_approval' || this.allPackages[index].status === 'rejected')) {
+                    // Editing a package from "My Uploads"
+                    if (this.editingPackage.packageName && this.editingPackage.packageName.trim() === '') { this.showToast('包名称不能为空。', 'error'); return; }
+                    if (!this.editingPackage.version || this.editingPackage.version.trim() === '') { this.showToast('版本号不能为空。', 'error'); return; }
+                    if (!this.editingPackage.environment) { this.showToast('请选择包环境。', 'error'); return; } // Added validation
+                    
+                    this.allPackages[index].packageName = this.editingPackage.packageName ? this.editingPackage.packageName.trim() : this.allPackages[index].packageName;
+                    this.allPackages[index].version = this.editingPackage.version.trim(); // Version is now editable
+                    this.allPackages[index].description = this.editingPackage.description.trim();
+                    this.allPackages[index].environment = this.editingPackage.environment; // Added environment update
+
+                    // If re-submitting a rejected package, it might go back to pending_approval
+                    if (this.allPackages[index].status === 'rejected') {
+                         this.allPackages[index].status = 'pending_approval';
+                         this.showToast(`包 "${this.allPackages[index].packageName}" 信息已更新并重新提交审批。`);
+                    } else {
+                        this.showToast(`包 "${this.allPackages[index].packageName}" 信息已更新。`);
+                    }
+
+                } else if (this.canManagePackage(this.editingPackage)) { // For other scenarios if any (admin, etc.)
+                    this.allPackages[index].description = this.editingPackage.description.trim();
+                    this.allPackages[index].isSharedInApp = this.editingPackage.isSharedInApp; // If applicable
+                    this.showToast(`包 "${this.editingPackage.version}" 信息已更新。`);
+                } else {
+                     this.showToast('更新失败或无权限。', 'error');
+                     this.isEditPackageModalOpen = false;
+                     this.editingPackage = null;
+                    return;
+                }
+
+                    this.isEditPackageModalOpen = false;
+                    if (this.viewingAppPackages && this.viewingAppPackages.id === this.allPackages[index].appId) {
+                     this.viewPackagesForApp(this.allPackages[index].appId, this.viewingAppPackages.sourceTab); 
+                    }
+                     if (this.currentTab === 'myUploads') {
+                        this.filterCurrentView();
+                }
+                this.editingPackage = null;
+            },
+            closeConfirmModal() {
+                this.isConfirmModalOpen = false;
+                // ... (reset confirm modal content)
+            },
+
+            // App Management Confirmations (largely disabled for users now for AppMarket)
+            confirmDeleteApp(appId) {
+                this.showToast('不允许删除应用。', 'error'); return;
+            },
+            confirmToggleAppShare(appId, targetShareState) {
+                 this.showToast('应用共享状态由管理员设置。', 'error'); return;
+            },
+
+            confirmDeleteMyPackage(packageId) { // Specific for "My Uploads"
+                const pkg = this.allPackages.find(p => p.id === packageId && p.uploader === USER_ID && (p.status === 'pending_approval' || p.status === 'rejected'));
+                if (!pkg) {
+                    this.showToast('无法删除此包，或当前状态不允许删除。', 'error'); return;
+                }
+                this.confirmModalContent = {
+                    title: '删除包确认',
+                    message: `您确定要删除包 "${pkg.packageName || pkg.version}" 吗？此操作不可恢复。`,
+                    onConfirm: () => {
+                        this.allPackages = this.allPackages.filter(p => p.id !== packageId);
+                        this.showToast(`包 "${pkg.packageName || pkg.version}" 已删除。`);
+                        if (this.currentTab === 'myUploads') {
+                            this.filterCurrentView(); 
+                        }
+                    },
+                    confirmButtonText: '确认删除', /* ... other confirm modal params */
+                };
+                this.isConfirmModalOpen = true;
+            },
+            confirmDeletePackage(packageId, appIdContext) { // Original, now less relevant for users
+                this.showToast('包删除权限已变更。', 'error');
+            },
+            confirmTogglePackageInAppShare(packageId, targetShareState) { 
+                 this.showToast('包共享状态已变更管理方式。', 'error');
+            },
+
+            // Utility Methods
+            truncateText(text, maxLength) { /* ... */ },
+            formatDate(dateString) { /* ... */ },
+            copyToClipboard(text, entity = "内容") { /* ... */ },
+            downloadPackage(url){ /* ... */ },
+            showToast(message, type = 'success', duration = 3500) { /* ... */ },
+            
+            getPackageStatusText(status) {
+                const map = {
+                    'pending_approval': '待审批',
+                    'approved': '已批准',
+                    'rejected': '已拒绝',
+                };
+                return map[status] || '未知';
+            },
+            getPlatformChipClass(platform) { /* ... */ },
+            getAppIconBgColor(appNameBase = '') { /* ... */ },
+            getTabCount(tabId) {
+                if (tabId === 'appMarket') return this.appMarketAppsCount;
+                if (tabId === 'myUploads') return this.myUploadedPackagesCount;
+                return 0;
+            },
+            getEnvironmentText(env) {
+                const map = {
+                    'online': '线上环境',
+                    'offline': '线下环境',
+                    'backup': '备机环境',
+                };
+                return map[env] || '未指定';
+            },
+
+            openUploadPackageForExistingApp() { // Called by "我上传的包" -> "上传新包" button
+                this.openMyUploadPackageModal(); // Directly call the new modal function
+            },
+            openCreateAppAndUploadPackageModalAction() { 
+                this.showToast('不允许新建应用。', 'error'); // Disallow composite creation
+            },
+            openUploadPackageModalInternal(params = { contextAppId: null, selectAppForUpload: false, isMyUpload: false, pkgName: '' }) { 
+                // This function is kept for potential internal use but direct calls are mostly via specific openers now
+                this.newPackage = { 
+                    appId: params.contextAppId || '', 
+                    uploadContextAppId: params.contextAppId,
+                    selectOrCreateApp: params.selectAppForUpload,
+                    isMyUploadFlow: params.isMyUpload || false,
+                    packageName: params.pkgName || '',
+                    file: null, 
+                    version: '', 
+                    description: '', 
+                    isSharedInApp: true, // Default, but overridden/hidden for MyUploadFlow
+                    status: params.isMyUpload ? 'pending_approval' : null,
+                    environment: params.isMyUpload ? 'online' : null
+                };
+                this.isUploadPackageModalOpen = true;
+            },
+
+            resetNewAppWithFirstPackageForm() { /* ... */ },
+            closeCreateAppAndUploadPackageModal() { /* ... */ },
+            async handleCreateAppAndFirstPackage() {
+                 this.showToast('不允许新建应用。', 'error'); // Disallow composite creation
+            },
+            getActiveFilterCount() { // This is now less relevant as filters are simplified for AppMarket
+                let count = 0;
+                // if (this.currentTab === 'appMarket') { // Example if platform filter was kept for AppMarket
+                //    if (this.selectedFilters.platform !== 'all') count++;
+                // } else if (this.currentTab === 'internalMarket') { // Old logic, keep for reference if needed
+                //    if (this.selectedFilters.source !== 'all') count++;
+                //    if (this.selectedFilters.myAppStatus !== 'all' && (this.selectedFilters.source === 'currentUser' || this.selectedFilters.source === 'all')) count++;
+                //    if (this.selectedFilters.platform !== 'all') count++;
+                // }
+                return count;
+            },
+            // START: New functions for dedicated "My Uploads" package edit modal
+            openMyPackageEditor(packageId) {
+                const pkg = this.allPackages.find(p => p.id === packageId && p.uploader === USER_ID && (p.status === 'pending_approval' || p.status === 'rejected'));
+                if (pkg) {
+                    this.myPackageToEdit = JSON.parse(JSON.stringify(pkg)); // Deep copy
+                    this.isMyPackageEditModalOpen = true;
+                } else {
+                    this.showToast('无法编辑此包，或当前状态不允许编辑。', 'error');
+                }
+            },
+            saveMyEditedPackage() {
+                if (!this.myPackageToEdit) { this.showToast('无包信息可更新。', 'error'); return; }
+
+                if (this.myPackageToEdit.packageName.trim() === '') { this.showToast('包名称不能为空。', 'error'); return; }
+                
+                const canEditSensitiveFields = this.myPackageToEdit.status === 'pending_approval' || this.myPackageToEdit.status === 'rejected';
+                if (canEditSensitiveFields) {
+                    if (this.myPackageToEdit.version.trim() === '') { this.showToast('版本号不能为空。', 'error'); return; }
+                    if (!this.myPackageToEdit.environment) { this.showToast('请选择包环境。', 'error'); return; }
+                }
+
+                const index = this.allPackages.findIndex(p => p.id === this.myPackageToEdit.id && p.uploader === USER_ID);
+                if (index === -1) {
+                    this.showToast('更新失败，未找到您上传的包。', 'error');
+                    this.isMyPackageEditModalOpen = false;
+                    return;
+                }
+
+                this.allPackages[index].packageName = this.myPackageToEdit.packageName.trim();
+                this.allPackages[index].description = this.myPackageToEdit.description.trim();
+
+                if (canEditSensitiveFields) {
+                    this.allPackages[index].version = this.myPackageToEdit.version.trim();
+                    this.allPackages[index].environment = this.myPackageToEdit.environment;
+                }
+
+                let toastMessage = `包 "${this.allPackages[index].packageName}" 信息已更新。`;
+                if (this.allPackages[index].status === 'rejected' && canEditSensitiveFields) {
+                    this.allPackages[index].status = 'pending_approval'; // Resubmit as pending
+                    toastMessage = `包 "${this.allPackages[index].packageName}" 信息已更新并重新提交审批。`;
+                }
+                
+                this.showToast(toastMessage);
+                this.isMyPackageEditModalOpen = false;
+                if (this.currentTab === 'myUploads') {
+                    this.filterCurrentView(); // Refresh the list
+                }
+            },
+            // END: New functions
+        }
+    }
+   </script>
+</body>
+</html>

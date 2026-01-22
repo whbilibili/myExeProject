@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试页面</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义飞书设计系统 -->
+  <link rel="stylesheet" href="./assets/css/feishu-design.css">
+</head>
+<body>
+  <div id="app">
+    <div class="page-wrapper">
+      <div class="navbar">
+        <div class="navbar-container">
+          <div class="navbar-left">
+            <div class="navbar-title">
+              <span>测试页面</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="main-container">
+        <div class="card">
+          <div class="card-header">
+            <h2>基本功能测试</h2>
+          </div>
+          <div class="card-body">
+            <p>Vue状态: {{ vueLoaded ? '✅ 已加载' : '❌ 未加载' }}</p>
+            <p>ElementPlus状态: {{ elementPlusLoaded ? '✅ 已加载' : '❌ 未加载' }}</p>
+            <p>Utils状态: {{ utilsLoaded ? '✅ 已加载' : '❌ 未加载' }}</p>
+            <p>MockData状态: {{ mockDataLoaded ? '✅ 已加载' : '❌ 未加载' }}</p>
+            <p>用户总数: {{ userCount }}</p>
+            <p>租户总数: {{ tenantCount }}</p>
+            <hr style="margin: 20px 0;">
+            <h3>用户列表（前5个）:</h3>
+            <ul>
+              <li v-for="user in users" :key="user.id">
+                {{ user.name }} (ID: {{ user.id }}) - 租户数: {{ user.tenants.length }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  
+  <!-- 工具函数 -->
+  <script src="./assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="./assets/js/mock-data.js"></script>
+  
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+    
+    const app = createApp({
+      setup() {
+        const vueLoaded = ref(false);
+        const elementPlusLoaded = ref(false);
+        const utilsLoaded = ref(false);
+        const mockDataLoaded = ref(false);
+        const userCount = ref(0);
+        const tenantCount = ref(0);
+        const users = ref([]);
+        
+        onMounted(() => {
+          console.log('Test page mounted');
+          
+          // 检查各个库是否加载
+          vueLoaded.value = typeof Vue !== 'undefined';
+          elementPlusLoaded.value = typeof ElementPlus !== 'undefined';
+          utilsLoaded.value = typeof Utils !== 'undefined';
+          mockDataLoaded.value = typeof MockData !== 'undefined';
+          
+          console.log('Vue:', vueLoaded.value);
+          console.log('ElementPlus:', elementPlusLoaded.value);
+          console.log('Utils:', utilsLoaded.value);
+          console.log('MockData:', mockDataLoaded.value);
+          
+          if (mockDataLoaded.value) {
+            try {
+              // 获取用户数据
+              const stats = MockData.getUserStats();
+              userCount.value = stats.total;
+              console.log('User stats:', stats);
+              
+              // 获取租户数据
+              const tenants = MockData.getTenants();
+              tenantCount.value = tenants.length;
+              console.log('Tenants count:', tenantCount.value);
+              
+              // 获取前5个用户
+              const usersData = MockData.getUsers({ page: 1, pageSize: 5 });
+              users.value = usersData.list;
+              console.log('Users:', users.value);
+            } catch (error) {
+              console.error('Error loading mock data:', error);
+            }
+          }
+        });
+        
+        return {
+          vueLoaded,
+          elementPlusLoaded,
+          utilsLoaded,
+          mockDataLoaded,
+          userCount,
+          tenantCount,
+          users
+        };
+      }
+    });
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

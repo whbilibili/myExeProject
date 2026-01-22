@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的用量 - 用户仪表盘</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义飞书设计系统 -->
+  <link rel="stylesheet" href="./assets/css/feishu-design.css">
+  
+  <style>
+    /* 配额卡片样式 */
+    .quota-section {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-6);
+      box-shadow: var(--shadow-1);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .quota-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-5);
+    }
+    
+    .quota-title {
+      font-size: 14px;  /* OpenAI风格 - 最大字体 */
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .quota-title::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background-color: var(--primary-color);
+      border-radius: var(--radius-medium);
+    }
+    
+    .quota-subtitle {
+      font-size: 12px;  /* OpenAI风格 - 辅助文字 */
+      color: var(--text-3);
+      margin-top: var(--spacing-1);
+    }
+    
+    .quota-info {
+      background: var(--fill-1);
+      border-radius: var(--radius-medium);
+      padding: var(--spacing-4);
+      margin-bottom: var(--spacing-4);
+      font-size: 12px;  /* OpenAI风格 - 提示文字 */
+      color: var(--text-3);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .quota-info .tooltip-icon {
+      margin-left: auto;
+    }
+    
+    .quota-card {
+      background: var(--bg-1);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      transition: all var(--duration-base) var(--ease-in-out);
+    }
+    
+    .quota-card:hover {
+      border-color: var(--primary-lighter);
+      box-shadow: var(--shadow-1);
+    }
+    
+    .quota-card-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .quota-icon {
+      width: 40px;  /* OpenAI风格 - 更紧凑的图标 */
+      height: 40px;
+      border-radius: var(--radius-large);
+      background: var(--primary-lightest);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;  /* OpenAI风格 - 缩小图标 */
+      color: var(--primary-color);
+    }
+    
+    .quota-card-title {
+      font-size: 13px;  /* OpenAI风格 - 卡片标题 */
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+    }
+    
+    .quota-progress {
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .quota-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;  /* OpenAI风格 - 数据行文字 */
+      color: var(--text-2);
+    }
+    
+    .quota-usage {
+      font-weight: var(--font-weight-semibold);
+      color: var(--primary-color);
+    }
+    
+    .quota-total {
+      color: var(--text-3);
+    }
+    
+    /* 租户选择器样式 */
+    .tenant-selector {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      box-shadow: var(--shadow-1);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .tenant-selector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .tenant-selector-title {
+      font-size: var(--font-size-16);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .tenant-selector-title::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background-color: var(--primary-color);
+      border-radius: var(--radius-medium);
+    }
+    
+    /* 标签页容器 */
+    .tabs-wrapper {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      box-shadow: var(--shadow-1);
+      overflow: hidden;
+    }
+    
+    .tab-content-iframe {
+      width: 100%;
+      min-height: 800px;
+      border: none;
+      display: block;
+      background: var(--bg-2);
+    }
+    
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+      .quota-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-3);
+      }
+      
+      .quota-info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-2);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="page-wrapper">
+    <!-- 顶部导航栏 -->
+    <div class="navbar">
+      <div class="navbar-container">
+        <div class="navbar-left">
+          <div class="navbar-title">
+            <el-icon :size="24" color="#3370FF">
+              <el-icon-data-analysis />
+            </el-icon>
+            <span>我的用量</span>
+          </div>
+        </div>
+        <div class="navbar-right">
+          <el-tag type="info" size="small">用户仪表盘 V1.0</el-tag>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 主内容区 -->
+    <div class="main-container fade-in">
+      <!-- 配额展示区域 -->
+      <div class="quota-section">
+        <div class="quota-header">
+          <div>
+            <div class="quota-title">我的配额</div>
+            <div class="quota-subtitle">个人资源配额与使用进度</div>
+          </div>
+        </div>
+        
+        <div class="quota-info">
+          <el-icon><el-icon-info-filled /></el-icon>
+          <span>此区域显示租户管理员为您配置的个人资源配额。仅显示有限制的资源，无限制资源显示为"无限制"，共享或不受限制的资源不在此处显示。如需调整配额，请联系租户管理员。</span>
+        </div>
+        
+        <!-- 配额卡片 -->
+        <div class="quota-card">
+          <div class="quota-card-header">
+            <div class="quota-icon">💻</div>
+            <div class="quota-card-title">云电脑设备使用时长</div>
+          </div>
+          <div class="quota-progress">
+            <el-progress 
+              :percentage="quotaData.usagePercent" 
+              :stroke-width="12"
+              :color="quotaData.usagePercent > 80 ? '#F53F3F' : '#3370FF'"
+            />
+          </div>
+          <div class="quota-info-row">
+            <span class="quota-usage">已使用: {{ quotaData.used }}小时</span>
+            <span class="quota-total">总配额: {{ quotaData.total === -1 ? '无限制' : quotaData.total + '小时' }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 标签页区域 -->
+      <div class="tabs-wrapper">
+        <el-tabs v-model="activeTab" type="card">
+          <el-tab-pane label="数据总览" name="overview">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-data-analysis /></el-icon>
+                数据总览
+                <el-tooltip content="本页所有数据均受页面顶部的'时间范围'和'租户'筛选器影响。" placement="top">
+                  <i class="tooltip-icon">i</i>
+                </el-tooltip>
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'overview'"
+              :src="`pages/overview.html?userId=${userId}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+          
+          <el-tab-pane label="资源消耗明细" name="consumption">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-coin /></el-icon>
+                资源消耗明细
+                <el-tooltip content="此区域列出该租户下每笔资源变动的详细信息，按时间倒序排列，是计算'我的配额'使用量的依据。可通过筛选器进行精确追踪。" placement="top">
+                  <i class="tooltip-icon">i</i>
+                </el-tooltip>
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'consumption'"
+              :src="`pages/consumption.html?userId=${userId}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+          
+          <el-tab-pane label="资产明细" name="assets">
+            <template #label>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <el-icon><el-icon-box /></el-icon>
+                资产明细
+                <el-tooltip content="本页签内所有统计数据均遵循页面顶部的全局'时间范围'和'租户'筛选条件。" placement="top">
+                  <i class="tooltip-icon">i</i>
+                </el-tooltip>
+              </span>
+            </template>
+            <iframe
+              v-if="activeTab === 'assets'"
+              :src="`pages/assets.html?userId=${userId}`"
+              class="tab-content-iframe"
+              frameborder="0"
+            ></iframe>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  
+  <!-- 工具函数 -->
+  <script src="./assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="./assets/js/mock-data.js"></script>
+  
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+    
+    const app = createApp({
+      setup() {
+        // 响应式数据
+        const userId = ref('');
+        const activeTab = ref('overview');
+        const quotaData = ref({
+          used: 0,
+          total: -1, // -1表示无限制
+          usagePercent: 0
+        });
+        
+        // 初始化用户ID
+        const initUserId = () => {
+          // 如果没有userId，获取第一个用户
+          if (!userId.value) {
+            try {
+              const allUsers = MockData.getUsers({ page: 1, pageSize: 1 });
+              if (allUsers.list && allUsers.list.length > 0) {
+                userId.value = allUsers.list[0].id;
+                loadQuotaData();
+              } else {
+                ElementPlus.ElMessage.error('无法加载用户数据，请刷新页面重试');
+              }
+            } catch (error) {
+              console.error('Error loading users:', error);
+              ElementPlus.ElMessage.error('加载用户数据时出错');
+            }
+          }
+        };
+        
+        // 加载配额数据
+        const loadQuotaData = () => {
+          // 模拟配额数据
+          const used = Math.floor(Math.random() * 200); // 0-200小时
+          const total = -1; // 无限制
+          const usagePercent = total === -1 ? 0 : Math.min((used / total) * 100, 100);
+          
+          quotaData.value = {
+            used,
+            total,
+            usagePercent
+          };
+        };
+        
+        // 初始化
+        onMounted(() => {
+          initUserId();
+        });
+        
+        return {
+          userId,
+          activeTab,
+          quotaData
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

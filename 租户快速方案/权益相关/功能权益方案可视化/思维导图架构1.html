@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bots平台权限体系方案 - 思维导图与架构图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .tab-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .tab-nav {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 20px;
+            border: none;
+            background: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            background: white;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px;
+            min-height: 800px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 思维导图样式 */
+        .mindmap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .central-node {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px 40px;
+            border-radius: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .branches {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .branch {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .branch-header {
+            background: linear-gradient(135deg, #ff7b7b, #ff6b9d);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(255, 123, 123, 0.3);
+        }
+
+        .branch.pillar2 .branch-header {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+
+        .branch.pillar3 .branch-header {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .branch-content {
+            background: white;
+            border: 2px solid #f8f9fa;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .sub-node {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .sub-node:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .sub-node.manager {
+            border-left-color: #ff7b7b;
+        }
+
+        .sub-node.feature {
+            border-left-color: #4ecdc4;
+        }
+
+        .sub-node.data {
+            border-left-color: #f093fb;
+        }
+
+        /* 架构图样式 */
+        .architecture {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .layer {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 2px solid #f8f9fa;
+            position: relative;
+        }
+
+        .layer-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .layer-content {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .component {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 12px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .component h4 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .component p {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .arrow {
+            text-align: center;
+            font-size: 2rem;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        /* 流程图样式 */
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .flow-step {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 20px 30px;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .flow-step::after {
+            content: '↓';
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            color: #667eea;
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .legend {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .legend h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .legend-items {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-color.pillar1 { background: linear-gradient(135deg, #ff7b7b, #ff6b9d); }
+        .legend-color.pillar2 { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+        .legend-color.pillar3 { background: linear-gradient(135deg, #f093fb, #f5576c); }
+
+        @media (max-width: 768px) {
+            .branches {
+                flex-direction: column;
+            }
+            
+            .layer-content {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Bots平台权限体系方案</h1>
+            <p>三位一体权限模型 | 企业级权限与权益管理解决方案</p>
+        </div>
+
+        <div class="tab-container">
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="showTab('mindmap')">💡 核心思维导图</button>
+                <button class="tab-btn" onclick="showTab('architecture')">🏗️ 架构设计图</button>
+                <button class="tab-btn" onclick="showTab('flow')">🔄 权限校验流程</button>
+            </div>
+
+            <!-- 思维导图 -->
+            <div id="mindmap" class="tab-content active">
+                <div class="mindmap">
+                    <div class="central-node">
+                        🎯 Bots平台<br/>三位一体权限模型
+                    </div>
+
+                    <div class="branches">
+                        <!-- 第一支柱：租户订阅计划 -->
+                        <div class="branch pillar1">
+                            <div class="branch-header">
+                                📦 第一支柱：租户订阅计划
+                            </div>
+                            <div class="branch-content">
+                                <div class="sub-node manager">
+                                    <strong>管理者：</strong>平台方
+                                </div>
+                                <div class="sub-node">
+                                    <strong>核心问题：</strong>"我的公司购买了什么？"
+                                </div>
+                                <div class="sub-node">
+                                    <strong>资源配额：</strong>
+                                    <br/>• 协作者席位数量
+                                    <br/>• Bots空间数量 
+                                    <br/>• 智能体/工作流数量
+                                    <br/>• API调用次数
+                                    <br/>• 赠送积分额度
+                                </div>
+                                <div class="sub-node">
+                                    <strong>可用功能：</strong>
+                                    <br/>• 高级工作流调试器
+                                    <br/>• 企业级插件市场
+                                    <br/>• API编程访问
+                                    <br/>• SSO单点登录
+                                    <br/>• 操作审计日志
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 第二支柱：租户级功能权限 -->
+                        <div class="branch pillar2">
+                            <div class="branch-header">
+                                🔑 第二支柱：租户级功能权限
+                            </div>
+                            <div class="branch-content">
+                                <div class="sub-node manager">
+                                    <strong>管理者：</strong>租户管理员
+                                </div>
+                                <div class="sub-node feature">
+                                    <strong>核心问题：</strong>"谁能使用哪些高级工具？"
+                                </div>
+                                <div class="sub-node feature">
+                                    <strong>工作原理：</strong>两级开关
+                                    <br/>• 第一级：租户已购买
+                                    <br/>• 第二级：管理员分配
+                                </div>
+                                <div class="sub-node feature">
+                                    <strong>特性：</strong>
+                                    <br/>• 跨空间，绑定用户身份
+                                    <br/>• 类似"驾驶执照"
+                                    <br/>• 支持按席位分配
+                                </div>
+                                <div class="sub-node feature">
+                                    <strong>管理界面：</strong>
+                                    <br/>• 功能列表 + 穿梭框
+                                    <br/>• 席位使用统计
+                                    <br/>• 搜索与筛选
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 第三支柱：空间层数据权限 -->
+                        <div class="branch pillar3">
+                            <div class="branch-header">
+                                🛡️ 第三支柱：空间层数据权限
+                            </div>
+                            <div class="branch-content">
+                                <div class="sub-node manager">
+                                    <strong>管理者：</strong>空间/资源所有者
+                                </div>
+                                <div class="sub-node data">
+                                    <strong>核心问题：</strong>"对这个具体资源能做什么？"
+                                </div>
+                                <div class="sub-node data">
+                                    <strong>角色体系：</strong>
+                                    <br/>• 所有者 > 管理员 > 可编辑
+                                    <br/>• 可评论 > 查看与使用
+                                </div>
+                                <div class="sub-node data">
+                                    <strong>继承机制：</strong>
+                                    <br/>• 空间 → 智能体/工作流
+                                    <br/>• 取最高权限原则
+                                    <br/>• 支持显式覆盖
+                                </div>
+                                <div class="sub-node data">
+                                    <strong>特性：</strong>
+                                    <br/>• 类似"车钥匙"
+                                    <br/>• 精细化访问控制
+                                    <br/>• 资源级权限管理
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <h3>🎨 图例说明</h3>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <div class="legend-color pillar1"></div>
+                            <span>租户订阅计划（商业基础）</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color pillar2"></div>
+                            <span>功能权限（能力分配）</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color pillar3"></div>
+                            <span>数据权限（访问控制）</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 架构设计图 -->
+            <div id="architecture" class="tab-content">
+                <div class="architecture">
+                    <!-- 平台层 -->
+                    <div class="layer">
+                        <div class="layer-title">🌐 平台层 (Platform Layer)</div>
+                        <div class="layer-content">
+                            <div class="component">
+                                <h4>📋 订阅计划管理</h4>
+                                <p>定义各种套餐（免费版、团队版、企业版）及其包含的资源配额和功能清单</p>
+                            </div>
+                            <div class="component">
+                                <h4>💳 计费系统</h4>
+                                <p>处理订阅、升级、续费等商业流程</p>
+                            </div>
+                            <div class="component">
+                                <h4>📊 全局监控</h4>
+                                <p>跨租户的使用量统计和资源监控</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="arrow">⬇</div>
+
+                    <!-- 租户层 -->
+                    <div class="layer">
+                        <div class="layer-title">🏢 租户层 (Tenant Layer)</div>
+                        <div class="layer-content">
+                            <div class="component">
+                                <h4>👑 租户管理员</h4>
+                                <p>企业内部的最高权限管理者，负责功能分配和组织管理</p>
+                            </div>
+                            <div class="component">
+                                <h4>🎛️ 功能权限分配</h4>
+                                <p>将已购买的高级功能分配给具体的用户或用户组</p>
+                            </div>
+                            <div class="component">
+                                <h4>📈 资源配额监控</h4>
+                                <p>监控租户内各种资源的使用情况和剩余配额</p>
+                            </div>
+                            <div class="component">
+                                <h4>👥 成员与组织管理</h4>
+                                <p>管理租户内的用户、部门结构和基础权限</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="arrow">⬇</div>
+
+                    <!-- 空间层 -->
+                    <div class="layer">
+                        <div class="layer-title">🏗️ 空间层 (Workspace Layer)</div>
+                        <div class="layer-content">
+                            <div class="component">
+                                <h4>🏠 空间管理</h4>
+                                <p>空间的创建、配置和基本设置管理</p>
+                            </div>
+                            <div class="component">
+                                <h4>👥 协作者管理</h4>
+                                <p>邀请成员加入空间，分配数据权限角色</p>
+                            </div>
+                            <div class="component">
+                                <h4>🔄 权限继承</h4>
+                                <p>空间权限自动继承到其下的所有资源</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="arrow">⬇</div>
+
+                    <!-- 资源层 -->
+                    <div class="layer">
+                        <div class="layer-title">📦 资源层 (Resource Layer)</div>
+                        <div class="layer-content">
+                            <div class="component">
+                                <h4>🤖 智能体</h4>
+                                <p>AI助手的创建、编辑、分享和使用权限控制</p>
+                            </div>
+                            <div class="component">
+                                <h4>⚡ 工作流</h4>
+                                <p>自动化流程的开发、调试和协作权限管理</p>
+                            </div>
+                            <div class="component">
+                                <h4>🛠️ 工具库</h4>
+                                <p>插件和工具的开发、发布和使用权限控制</p>
+                            </div>
+                            <div class="component">
+                                <h4>📚 知识库</h4>
+                                <p>知识管理和内容协作的权限控制</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 权限校验流程 -->
+            <div id="flow" class="tab-content">
+                <div class="flow-diagram">
+                    <h2 style="color: #667eea; text-align: center; margin-bottom: 30px;">🔍 权限校验流程图</h2>
+                    
+                    <div class="flow-step">
+                        <span class="step-number">1</span>
+                        <strong>用户发起操作请求</strong>
+                        <p>例如：用户张三尝试在"核心研发空间"的"数据清洗工作流"上使用"高级调试器"功能</p>
+                    </div>
+
+                    <div class="flow-step">
+                        <span class="step-number">2</span>
+                        <strong>第一支柱：检查租户订阅计划</strong>
+                        <p>✅ 验证租户是否已订阅包含该功能的计划<br/>
+                        ✅ 检查相关资源配额是否充足</p>
+                    </div>
+
+                    <div class="flow-step">
+                        <span class="step-number">3</span>
+                        <strong>第二支柱：检查功能权限</strong>
+                        <p>✅ 验证租户管理员是否已为该用户分配"高级调试器"功能权限<br/>
+                        ✅ 检查功能席位是否在有效期内</p>
+                    </div>
+
+                    <div class="flow-step">
+                        <span class="step-number">4</span>
+                        <strong>第三支柱：检查数据权限</strong>
+                        <p>✅ 验证用户在目标空间的角色权限<br/>
+                        ✅ 检查对具体工作流的操作权限（通过继承或显式授权）</p>
+                    </div>
+
+                    <div class="flow-step">
+                        <span class="step-number">5</span>
+                        <strong>权限校验结果</strong>
+                        <p><strong>通过：</strong>三个支柱全部通过 → 允许操作<br/>
+                        <strong>拒绝：</strong>任意支柱失败 → 拒绝操作并返回相应错误信息</p>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; padding: 25px; border-radius: 15px; text-align: center; margin-top: 30px; box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);">
+                        <h3>🎯 核心原则</h3>
+                        <p style="margin-top: 10px; font-size: 1.1rem;">
+                            <strong>最终权限 = 订阅计划 ∩ 功能权限 ∩ 数据权限</strong><br/>
+                            三个维度缺一不可，确保权限控制的精确性和安全性
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // 隐藏所有标签内容
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // 移除所有按钮的活动状态
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // 显示选中的标签内容
+            document.getElementById(tabName).classList.add('active');
+            
+            // 激活对应的按钮
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

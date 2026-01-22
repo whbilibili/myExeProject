@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据总览</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义飞书设计系统 -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--spacing-4);
+      background: var(--bg-2);
+      font-size: 13px;
+    }
+    
+    /* 区块标题 */
+    .section-title {
+      font-size: 16px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-4);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding-left: var(--spacing-2);
+      border-left: 3px solid var(--primary-color);
+    }
+    
+    /* 子区块标题 */
+    .subsection-title {
+      font-size: 14px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-4);
+      padding-bottom: var(--spacing-2);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      position: relative;
+    }
+    
+    .subsection-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-color), transparent);
+      border-radius: var(--radius-full);
+    }
+    
+    /* 核心指标卡片 - 飞书风格 */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-5);
+    }
+    
+    .metric-card-feishu {
+      background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+      border-radius: var(--radius-medium);
+      padding: var(--spacing-4);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--border-1);
+      transition: all var(--duration-base) var(--ease-in-out);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .metric-card-feishu::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+      opacity: 0;
+      transition: opacity var(--duration-base);
+    }
+    
+    .metric-card-feishu:hover {
+      box-shadow: 0 4px 16px rgba(51, 112, 255, 0.12);
+      border-color: var(--primary-lighter);
+      transform: translateY(-2px);
+    }
+    
+    .metric-card-feishu:hover::before {
+      opacity: 1;
+    }
+    
+    .metric-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-2);
+    }
+    
+    .metric-card-label {
+      font-size: 12px;
+      font-weight: var(--font-weight-medium);
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-1);
+    }
+    
+    .metric-card-value {
+      font-size: 24px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      line-height: 1.2;
+      margin-bottom: var(--spacing-1);
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .metric-card-unit {
+      font-size: 12px;
+      font-weight: var(--font-weight-regular);
+      color: var(--text-3);
+      margin-left: var(--spacing-1);
+    }
+    
+    .metric-card-desc {
+      font-size: 11px;
+      color: var(--text-3);
+      line-height: 1.4;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-1);
+    }
+    
+    /* 大指标卡片（用于积分总览等） */
+    .metric-card-large {
+      background: linear-gradient(135deg, #FFFFFF 0%, #F7F9FC 100%);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--border-1);
+      transition: all var(--duration-base) var(--ease-in-out);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .metric-card-large::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(51, 112, 255, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    
+    .metric-card-large:hover {
+      box-shadow: 0 8px 24px rgba(51, 112, 255, 0.15);
+      border-color: var(--primary-lighter);
+      transform: translateY(-4px);
+    }
+    
+    .metric-card-large .metric-card-value {
+      font-size: 36px;
+      margin-bottom: var(--spacing-2);
+    }
+    
+    .metric-card-large .metric-card-label {
+      font-size: 14px;
+      margin-bottom: var(--spacing-2);
+    }
+    
+    .metric-card-large .metric-card-desc {
+      font-size: 12px;
+    }
+    
+    /* 图表网格 */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-5);
+    }
+    
+    .chart-wrapper {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-4);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--border-1);
+      transition: all var(--duration-base) var(--ease-in-out);
+    }
+    
+    .chart-wrapper:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      border-color: var(--border-3);
+    }
+    
+    /* 模块容器 */
+    .module-wrapper {
+      background: var(--bg-1);
+      border-radius: var(--radius-xlarge);
+      padding: var(--spacing-8);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+      margin-bottom: var(--spacing-6);
+      border: 1px solid var(--border-1);
+    }
+    
+    /* 页面提示样式 */
+    .page-welcome {
+      background: linear-gradient(135deg, #F0F7FF 0%, #E8F4FF 100%);
+      border: 1px solid var(--primary-lighter);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-6);
+      margin-bottom: var(--spacing-6);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-4);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .page-welcome::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--primary-color), var(--primary-light));
+    }
+    
+    .welcome-icon {
+      color: var(--primary-color);
+      font-size: var(--font-size-20);
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    
+    .welcome-content {
+      flex: 1;
+    }
+    
+    .welcome-title {
+      font-size: var(--font-size-16);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-2);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .welcome-text {
+      font-size: var(--font-size-14);
+      color: var(--text-2);
+      line-height: 1.6;
+      margin-bottom: var(--spacing-3);
+    }
+    
+    .welcome-note {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+      background: rgba(51, 112, 255, 0.08);
+      padding: var(--spacing-2) var(--spacing-3);
+      border-radius: var(--radius-medium);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-1);
+    }
+    
+    .welcome-note-icon {
+      color: var(--primary-color);
+      font-size: var(--font-size-12);
+    }
+
+    /* 响应式 */
+    @media (max-width: 1400px) {
+      .metrics-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    @media (max-width: 1200px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: var(--spacing-4);
+      }
+      
+      .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-3);
+      }
+      
+      .module-wrapper {
+        padding: var(--spacing-5);
+      }
+      
+      .metric-card-feishu {
+        padding: var(--spacing-5);
+      }
+      
+      .metric-card-value {
+        font-size: var(--font-size-24) !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 页面欢迎提示 -->
+    <div class="page-welcome">
+      <el-icon class="welcome-icon"><el-icon-data-analysis /></el-icon>
+      <div class="welcome-content">
+        <div class="welcome-title">
+          <span>欢迎来到数据总览</span>
+        </div>
+        <div class="welcome-text">
+          本页面汇集了用户的核心价值、消费模式与创造能力的关键指标，帮助您快速洞察用户画像。
+        </div>
+        <div class="welcome-note">
+          <el-icon class="welcome-note-icon"><el-icon-info-filled /></el-icon>
+          <span>请注意：所有数据均为T+1更新，展示的是截至昨日的数据</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 全局筛选器 -->
+    <div class="filter-bar" style="margin-bottom: var(--spacing-6);">
+      <div class="filter-row">
+        <div class="filter-item" style="min-width: 200px;">
+          <label class="filter-label">
+            时间范围
+            <el-tooltip content="选择数据统计的时间范围" placement="top">
+              <i class="tooltip-icon">i</i>
+            </el-tooltip>
+          </label>
+          <el-select v-model="filters.timeRange" @change="loadData" style="width: 100%;">
+            <el-option label="最近7天" value="7days" />
+            <el-option label="最近30天" value="30days" />
+            <el-option label="最近90天" value="90days" />
+            <el-option label="自定义范围" value="custom" />
+          </el-select>
+        </div>
+        
+        <div class="filter-item" v-if="filters.timeRange === 'custom'" style="min-width: 280px;">
+          <label class="filter-label">自定义时间</label>
+          <el-date-picker
+            v-model="filters.customRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            @change="loadData"
+            style="width: 100%;"
+          />
+        </div>
+        
+        <div class="filter-item" style="min-width: 250px; flex: 1;">
+          <label class="filter-label">
+            归属租户
+            <el-tooltip content="筛选特定租户的数据，默认为全部租户" placement="top">
+              <i class="tooltip-icon">i</i>
+            </el-tooltip>
+          </label>
+          <el-select
+            v-model="filters.tenants"
+            multiple
+            filterable
+            clearable
+            collapse-tags
+            collapse-tags-tooltip
+            placeholder="全部租户"
+            @change="loadData"
+            style="width: 100%;"
+          >
+            <el-option
+              v-for="tenant in userTenants"
+              :key="tenant.tenantId"
+              :label="tenant.tenantName"
+              :value="tenant.tenantId"
+            />
+          </el-select>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 模块一：资产与使用总览 -->
+    <div class="module-wrapper">
+      <h2 class="section-title">
+        <el-icon><el-icon-box /></el-icon>
+        资产与使用总览
+        <el-tooltip content="指在选定时间范围内，该用户创建和使用的各类资产的数量及活跃情况。" placement="top">
+          <i class="tooltip-icon">i</i>
+        </el-tooltip>
+      </h2>
+      
+      <!-- 资产创建总数 -->
+      <h3 class="subsection-title">资产创建总数</h3>
+      <div class="metrics-grid">
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">智能体总数</div>
+          </div>
+          <div class="metric-card-value">{{ stats.assetCreation.agents }}<span class="metric-card-unit">个</span></div>
+          <div class="metric-card-desc">在选定时间范围内创建</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">工作流总数</div>
+          </div>
+          <div class="metric-card-value">{{ stats.assetCreation.workflows }}<span class="metric-card-unit">个</span></div>
+          <div class="metric-card-desc">在选定时间范围内创建</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">工具总数</div>
+          </div>
+          <div class="metric-card-value">{{ stats.assetCreation.tools }}<span class="metric-card-unit">个</span></div>
+          <div class="metric-card-desc">在选定时间范围内创建</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">工具库总数</div>
+          </div>
+          <div class="metric-card-value">{{ stats.assetCreation.toolLibraries }}<span class="metric-card-unit">个</span></div>
+          <div class="metric-card-desc">在选定时间范围内创建</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">知识库总数</div>
+          </div>
+          <div class="metric-card-value">{{ stats.assetCreation.knowledgeBases }}<span class="metric-card-unit">个</span></div>
+          <div class="metric-card-desc">在选定时间范围内创建</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">团队空间总数</div>
+          </div>
+          <div class="metric-card-value">{{ stats.assetCreation.spaces }}<span class="metric-card-unit">个</span></div>
+          <div class="metric-card-desc">在选定时间范围内创建</div>
+        </div>
+      </div>
+        
+      <!-- 核心资产活跃度 -->
+      <h3 class="subsection-title">核心资产活跃度</h3>
+      <div class="metrics-grid">
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">
+              智能体总运行次数
+              <el-tooltip content="所有智能体被成功运行的总次数" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.assetActivity.agentRunCount) }}<span class="metric-card-unit">次</span></div>
+          <div class="metric-card-desc">智能体运行统计</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">智能体用户数</div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.assetActivity.agentUserCount) }}<span class="metric-card-unit">人</span></div>
+          <div class="metric-card-desc">调用智能体的去重用户数</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">智能体累积对话次数</div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.assetActivity.agentDialogCount) }}<span class="metric-card-unit">次</span></div>
+          <div class="metric-card-desc">所有对话轮次统计</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">智能体累积Token消耗</div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatLargeNumber(stats.assetActivity.agentTokens) }}</div>
+          <div class="metric-card-desc">智能体消耗的总Token数</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">工作流总运行次数</div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.assetActivity.workflowRunCount) }}<span class="metric-card-unit">次</span></div>
+          <div class="metric-card-desc">工作流运行统计</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">
+              工作流运行成功率
+              <el-tooltip content="成功运行次数 / 总运行次数" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="metric-card-value">{{ stats.assetActivity.workflowSuccessRate }}<span class="metric-card-unit">%</span></div>
+          <div class="metric-card-desc">工作流执行成功率</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">工作流用户数</div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.assetActivity.workflowUserCount) }}<span class="metric-card-unit">人</span></div>
+          <div class="metric-card-desc">调用工作流的去重用户数</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">工作流累积Token消耗</div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatLargeNumber(stats.assetActivity.workflowTokens) }}</div>
+          <div class="metric-card-desc">工作流消耗的总Token数</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">
+              工具总引用数
+              <el-tooltip content="工具被智能体和工作流调用的总次数" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.assetActivity.toolRefCount) }}<span class="metric-card-unit">次</span></div>
+          <div class="metric-card-desc">工具被引用的总次数</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">
+              知识库总引用数
+              <el-tooltip content="知识库被调用的总次数" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.assetActivity.knowledgeRefCount) }}<span class="metric-card-unit">次</span></div>
+          <div class="metric-card-desc">知识库被引用的总次数</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 模块二：积分总览 -->
+    <div class="module-wrapper">
+      <h2 class="section-title">
+        <el-icon><el-icon-coin /></el-icon>
+        积分总览
+        <el-tooltip content="统计用户在选定时间范围内的所有积分消耗情况" placement="top">
+          <i class="tooltip-icon">i</i>
+        </el-tooltip>
+      </h2>
+      
+      <!-- 核心指标 - 使用大卡片 -->
+      <div class="metrics-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: var(--spacing-8);">
+        <div class="metric-card-large">
+          <div class="metric-card-label">
+            积分总消耗
+            <el-tooltip content="周期内，Token消耗、设备时长抵扣及其他所有消耗行为产生的积分总和" placement="top">
+              <i class="tooltip-icon">i</i>
+            </el-tooltip>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.pointsOverview.totalPoints) }}<span class="metric-card-unit">点</span></div>
+          <div class="metric-card-desc">包含所有类型的积分消耗</div>
+        </div>
+        
+        <div class="metric-card-large">
+          <div class="metric-card-label">
+            Token消耗积分
+            <el-tooltip content="周期内，因调用大语言模型产生Token消耗所抵扣的积分总和" placement="top">
+              <i class="tooltip-icon">i</i>
+            </el-tooltip>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.pointsOverview.tokenPoints) }}<span class="metric-card-unit">点</span></div>
+          <div class="metric-card-desc">仅因模型Token消耗产生</div>
+        </div>
+        
+        <div class="metric-card-large">
+          <div class="metric-card-label">
+            设备抵扣消耗积分
+            <el-tooltip content="周期内，因使用云电脑、云手机等设备时长，通过积分抵扣产生的消耗总和" placement="top">
+              <i class="tooltip-icon">i</i>
+            </el-tooltip>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.pointsOverview.devicePoints) }}<span class="metric-card-unit">点</span></div>
+          <div class="metric-card-desc">仅因设备时长抵扣产生</div>
+        </div>
+      </div>
+        
+      <!-- 图表区域 -->
+      <div class="charts-grid">
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              积分消耗趋势
+              <el-tooltip content="展示每日/每周/每月的总积分消耗变化趋势" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+            <el-radio-group v-model="chartTimeGranularity.pointsTrend" size="small" @change="updatePointsTrendChart">
+              <el-radio-button label="day">日</el-radio-button>
+              <el-radio-button label="week">周</el-radio-button>
+              <el-radio-button label="month">月</el-radio-button>
+            </el-radio-group>
+          </div>
+          <div id="pointsTrendChart" class="chart-container"></div>
+        </div>
+        
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              积分消耗构成
+              <el-tooltip content="展示各类消费（Token、设备等）在总积分消耗中的占比" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+          </div>
+          <div id="pointsCompositionChart" class="chart-container small"></div>
+        </div>
+        
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              按模型积分消耗排行
+              <el-tooltip content="展示消耗积分最多的前20个语言模型" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+          </div>
+          <div id="modelRankChart" class="chart-container"></div>
+        </div>
+        
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              按设备积分消耗分布
+              <el-tooltip content="对比云电脑和云手机分别产生的积分消耗" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+          </div>
+          <div id="deviceDistChart" class="chart-container small"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 模块三：核心资源消耗分析 -->
+    <div class="module-wrapper">
+      <h2 class="section-title">
+        <el-icon><el-icon-data-analysis /></el-icon>
+        核心资源消耗分析
+      </h2>
+      
+      <!-- Token消耗分析 -->
+      <h3 class="subsection-title">Token 消耗分析</h3>
+      <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: var(--spacing-6);">
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">
+              Token总消耗数
+              <el-tooltip content="在选定条件下，模型消耗的Token总数" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatLargeNumber(stats.tokenConsumption.total) }}</div>
+          <div class="metric-card-desc">输入+输出Token总计</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">总输入Token</div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatLargeNumber(stats.tokenConsumption.input) }}</div>
+          <div class="metric-card-desc">模型输入的Token数量</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">总输出Token</div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatLargeNumber(stats.tokenConsumption.output) }}</div>
+          <div class="metric-card-desc">模型输出的Token数量</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">
+              智能体累积Token消耗
+              <el-tooltip content="智能体自己调用模型产生的Token + 智能体调用的工作流产生的所有Token" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatLargeNumber(stats.tokenConsumption.agentTokens || Math.floor(stats.tokenConsumption.total * 0.6)) }}</div>
+          <div class="metric-card-desc">智能体+其调用工作流产生</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">
+              工作流累积Token消耗
+              <el-tooltip content="工作流运行时产生的所有Token消耗" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatLargeNumber(stats.tokenConsumption.workflowTokens || Math.floor(stats.tokenConsumption.total * 0.4)) }}</div>
+          <div class="metric-card-desc">工作流运行时产生</div>
+        </div>
+      </div>
+      
+      <div class="charts-grid">
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              Token消耗趋势
+              <el-tooltip content="展示每日/每周/每月输入Token数量与输出Token数量的变化趋势" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+            <el-radio-group v-model="chartTimeGranularity.tokenTrend" size="small" @change="updateTokenTrendChart">
+              <el-radio-button label="day">日</el-radio-button>
+              <el-radio-button label="week">周</el-radio-button>
+              <el-radio-button label="month">月</el-radio-button>
+            </el-radio-group>
+          </div>
+          <div id="tokenTrendChart" class="chart-container"></div>
+        </div>
+        
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              输入/输出Token构成
+              <el-tooltip content="展示输入Token和输出Token在总Token消耗量中的占比" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+          </div>
+          <div id="tokenCompositionChart" class="chart-container small"></div>
+        </div>
+        
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              模型消耗分析
+              <el-tooltip content="展示Token用量最多的语言模型排行" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+            <el-radio-group v-model="tokenUnit.model" size="small" @change="updateModelTokenChart">
+              <el-radio-button label="1">个Token</el-radio-button>
+              <el-radio-button label="1000">千Token</el-radio-button>
+              <el-radio-button label="1000000">百万Token</el-radio-button>
+            </el-radio-group>
+          </div>
+          <div id="modelTokenChart" class="chart-container"></div>
+        </div>
+        
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              资产消耗分析
+              <el-tooltip content="展示Token用量最多的智能体/工作流排行" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+            <el-radio-group v-model="tokenUnit.asset" size="small" @change="updateAssetTokenChart">
+              <el-radio-button label="1">个Token</el-radio-button>
+              <el-radio-button label="1000">千Token</el-radio-button>
+              <el-radio-button label="1000000">百万Token</el-radio-button>
+            </el-radio-group>
+          </div>
+          <div id="assetTokenChart" class="chart-container"></div>
+        </div>
+      </div>
+        
+      <!-- 设备时长分析 -->
+      <h3 class="subsection-title" style="margin-top: var(--spacing-8);">设备时长分析</h3>
+      <div class="metrics-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: var(--spacing-6);">
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">
+              总设备使用时长
+              <el-tooltip content="用户使用云设备（云电脑+云手机）的总分钟数" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.deviceUsage.total) }}<span class="metric-card-unit">分钟</span></div>
+          <div class="metric-card-desc">云电脑+云手机总使用时长</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">云电脑使用时长</div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.deviceUsage.computer) }}<span class="metric-card-unit">分钟</span></div>
+          <div class="metric-card-desc">云电脑设备使用统计</div>
+        </div>
+        
+        <div class="metric-card-feishu">
+          <div class="metric-card-header">
+            <div class="metric-card-label">云手机使用时长</div>
+          </div>
+          <div class="metric-card-value">{{ Utils.formatNumber(stats.deviceUsage.phone) }}<span class="metric-card-unit">分钟</span></div>
+          <div class="metric-card-desc">云手机设备使用统计</div>
+        </div>
+      </div>
+      
+      <div class="charts-grid">
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              设备使用时长趋势
+              <el-tooltip content="对比每日/每周/每月云电脑和云手机的使用时长变化" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+            <el-radio-group v-model="chartTimeGranularity.deviceTrend" size="small" @change="updateDeviceTrendChart">
+              <el-radio-button label="day">日</el-radio-button>
+              <el-radio-button label="week">周</el-radio-button>
+              <el-radio-button label="month">月</el-radio-button>
+            </el-radio-group>
+          </div>
+          <div id="deviceTrendChart" class="chart-container"></div>
+        </div>
+        
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              使用与抵扣趋势
+              <el-tooltip content="分析每日/每周/每月总使用时长与实际产生积分消耗的抵扣时长之间的关系" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+            <el-radio-group v-model="chartTimeGranularity.usageDeduct" size="small" @change="updateUsageDeductChart">
+              <el-radio-button label="day">日</el-radio-button>
+              <el-radio-button label="week">周</el-radio-button>
+              <el-radio-button label="month">月</el-radio-button>
+            </el-radio-group>
+          </div>
+          <div id="usageDeductChart" class="chart-container"></div>
+        </div>
+        
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <h3 class="chart-title">
+              设备使用时长构成
+              <el-tooltip content="展示云电脑和云手机在总设备使用时长中的占比" placement="top">
+                <i class="tooltip-icon">i</i>
+              </el-tooltip>
+            </h3>
+          </div>
+          <div id="deviceCompositionChart" class="chart-container small"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <!-- ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+  <!-- 图表工具 -->
+  <script src="../assets/js/charts.js"></script>
+  
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+    
+    const app = createApp({
+      setup() {
+        const userId = ref(Utils.getUrlParam('userId'));
+        const tenantId = ref(Utils.getUrlParam('tenantId'));
+        const userTenants = ref([]);
+        const filters = ref({
+          timeRange: '30days',
+          customRange: null,
+          tenants: [tenantId.value] // 默认选中当前租户
+        });
+        
+        // 图表时间粒度
+        const chartTimeGranularity = ref({
+          pointsTrend: 'day',      // 积分消耗趋势
+          tokenTrend: 'day',        // Token消耗趋势
+          deviceTrend: 'day',       // 设备使用时长趋势
+          usageDeduct: 'day'        // 使用与抵扣趋势
+        });
+        
+        // Token单位（1=个, 1000=千, 1000000=百万）
+        const tokenUnit = ref({
+          model: '1000',    // 模型Token消耗图表单位
+          asset: '1000'     // 资产Token消耗图表单位
+        });
+        
+        const stats = ref({
+          assetCreation: {
+            agents: 0,
+            workflows: 0,
+            tools: 0,
+            toolLibraries: 0,
+            knowledgeBases: 0,
+            spaces: 0
+          },
+          assetActivity: {
+            agentRunCount: 0,
+            agentUserCount: 0,
+            agentDialogCount: 0,
+            agentTokens: 0,
+            workflowRunCount: 0,
+            workflowSuccessRate: 0,
+            workflowUserCount: 0,
+            workflowTokens: 0,
+            toolRefCount: 0,
+            knowledgeRefCount: 0
+          },
+          pointsOverview: {
+            totalPoints: 0,
+            tokenPoints: 0,
+            devicePoints: 0
+          },
+          tokenConsumption: {
+            total: 0,
+            input: 0,
+            output: 0
+          },
+          deviceUsage: {
+            total: 0,
+            computer: 0,
+            phone: 0
+          }
+        });
+        
+        // 加载用户租户
+        const loadUserTenants = () => {
+          const user = MockData.getUserDetail(userId.value);
+          if (user) {
+            userTenants.value = user.tenants;
+          }
+        };
+        
+        // 加载数据
+        const loadData = () => {
+          const overviewData = MockData.getOverviewStats(userId.value, filters.value);
+          stats.value = overviewData;
+          
+          // 渲染所有图表
+          setTimeout(() => {
+            renderAllCharts();
+          }, 100);
+        };
+        
+        // 渲染所有图表
+        const renderAllCharts = () => {
+          // 积分消耗趋势图 - 使用独立更新方法
+          updatePointsTrendChart();
+          
+          // 积分消耗构成
+          Charts.renderDoughnutChart('pointsCompositionChart', {
+            title: '',
+            data: [
+              { value: stats.value.pointsOverview.tokenPoints, name: 'Token消耗' },
+              { value: stats.value.pointsOverview.devicePoints, name: '云电脑抵扣' },
+              { value: Utils.randomInt(1000, 5000), name: '云手机抵扣' },
+              { value: Utils.randomInt(500, 2000), name: '其他' }
+            ]
+          });
+          
+          // 按模型积分消耗排行
+          const models = MockData.DataPool.models.slice(0, 10);
+          Charts.renderHorizontalBarChart('modelRankChart', {
+            title: '',
+            yAxisData: models,
+            data: models.map(() => Utils.randomInt(1000, 10000))
+          });
+          
+          // 按设备积分消耗分布
+          Charts.renderPieChart('deviceDistChart', {
+            title: '',
+            data: [
+              { value: Utils.randomInt(8000, 15000), name: '云电脑' },
+              { value: Utils.randomInt(3000, 8000), name: '云手机' }
+            ]
+          });
+          
+          // Token消耗趋势 - 使用独立更新方法
+          updateTokenTrendChart();
+          
+          // 输入/输出Token构成
+          Charts.renderPieChart('tokenCompositionChart', {
+            title: '',
+            data: [
+              { value: stats.value.tokenConsumption.input, name: '输入Token' },
+              { value: stats.value.tokenConsumption.output, name: '输出Token' }
+            ]
+          });
+          
+          // 模型Token消耗分析 - 使用独立更新方法
+          updateModelTokenChart();
+          
+          // 资产Token消耗分析 - 使用独立更新方法
+          updateAssetTokenChart();
+          
+          // 设备使用时长趋势 - 使用独立更新方法
+          updateDeviceTrendChart();
+          
+          // 使用与抵扣趋势 - 使用独立更新方法
+          updateUsageDeductChart();
+          
+          // 设备使用时长构成（写死示例数据）
+          Charts.renderPieChart('deviceCompositionChart', {
+            title: '',
+            data: [
+              { value: 2000, name: '云电脑' },
+              { value: 1000, name: '云手机' }
+            ]
+          });
+        };
+        
+        // 生成不同时间粒度的数据
+        const generateTimeSeriesByGranularity = (granularity, dayCount, minValue, maxValue) => {
+          let dataPoints;
+          let dateFormatter;
+          
+          switch(granularity) {
+            case 'week':
+              dataPoints = Math.ceil(dayCount / 7);
+              dateFormatter = (date) => {
+                const weekStart = new Date(date);
+                const weekEnd = new Date(date);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                return `${Utils.formatDate(weekStart, 'MM-DD')}~${Utils.formatDate(weekEnd, 'MM-DD')}`;
+              };
+              break;
+            case 'month':
+              dataPoints = Math.ceil(dayCount / 30);
+              dateFormatter = (date) => Utils.formatDate(date, 'YYYY-MM');
+              break;
+            default: // day
+              dataPoints = dayCount;
+              dateFormatter = (date) => Utils.formatDate(date, 'MM-DD');
+          }
+          
+          const data = [];
+          const now = new Date();
+          
+          for (let i = dataPoints - 1; i >= 0; i--) {
+            const date = new Date(now);
+            if (granularity === 'week') {
+              date.setDate(date.getDate() - i * 7);
+            } else if (granularity === 'month') {
+              date.setMonth(date.getMonth() - i);
+            } else {
+              date.setDate(date.getDate() - i);
+            }
+            
+            data.push({
+              date: dateFormatter(date),
+              value: Utils.randomInt(minValue, maxValue)
+            });
+          }
+          
+          return data;
+        };
+        
+        // 更新积分消耗趋势图
+        const updatePointsTrendChart = () => {
+          const granularity = chartTimeGranularity.value.pointsTrend;
+          const timeSeriesData = generateTimeSeriesByGranularity(granularity, 30, 800, 3000);
+          
+          Charts.renderDualLineChart('pointsTrendChart', {
+            title: '',
+            seriesNames: ['Token消耗', '设备抵扣'],
+            xAxisData: timeSeriesData.map(d => d.date),
+            series: [
+              {
+                name: 'Token消耗',
+                type: 'line',
+                data: timeSeriesData.map(d => d.value),
+                smooth: true,
+                itemStyle: { color: Charts.colors.multi[0] }
+              },
+              {
+                name: '设备抵扣',
+                type: 'line',
+                data: timeSeriesData.map(d => Utils.randomInt(300, 1200)),
+                smooth: true,
+                itemStyle: { color: Charts.colors.multi[1] }
+              }
+            ]
+          });
+        };
+        
+        // 更新Token消耗趋势图
+        const updateTokenTrendChart = () => {
+          const granularity = chartTimeGranularity.value.tokenTrend;
+          const timeSeriesData = generateTimeSeriesByGranularity(granularity, 30, 50000, 200000);
+          
+          Charts.renderDualLineChart('tokenTrendChart', {
+            title: '',
+            seriesNames: ['输入Token', '输出Token'],
+            xAxisData: timeSeriesData.map(d => d.date),
+            series: [
+              {
+                name: '输入Token',
+                type: 'line',
+                data: timeSeriesData.map(d => d.value),
+                smooth: true,
+                itemStyle: { color: Charts.colors.multi[0] }
+              },
+              {
+                name: '输出Token',
+                type: 'line',
+                data: timeSeriesData.map(d => Utils.randomInt(30000, 150000)),
+                smooth: true,
+                itemStyle: { color: Charts.colors.multi[1] }
+              }
+            ]
+          });
+        };
+        
+        // 更新设备使用时长趋势图（写死示例数据，确保展示效果）
+        const updateDeviceTrendChart = () => {
+          const granularity = chartTimeGranularity.value.deviceTrend;
+          let xAxisData = [];
+          let computer = [];
+          let phone = [];
+          if (granularity === 'week') {
+            xAxisData = ['2025-W38', '2025-W39', '2025-W40', '2025-W41'];
+            computer = [820, 900, 860, 920];
+            phone = [380, 420, 400, 450];
+          } else if (granularity === 'month') {
+            xAxisData = ['2025-08', '2025-09', '2025-10'];
+            computer = [3100, 3450, 3300];
+            phone = [1600, 1750, 1680];
+          } else { // day
+            xAxisData = ['2025-09-29','2025-09-30','2025-10-01','2025-10-02','2025-10-03','2025-10-04','2025-10-05','2025-10-06','2025-10-07','2025-10-08','2025-10-09','2025-10-10','2025-10-11','2025-10-12'];
+            computer = [150, 90, 120, 180, 160, 140, 190, 170, 150, 180, 200, 160, 140, 180];
+            phone = [70, 60, 80, 95, 85, 75, 90, 80, 70, 85, 100, 90, 75, 85];
+          }
+          Charts.renderDualLineChart('deviceTrendChart', {
+            title: '',
+            seriesNames: ['云电脑', '云手机'],
+            xAxisData,
+            series: [
+              {
+                name: '云电脑',
+                type: 'line',
+                data: computer,
+                smooth: true,
+                itemStyle: { color: Charts.colors.multi[0] }
+              },
+              {
+                name: '云手机',
+                type: 'line',
+                data: phone,
+                smooth: true,
+                itemStyle: { color: Charts.colors.multi[1] }
+              }
+            ]
+          });
+        };
+        
+        // 更新使用与抵扣趋势图（写死示例数据，确保展示效果）
+        const updateUsageDeductChart = () => {
+          const granularity = chartTimeGranularity.value.usageDeduct;
+          let xAxisData = [];
+          let total = [];
+          let deduct = [];
+          if (granularity === 'week') {
+            xAxisData = ['2025-W38', '2025-W39', '2025-W40', '2025-W41'];
+            total = [1200, 1350, 1280, 1400];
+            deduct = [780, 860, 820, 900];
+          } else if (granularity === 'month') {
+            xAxisData = ['2025-08', '2025-09', '2025-10'];
+            total = [4800, 5200, 5100];
+            deduct = [3000, 3300, 3250];
+          } else { // day
+            xAxisData = ['2025-09-29','2025-09-30','2025-10-01','2025-10-02','2025-10-03','2025-10-04','2025-10-05','2025-10-06','2025-10-07','2025-10-08','2025-10-09','2025-10-10','2025-10-11','2025-10-12'];
+            total =  [200,180,220,260,240,210,270,250,230,260,280,240,220,260];
+            deduct = [130,120,150,170,160,140,175,160,150,165,180,165,150,170];
+          }
+          const chart = echarts.init(document.getElementById('usageDeductChart'));
+          const option = {
+            tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+            legend: { data: ['总使用时长', '积分抵扣时长'] },
+            xAxis: { type: 'category', data: xAxisData, axisLine: { lineStyle: { color: '#E5E6EB' } }, axisLabel: { color: '#646A73' } },
+            yAxis: [{ type: 'value', name: '时长(分钟)', axisLine: { lineStyle: { color: '#E5E6EB' } }, axisLabel: { color: '#646A73' }, splitLine: { lineStyle: { color: '#F2F3F5', type: 'dashed' } } }],
+            series: [
+              { name: '总使用时长', type: 'bar', data: total, itemStyle: { color: Charts.colors.multi[0] } },
+              { name: '积分抵扣时长', type: 'line', data: deduct, smooth: true, itemStyle: { color: Charts.colors.multi[1] } }
+            ]
+          };
+          chart.setOption(option);
+        };
+        
+        // 格式化Token单位
+        const formatTokenByUnit = (value, unit) => {
+          const unitValue = parseInt(unit);
+          const formattedValue = (value / unitValue).toFixed(unitValue === 1 ? 0 : 2);
+          return parseFloat(formattedValue);
+        };
+        
+        // 获取Token单位文本
+        const getTokenUnitText = (unit) => {
+          const unitValue = parseInt(unit);
+          if (unitValue === 1) return '个Token';
+          if (unitValue === 1000) return '千Token';
+          if (unitValue === 1000000) return '百万Token';
+          return 'Token';
+        };
+        
+        // 更新模型Token消耗图表（写死示例数据，确保展示效果）
+        const updateModelTokenChart = () => {
+          const unit = tokenUnit.value.model;
+          const tokenModels = ['GPT-4o','GPT-4 Turbo','Claude 3.5 Sonnet','Claude 3 Opus','Gemini 1.5 Pro','Llama 3 70B','Mixtral 8x7B','GPT-3.5 Turbo','Claude 3 Haiku','Gemini 1.5 Flash'];
+          const rawData = [680000,520000,480000,420000,380000,320000,280000,240000,180000,120000];
+          
+          const chart = echarts.init(document.getElementById('modelTokenChart'));
+          const option = {
+            tooltip: {
+              trigger: 'axis',
+              axisPointer: {
+                type: 'shadow'
+              },
+              formatter: (params) => {
+                const param = params[0];
+                const rawValue = rawData[param.dataIndex];
+                return `${param.name}<br/>${param.marker}${Utils.formatLargeNumber(rawValue)}`;
+              }
+            },
+            grid: {
+              left: '15%',
+              right: '5%',
+              top: '5%',
+              bottom: '5%'
+            },
+            xAxis: {
+              type: 'value',
+              name: getTokenUnitText(unit),
+              nameTextStyle: { color: '#646A73' },
+              axisLine: { lineStyle: { color: '#E5E6EB' } },
+              axisLabel: { color: '#646A73' },
+              splitLine: { lineStyle: { color: '#F2F3F5', type: 'dashed' } }
+            },
+            yAxis: {
+              type: 'category',
+              data: tokenModels,
+              axisLine: { lineStyle: { color: '#E5E6EB' } },
+              axisLabel: { color: '#646A73' },
+              axisTick: { show: false }
+            },
+            series: [
+              {
+                type: 'bar',
+                data: rawData.map(v => formatTokenByUnit(v, unit)),
+                itemStyle: {
+                  color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                    { offset: 0, color: Charts.colors.primary[0] },
+                    { offset: 1, color: Charts.colors.primary[1] }
+                  ]),
+                  borderRadius: [0, 4, 4, 0]
+                },
+                barMaxWidth: 30
+              }
+            ]
+          };
+          chart.setOption(option);
+        };
+        
+        // 更新资产Token消耗图表（写死示例数据，确保展示效果）
+        const updateAssetTokenChart = () => {
+          const unit = tokenUnit.value.asset;
+          const agents = ['智能体: 客服助手','智能体: 代码生成器','智能体: 数据分析师','智能体: 文案创作','智能体: 翻译助手'];
+          const workflows = ['工作流: 自动化报告','工作流: 数据清洗','工作流: 内容审核','工作流: 邮件分类','工作流: 智能推荐'];
+          const assetNames = [...agents, ...workflows];
+          const rawData = [560000,480000,420000,380000,320000,280000,240000,200000,180000,150000];
+          
+          const chart = echarts.init(document.getElementById('assetTokenChart'));
+          const option = {
+            tooltip: {
+              trigger: 'axis',
+              axisPointer: {
+                type: 'shadow'
+              },
+              formatter: (params) => {
+                const param = params[0];
+                const rawValue = rawData[param.dataIndex];
+                return `${param.name}<br/>${param.marker}${Utils.formatLargeNumber(rawValue)}`;
+              }
+            },
+            grid: {
+              left: '20%',
+              right: '5%',
+              top: '5%',
+              bottom: '5%'
+            },
+            xAxis: {
+              type: 'value',
+              name: getTokenUnitText(unit),
+              nameTextStyle: { color: '#646A73' },
+              axisLine: { lineStyle: { color: '#E5E6EB' } },
+              axisLabel: { color: '#646A73' },
+              splitLine: { lineStyle: { color: '#F2F3F5', type: 'dashed' } }
+            },
+            yAxis: {
+              type: 'category',
+              data: assetNames,
+              axisLine: { lineStyle: { color: '#E5E6EB' } },
+              axisLabel: { 
+                color: '#646A73',
+                formatter: (value) => value
+              },
+              axisTick: { show: false }
+            },
+            series: [
+              {
+                type: 'bar',
+                data: rawData.map((v, index) => ({
+                  value: formatTokenByUnit(v, unit),
+                  itemStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                      { offset: 0, color: index < agents.length ? Charts.colors.primary[0] : Charts.colors.warning[0] },
+                      { offset: 1, color: index < agents.length ? Charts.colors.primary[1] : Charts.colors.warning[1] }
+                    ])
+                  }
+                })),
+                itemStyle: {
+                  borderRadius: [0, 4, 4, 0]
+                },
+                barMaxWidth: 30
+              }
+            ]
+          };
+          chart.setOption(option);
+        };
+        
+        // 初始化
+        onMounted(() => {
+          loadUserTenants();
+          loadData();
+        });
+        
+        return {
+          filters,
+          userTenants,
+          stats,
+          chartTimeGranularity,
+          tokenUnit,
+          loadData,
+          updatePointsTrendChart,
+          updateTokenTrendChart,
+          updateDeviceTrendChart,
+          updateUsageDeductChart,
+          updateModelTokenChart,
+          updateAssetTokenChart,
+          Utils
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

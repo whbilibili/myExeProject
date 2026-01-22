@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资源消耗账单</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义飞书设计系统 -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--spacing-4);
+      background: var(--bg-2);
+      font-size: 13px;
+    }
+    
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .page-title {
+      font-size: var(--font-size-20);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    /* 资源消耗类型标签 */
+    .consumption-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--radius-medium);
+      font-size: var(--font-size-12);
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .consumption-badge.consume {
+      background-color: var(--danger-lightest);
+      color: var(--danger-color);
+    }
+    
+    .consumption-badge.refund {
+      background-color: var(--success-lightest);
+      color: var(--success-color);
+    }
+    
+    /* 用量单元格 */
+    .usage-cell {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-12);
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+    
+    /* 积分单元格 */
+    .points-cell {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-semibold);
+    }
+    
+    .points-cell.negative {
+      color: var(--danger-color);
+    }
+    
+    .points-cell.positive {
+      color: var(--success-color);
+    }
+    
+    /* 页面提示样式 */
+    .page-notice {
+      padding: var(--spacing-3) var(--spacing-4);
+      background: var(--info-lightest);
+      border-left: 3px solid var(--info-color);
+      border-radius: var(--radius-medium);
+      margin-bottom: var(--spacing-4);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .page-notice-icon {
+      color: var(--info-color);
+      font-size: var(--font-size-18);
+      flex-shrink: 0;
+    }
+    
+    .page-notice-text {
+      font-size: var(--font-size-13);
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 页面提示 -->
+    <div class="page-notice">
+      <el-icon class="page-notice-icon"><el-icon-info-filled /></el-icon>
+      <div class="page-notice-text">
+        <strong>数据说明：</strong>本页面展示用户的资源消耗明细流水，包括Token消耗、设备使用、存储空间等各类资源的详细使用记录。支持按时间、资源类型、行为等维度筛选查看。
+      </div>
+    </div>
+    
+    <!-- 高级筛选器 -->
+    <div class="filter-bar" style="margin-bottom: var(--spacing-5);">
+      <div class="filter-row">
+        <div class="filter-item" style="min-width: 280px;">
+          <label class="filter-label">
+            时间范围
+            <el-tooltip content="选择资源消耗记录的时间范围" placement="top">
+              <i class="tooltip-icon">i</i>
+            </el-tooltip>
+          </label>
+          <el-date-picker
+            v-model="filters.dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            clearable
+            style="width: 100%;"
+            @change="loadData"
+          />
+        </div>
+        
+        <div class="filter-item" style="min-width: 200px;">
+          <label class="filter-label">资源类型</label>
+          <el-select
+            v-model="filters.resourceTypes"
+            multiple
+            clearable
+            collapse-tags
+            placeholder="全部类型"
+            style="width: 100%;"
+            @change="loadData"
+          >
+            <el-option label="Token" value="Token" />
+            <el-option label="云电脑设备时长" value="云电脑设备时长" />
+            <el-option label="云手机设备时长" value="云手机设备时长" />
+            <el-option label="存储空间" value="存储空间" />
+            <el-option label="带宽流量" value="带宽流量" />
+            <el-option label="API调用" value="API调用" />
+          </el-select>
+        </div>
+        
+        <div class="filter-item" style="min-width: 180px;">
+          <label class="filter-label">行为</label>
+          <el-input
+            v-model="filters.action"
+            placeholder="搜索行为关键词"
+            clearable
+            @input="handleSearch"
+          >
+            <template #prefix>
+              <el-icon><el-icon-search /></el-icon>
+            </template>
+          </el-input>
+        </div>
+        
+        <div class="filter-item" style="min-width: 160px;">
+          <label class="filter-label">变动类型</label>
+          <el-select
+            v-model="filters.changeType"
+            placeholder="全部"
+            style="width: 100%;"
+            @change="loadData"
+          >
+            <el-option label="全部" value="全部" />
+            <el-option label="消耗" value="消耗" />
+            <el-option label="返还" value="返还" />
+          </el-select>
+        </div>
+        
+        <div class="filter-item" style="min-width: 180px;">
+          <label class="filter-label">计费租户</label>
+          <el-select
+            v-model="filters.tenant"
+            filterable
+            clearable
+            placeholder="全部租户"
+            style="width: 100%;"
+            @change="loadData"
+          >
+            <el-option
+              v-for="tenant in userTenants"
+              :key="tenant.tenantId"
+              :label="tenant.tenantName"
+              :value="tenant.tenantName"
+            />
+          </el-select>
+        </div>
+        
+        <div class="filter-item" style="min-width: 160px;">
+          <label class="filter-label">
+            是否消耗积分
+            <el-tooltip content="用于筛选该条记录是否产生了实际的积分变动" placement="top">
+              <i class="tooltip-icon">i</i>
+            </el-tooltip>
+          </label>
+          <el-select
+            v-model="filters.hasPoints"
+            placeholder="全部"
+            style="width: 100%;"
+            @change="loadData"
+          >
+            <el-option label="全部" value="全部" />
+            <el-option label="是" value="是" />
+            <el-option label="否" value="否" />
+          </el-select>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 数据表格 -->
+    <div class="table-wrapper">
+      <el-table
+        :data="tableData"
+        v-loading="loading"
+        style="width: 100%"
+        stripe
+        @sort-change="handleSortChange"
+        :default-sort="{ prop: 'date', order: 'descending' }"
+      >
+        <el-table-column
+          prop="date"
+          label="日期"
+          width="170"
+          sortable="custom"
+        >
+          <template #default="{ row }">
+            <span class="text-13">{{ Utils.formatDate(row.date) }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column
+          label="资源类型"
+          width="160"
+          prop="resourceType"
+        >
+          <template #default="{ row }">
+            <el-tag size="small" effect="plain">{{ row.resourceType }}</el-tag>
+          </template>
+        </el-table-column>
+        
+        <el-table-column
+          label="行为"
+          min-width="250"
+          show-overflow-tooltip
+        >
+          <template #header>
+            <span>行为</span>
+            <el-tooltip content="记录用户产生消耗的具体动作，例如：运行工作流"每日报告生成"，调用模型"GPT-4o"" placement="top">
+              <i class="tooltip-icon">i</i>
+            </el-tooltip>
+          </template>
+          <template #default="{ row }">
+            <span class="text-14 text-1">{{ row.action }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column
+          label="变动类型"
+          width="100"
+        >
+          <template #default="{ row }">
+            <span :class="['consumption-badge', row.changeType === '消耗' ? 'consume' : 'refund']">
+              {{ row.changeType }}
+            </span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column
+          label="用量"
+          width="240"
+        >
+          <template #header>
+            <span>用量</span>
+            <el-tooltip content="对消耗资源的量化描述，例如：输入Token: 1024, 输出Token: 2048；或 设备时长: 15分钟" placement="top">
+              <i class="tooltip-icon">i</i>
+            </el-tooltip>
+          </template>
+          <template #default="{ row }">
+            <div class="usage-cell">{{ row.usage }}</div>
+          </template>
+        </el-table-column>
+        
+        <el-table-column
+          label="消耗积分"
+          width="130"
+          sortable="custom"
+          prop="points"
+        >
+          <template #header>
+            <span>消耗积分</span>
+            <el-tooltip content="该条记录实际发生变动的积分数量。若为0，则表示该次行为在免费额度内或未达到计费标准" placement="top">
+              <i class="tooltip-icon">i</i>
+            </el-tooltip>
+          </template>
+          <template #default="{ row }">
+            <span :class="['points-cell', row.points < 0 ? 'negative' : (row.points > 0 ? 'positive' : '')]">
+              {{ row.points > 0 ? `+${row.points}` : row.points }}
+            </span>
+            <span class="text-12 text-3"> 点</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column
+          label="计费租户"
+          width="180"
+          show-overflow-tooltip
+        >
+          <template #default="{ row }">
+            <el-tag type="info" size="small" effect="plain">{{ row.tenant }}</el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <!-- 分页 -->
+      <div style="padding: var(--spacing-5) var(--spacing-6); display: flex; justify-content: space-between; align-items: center; background: var(--bg-1);">
+        <div class="text-13 text-3">
+          共 {{ pagination.total }} 条记录
+        </div>
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :page-sizes="[20, 50, 100, 200]"
+          :total="pagination.total"
+          layout="sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
+    </div>
+  </div>
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+  
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+    
+    const app = createApp({
+      setup() {
+        const userId = ref(Utils.getUrlParam('userId'));
+        const tenantId = ref(Utils.getUrlParam('tenantId'));
+        const loading = ref(false);
+        const exporting = ref(false);
+        const tableData = ref([]);
+        const userTenants = ref([]);
+        
+        const filters = ref({
+          dateRange: null,
+          resourceTypes: [],
+          action: '',
+          changeType: '全部',
+          tenant: tenantId.value, // 默认选中当前租户
+          hasPoints: '全部'
+        });
+        
+        const pagination = ref({
+          page: 1,
+          pageSize: 20,
+          total: 0
+        });
+        
+        // 加载用户租户
+        const loadUserTenants = () => {
+          const user = MockData.getUserDetail(userId.value);
+          if (user) {
+            userTenants.value = user.tenants;
+          }
+        };
+        
+        // 加载数据
+        const loadData = () => {
+          loading.value = true;
+          
+          const params = {
+            ...filters.value,
+            page: pagination.value.page,
+            pageSize: pagination.value.pageSize
+          };
+          
+          if (filters.value.dateRange) {
+            params.startDate = filters.value.dateRange[0];
+            params.endDate = filters.value.dateRange[1];
+          }
+          
+          setTimeout(() => {
+            let records = MockData.getConsumptionRecords(userId.value, params);
+            
+            // 前端筛选（实际应该在后端完成）
+            if (filters.value.resourceTypes.length > 0) {
+              records = records.filter(r => filters.value.resourceTypes.includes(r.resourceType));
+            }
+            
+            if (filters.value.action) {
+              const keyword = filters.value.action.toLowerCase();
+              records = records.filter(r => r.action.toLowerCase().includes(keyword));
+            }
+            
+            if (filters.value.changeType !== '全部') {
+              records = records.filter(r => r.changeType === filters.value.changeType);
+            }
+            
+            if (filters.value.tenant) {
+              records = records.filter(r => r.tenant === filters.value.tenant);
+            }
+            
+            if (filters.value.hasPoints !== '全部') {
+              if (filters.value.hasPoints === '是') {
+                records = records.filter(r => r.points !== 0);
+              } else {
+                records = records.filter(r => r.points === 0);
+              }
+            }
+            
+            // 分页
+            pagination.value.total = records.length;
+            const start = (pagination.value.page - 1) * pagination.value.pageSize;
+            const end = start + pagination.value.pageSize;
+            tableData.value = records.slice(start, end);
+            
+            loading.value = false;
+          }, 300);
+        };
+        
+        // 防抖搜索
+        const handleSearch = Utils.debounce(() => {
+          pagination.value.page = 1;
+          loadData();
+        }, 500);
+        
+        // 排序
+        const handleSortChange = ({ prop, order }) => {
+          // 实现排序逻辑
+          loadData();
+        };
+        
+        // 分页
+        const handlePageChange = () => {
+          loadData();
+        };
+        
+        const handleSizeChange = () => {
+          pagination.value.page = 1;
+          loadData();
+        };
+        
+        // 导出数据
+        const exportData = () => {
+          exporting.value = true;
+          
+          setTimeout(() => {
+            // 获取所有数据（不分页）
+            const allRecords = MockData.getConsumptionRecords(userId.value);
+            
+            // 格式化数据
+            const exportData = allRecords.map(record => ({
+              '日期': Utils.formatDate(record.date),
+              '资源类型': record.resourceType,
+              '行为': record.action,
+              '变动类型': record.changeType,
+              '用量': record.usage,
+              '消耗积分': record.points,
+              '计费租户': record.tenant
+            }));
+            
+            // 导出CSV
+            const filename = `资源消耗明细_${Utils.formatDate(new Date(), 'YYYY-MM-DD')}.csv`;
+            Utils.exportCSV(exportData, filename);
+            
+            ElementPlus.ElMessage.success('导出成功');
+            exporting.value = false;
+          }, 1000);
+        };
+        
+        // 初始化
+        onMounted(() => {
+          loadUserTenants();
+          loadData();
+        });
+        
+        return {
+          loading,
+          exporting,
+          tableData,
+          userTenants,
+          filters,
+          pagination,
+          loadData,
+          handleSearch,
+          handleSortChange,
+          handlePageChange,
+          handleSizeChange,
+          exportData,
+          Utils
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

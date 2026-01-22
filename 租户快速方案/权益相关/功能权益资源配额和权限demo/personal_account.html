@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人账户</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': { '500': '#3b82f6', '700': '#1d4ed8' },
+                        'slate': {
+                            '50': '#f8fafc', '100': '#f1f5f9', '200': '#e2e8f0', '300': '#cbd5e1', '400': '#94a3b8',
+                            '500': '#64748b', '600': '#475569', '700': '#334155', '800': '#1e293b', '900': '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://rsms.me/inter/inter.css');
+        html { font-family: 'Inter', sans-serif; }
+        body {
+            background-color: #0f172a; /* slate-900 */
+            color: #cbd5e1; /* slate-300 */
+            overflow-y: auto;
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="animate-fade-in-up" style="animation-delay: 100ms;">
+            <h1 class="text-3xl font-bold text-white mb-2">个人账户</h1>
+            <p class="text-slate-400">查看您的账户余额、消费历史和进行充值。</p>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 animate-fade-in-up" style="animation-delay: 200ms;">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-slate-400">账户余额</p>
+                    <a href="#" class="text-sm font-semibold text-primary-500 hover:text-primary-400">查看账单 &rarr;</a>
+                </div>
+                <div class="mt-4">
+                    <span class="text-5xl font-bold text-white">¥1,234.56</span>
+                </div>
+                <div class="mt-8 flex space-x-4">
+                    <button class="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i> 充值
+                    </button>
+                    <button class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        <i class="fas fa-receipt mr-2"></i> 提现
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Recharge History -->
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 animate-fade-in-up" style="animation-delay: 300ms;">
+                <h3 class="text-lg font-semibold text-white mb-4">近期交易记录</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-white">账户充值</p>
+                            <p class="text-sm text-slate-400">2025-06-20</p>
+                        </div>
+                        <p class="font-semibold text-green-400">+ ¥500.00</p>
+                    </div>
+                     <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-white">购买 "AI 助手" 席位</p>
+                            <p class="text-sm text-slate-400">2025-06-18</p>
+                        </div>
+                        <p class="font-semibold text-red-400">- ¥150.00</p>
+                    </div>
+                     <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-white">积分充值 (10M点)</p>
+                            <p class="text-sm text-slate-400">2025-06-15</p>
+                        </div>
+                        <p class="font-semibold text-red-400">- ¥100.00</p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-white">账户充值</p>
+                            <p class="text-sm text-slate-400">2025-06-10</p>
+                        </div>
+                        <p class="font-semibold text-green-400">+ ¥1,000.00</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html> 

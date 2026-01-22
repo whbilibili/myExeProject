@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>加入的租户</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- Custom CSS - 飞书风格 -->
+  <link rel="stylesheet" href="../assets/css/feishu-style.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg-gray-1);
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 操作栏 -->
+    <div class="search-bar">
+      <el-form :inline="true">
+        <el-form-item>
+          <el-button type="primary" @click="showAddDialog">
+            <el-icon><Plus /></el-icon>
+            添加到租户
+          </el-button>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button 
+            type="danger" 
+            :disabled="selectedTenants.length === 0"
+            @click="batchRemove"
+          >
+            <el-icon><Delete /></el-icon>
+            批量移出租户 ({{ selectedTenants.length }})
+          </el-button>
+        </el-form-item>
+
+        <el-form-item style="margin-left: auto;">
+          <el-input 
+            v-model="searchKeyword" 
+            placeholder="搜索租户名称/ID"
+            clearable
+            style="width: 300px"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <!-- 租户列表 -->
+    <div class="data-table">
+      <el-table 
+        :data="filteredTenants" 
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column 
+          type="selection" 
+          width="55"
+          :selectable="checkSelectable"
+        ></el-table-column>
+
+        <el-table-column prop="tenantId" label="租户ID" width="150">
+          <template #default="scope">
+            <span>{{ scope.row.tenantId }}</span>
+            <i class="el-icon-document-copy copy-btn" @click="copyText(scope.row.tenantId)"></i>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="tenantName" label="租户名称" width="200">
+          <template #default="scope">
+            <span>{{ scope.row.tenantName }}</span>
+            <el-tag v-if="scope.row.isOwner" type="warning" size="small" style="margin-left: 8px">
+              所有者
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="joinedAt" label="加入时间" width="180" sortable>
+          <template #default="scope">
+            {{ Utils.formatDate(scope.row.joinedAt) }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="tenantVersion" label="租户版本" width="120">
+          <template #default="scope">
+            <el-tag 
+              :type="scope.row.tenantVersion === '企业版' ? 'danger' : scope.row.tenantVersion === '团队版' ? 'warning' : ''"
+              size="small"
+            >
+              {{ scope.row.tenantVersion }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="租户信息" min-width="300">
+          <template #default="scope">
+            <div v-if="tenantDetails[scope.row.tenantId]">
+              <div style="font-size: 12px; color: #909399; margin-bottom: 4px;">
+                创建人: {{ tenantDetails[scope.row.tenantId].createdBy }} | 
+                所有者: {{ tenantDetails[scope.row.tenantId].owner }}
+              </div>
+              <div style="font-size: 12px; color: #909399;">
+                成员数: {{ tenantDetails[scope.row.tenantId].memberCount }} | 
+                创建时间: {{ Utils.formatDate(tenantDetails[scope.row.tenantId].createdAt) }}
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" width="150" fixed="right">
+          <template #default="scope">
+            <el-button 
+              size="small" 
+              type="danger"
+              :disabled="scope.row.isOwner"
+              @click="removeTenant(scope.row)"
+            >
+              移出租户
+            </el-button>
+            <el-tooltip 
+              v-if="scope.row.isOwner"
+              content="用户是该租户的所有者，不可移除"
+              placement="top"
+            >
+              <el-icon style="margin-left: 8px; color: #909399;"><InfoFilled /></el-icon>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <!-- 添加租户对话框 -->
+    <el-dialog 
+      v-model="addDialogVisible" 
+      title="添加到租户" 
+      width="600px"
+    >
+      <el-input 
+        v-model="addSearchKeyword" 
+        placeholder="搜索租户名称/ID"
+        clearable
+        style="margin-bottom: 16px;"
+      >
+        <template #prefix>
+          <el-icon><Search /></el-icon>
+        </template>
+      </el-input>
+
+      <el-table 
+        :data="availableTenants" 
+        style="width: 100%"
+        max-height="400"
+        @selection-change="handleAddSelectionChange"
+      >
+        <el-table-column 
+          type="selection" 
+          width="55"
+          :selectable="checkAddSelectable"
+        ></el-table-column>
+
+        <el-table-column prop="id" label="租户ID" width="140"></el-table-column>
+
+        <el-table-column prop="name" label="租户名称" width="150"></el-table-column>
+
+        <el-table-column prop="owner" label="所有者" width="100"></el-table-column>
+
+        <el-table-column prop="version" label="版本" width="100">
+          <template #default="scope">
+            <el-tag size="small">{{ scope.row.version }}</el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="状态" width="80">
+          <template #default="scope">
+            <el-tag 
+              v-if="isUserInTenant(scope.row.id)" 
+              type="info" 
+              size="small"
+            >
+              已加入
+            </el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <template #footer>
+        <el-button @click="addDialogVisible = false">取消</el-button>
+        <el-button 
+          type="primary" 
+          @click="confirmAdd"
+          :disabled="selectedAddTenants.length === 0"
+        >
+          确定添加 ({{ selectedAddTenants.length }})
+        </el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  
+  <!-- Element Plus 图标 -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- 自定义JS -->
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/data/static-data.js"></script>
+
+  <script>
+    const { createApp, ref, computed, reactive } = Vue;
+    const { ElMessage, ElMessageBox } = ElementPlus;
+
+    const app = createApp({
+      setup() {
+        const userId = ref(Utils.getQueryParam('userId'));
+        const searchKeyword = ref('');
+        const addSearchKeyword = ref('');
+        const addDialogVisible = ref(false);
+        const selectedTenants = ref([]);
+        const selectedAddTenants = ref([]);
+
+        const currentUser = computed(() => {
+          return MockData.users.find(u => u.id === userId.value);
+        });
+
+        const userTenants = ref(currentUser.value?.tenants || []);
+
+        const tenantDetails = computed(() => {
+          const details = {};
+          MockData.tenants.forEach(t => {
+            details[t.id] = t;
+          });
+          return details;
+        });
+
+        const filteredTenants = computed(() => {
+          if (!searchKeyword.value) return userTenants.value;
+          
+          const keyword = searchKeyword.value.toLowerCase();
+          return userTenants.value.filter(t => 
+            t.tenantId.toLowerCase().includes(keyword) ||
+            t.tenantName.toLowerCase().includes(keyword)
+          );
+        });
+
+        const availableTenants = computed(() => {
+          let tenants = MockData.tenants;
+          
+          if (addSearchKeyword.value) {
+            const keyword = addSearchKeyword.value.toLowerCase();
+            tenants = tenants.filter(t => 
+              t.id.toLowerCase().includes(keyword) ||
+              t.name.toLowerCase().includes(keyword)
+            );
+          }
+          
+          return tenants;
+        });
+
+        const isUserInTenant = (tenantId) => {
+          return userTenants.value.some(t => t.tenantId === tenantId);
+        };
+
+        const checkSelectable = (row) => {
+          return !row.isOwner;
+        };
+
+        const checkAddSelectable = (row) => {
+          return !isUserInTenant(row.id);
+        };
+
+        const handleSelectionChange = (selection) => {
+          selectedTenants.value = selection;
+        };
+
+        const handleAddSelectionChange = (selection) => {
+          selectedAddTenants.value = selection;
+        };
+
+        const copyText = async (text) => {
+          const success = await Utils.copyToClipboard(text);
+          if (success) {
+            ElMessage.success('复制成功');
+          } else {
+            ElMessage.error('复制失败');
+          }
+        };
+
+        const removeTenant = (tenant) => {
+          ElMessageBox.confirm(
+            `确定要将用户从租户"${tenant.tenantName}"中移出吗？`,
+            '确认移出',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            const index = userTenants.value.findIndex(t => t.tenantId === tenant.tenantId);
+            if (index > -1) {
+              userTenants.value.splice(index, 1);
+              ElMessage.success('移出成功');
+            }
+          }).catch(() => {});
+        };
+
+        const batchRemove = () => {
+          ElMessageBox.confirm(
+            `确定要批量移出 ${selectedTenants.value.length} 个租户吗？`,
+            '批量移出',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            selectedTenants.value.forEach(tenant => {
+              const index = userTenants.value.findIndex(t => t.tenantId === tenant.tenantId);
+              if (index > -1) {
+                userTenants.value.splice(index, 1);
+              }
+            });
+            selectedTenants.value = [];
+            ElMessage.success('批量移出成功');
+          }).catch(() => {});
+        };
+
+        const showAddDialog = () => {
+          addDialogVisible.value = true;
+          addSearchKeyword.value = '';
+          selectedAddTenants.value = [];
+        };
+
+        const confirmAdd = () => {
+          selectedAddTenants.value.forEach(tenant => {
+            if (!isUserInTenant(tenant.id)) {
+              userTenants.value.push({
+                tenantId: tenant.id,
+                tenantName: tenant.name,
+                tenantVersion: tenant.version,
+                joinedAt: new Date(),
+                isOwner: false
+              });
+            }
+          });
+          
+          ElMessage.success(`成功添加 ${selectedAddTenants.value.length} 个租户`);
+          addDialogVisible.value = false;
+          selectedAddTenants.value = [];
+        };
+
+        return {
+          searchKeyword,
+          addSearchKeyword,
+          addDialogVisible,
+          selectedTenants,
+          selectedAddTenants,
+          userTenants,
+          tenantDetails,
+          filteredTenants,
+          availableTenants,
+          isUserInTenant,
+          checkSelectable,
+          checkAddSelectable,
+          handleSelectionChange,
+          handleAddSelectionChange,
+          copyText,
+          removeTenant,
+          batchRemove,
+          showAddDialog,
+          confirmAdd,
+          Utils
+        };
+      }
+    });
+
+    app.use(ElementPlus);
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>平台运营报表</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 飞书设计系统 -->
+  <link rel="stylesheet" href="./assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--spacing-6);
+      background: var(--bg-2);
+    }
+    
+    .page-header {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      margin-bottom: var(--spacing-6);
+      box-shadow: var(--shadow-1);
+    }
+    
+    .page-title {
+      font-size: var(--font-size-24);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .filter-toolbar {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      margin-bottom: var(--spacing-6);
+      box-shadow: var(--shadow-1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--spacing-4);
+    }
+    
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+    
+    .filter-label {
+      font-size: var(--font-size-14);
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+    
+    .tabs-container {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      box-shadow: var(--shadow-1);
+    }
+    
+    .tab-content {
+      padding: var(--spacing-6) 0;
+    }
+    
+    .section-title {
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-5);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .kpi-grid-8 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .kpi-card {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      border: 1px solid var(--border-2);
+      transition: all var(--duration-base) var(--ease-in-out);
+    }
+    
+    .kpi-card:hover {
+      border-color: var(--primary-lighter);
+      box-shadow: var(--shadow-1);
+      transform: translateY(-2px);
+    }
+    
+    .kpi-label {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+      margin-bottom: var(--spacing-2);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-1);
+    }
+    
+    .kpi-value {
+      font-size: var(--font-size-28);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-1);
+      line-height: 1.2;
+    }
+    
+    .kpi-desc {
+      font-size: var(--font-size-12);
+      color: var(--text-3);
+      line-height: 1.4;
+      margin-top: var(--spacing-1);
+    }
+    
+    .chart-card {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      box-shadow: var(--shadow-1);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .chart-title {
+      font-size: var(--font-size-16);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .chart-container {
+      width: 100%;
+      height: 300px;
+    }
+    
+    .chart-container-large {
+      height: 400px;
+    }
+    
+    .charts-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .tooltip-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: var(--radius-circle);
+      background: var(--fill-3);
+      color: var(--text-3);
+      font-size: 10px;
+      cursor: help;
+      transition: all var(--duration-fast) var(--ease-in-out);
+      margin-left: var(--spacing-1);
+    }
+    
+    .tooltip-icon:hover {
+      background: var(--primary-color);
+      color: var(--text-white);
+    }
+    
+    @media (max-width: 1600px) {
+      .kpi-grid-8 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    
+    @media (max-width: 1200px) {
+      .kpi-grid-8 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .charts-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <h1 class="page-title">平台运营报表</h1>
+    </div>
+    
+    <!-- 筛选工具栏 -->
+    <div class="filter-toolbar">
+      <div class="filter-group">
+        <span class="filter-label">时间范围：</span>
+        <el-select v-model="timeRange" @change="handleTimeRangeChange" style="width: 200px;">
+          <el-option label="最近7天" value="最近7天" />
+          <el-option label="最近30天" value="最近30天" />
+          <el-option label="最近90天" value="最近90天" />
+          <el-option label="自定义范围" value="custom" />
+        </el-select>
+        
+        <el-date-picker
+          v-if="timeRange === 'custom'"
+          v-model="customDateRange"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          @change="handleTimeRangeChange"
+          style="width: 400px; margin-left: var(--spacing-3);"
+        />
+      </div>
+      
+      <div class="filter-group">
+        <el-button @click="handleRefresh" :loading="loading" v-if="Refresh" :icon="Refresh">
+          刷新
+        </el-button>
+        <el-button @click="handleRefresh" :loading="loading" v-else>
+          刷新
+        </el-button>
+        <el-button @click="handleExport" v-if="Download" :icon="Download">
+          导出
+        </el-button>
+        <el-button @click="handleExport" v-else>
+          导出
+        </el-button>
+      </div>
+    </div>
+    
+    <!-- 标签页 -->
+    <div class="tabs-container">
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+        <!-- 智能体报表 -->
+        <el-tab-pane label="智能体报表" name="agents">
+          <div class="tab-content">
+            <!-- KPI卡片 -->
+            <div class="kpi-grid-8">
+              <div class="kpi-card" v-for="kpi in agentKPIs" :key="kpi.key">
+                <div class="kpi-label">
+                  {{ kpi.label }}
+                  <el-tooltip :content="kpi.tooltip" placement="top">
+                    <span class="tooltip-icon">i</span>
+                  </el-tooltip>
+                </div>
+                <div class="kpi-value">{{ kpi.value }}</div>
+                <div class="kpi-desc" v-if="kpi.desc">{{ kpi.desc }}</div>
+              </div>
+            </div>
+            
+            <!-- 成本与使用分析 -->
+            <h2 class="section-title">成本与使用分析</h2>
+            <div class="charts-grid-2">
+              <div class="chart-card">
+                <div class="chart-title">智能体成本趋势</div>
+                <div class="chart-container-large" id="agent-cost-trend"></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">Top 20 智能体成本排行</div>
+                <div class="chart-container-large" id="agent-cost-ranking"></div>
+              </div>
+            </div>
+            
+            <!-- 性能与质量分析 -->
+            <h2 class="section-title">性能与质量分析</h2>
+            <div class="charts-grid-2">
+              <div class="chart-card">
+                <div class="chart-title">智能体调用次数趋势（Top 10）</div>
+                <div class="chart-container-large" id="agent-usage-trend"></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">智能体成功率排行</div>
+                <div class="chart-container-large" id="agent-success-rate"></div>
+              </div>
+            </div>
+            
+            <!-- 明细表格 -->
+            <h2 class="section-title">智能体明细</h2>
+            <el-table
+              :data="agentTableData"
+              style="width: 100%"
+              v-loading="loading"
+              stripe
+              border
+            >
+              <el-table-column prop="name" label="智能体名称" width="200" />
+              <el-table-column prop="status" label="状态" width="100">
+                <template #default="{ row }">
+                  <el-tag :type="row.status === '已发布' ? 'success' : 'info'">{{ row.status }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="callCount" label="调用次数" width="120" sortable />
+              <el-table-column prop="userCount" label="使用用户数" width="120" sortable />
+              <el-table-column prop="totalTokens" label="Token消耗" width="150" sortable>
+                <template #default="{ row }">
+                  {{ Utils.formatToken(row.totalTokens) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="cost" label="成本(元)" width="120" sortable>
+                <template #default="{ row }">
+                  {{ Utils.formatCurrency(row.cost) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="successRate" label="成功率" width="100" sortable>
+                <template #default="{ row }">
+                  {{ row.successRate }}%
+                </template>
+              </el-table-column>
+              <el-table-column prop="avgResponseTime" label="平均响应时间" width="130" sortable>
+                <template #default="{ row }">
+                  {{ row.avgResponseTime }}秒
+                </template>
+              </el-table-column>
+              <el-table-column prop="creator" label="创建人" width="120" />
+              <el-table-column prop="lastCallTime" label="最后调用时间" width="180">
+                <template #default="{ row }">
+                  {{ Utils.formatDateTime(row.lastCallTime) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="100" fixed="right">
+                <template #default="{ row }">
+                  <el-button link type="primary" size="small">查看详情</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-pagination
+              v-model:current-page="agentPage"
+              v-model:page-size="pageSize"
+              :total="agentData.length"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleAgentPageChange"
+              @current-change="handleAgentPageChange"
+              style="margin-top: var(--spacing-4);"
+            />
+          </div>
+        </el-tab-pane>
+        
+        <!-- 工作流报表 -->
+        <el-tab-pane label="工作流报表" name="workflows">
+          <div class="tab-content">
+            <!-- KPI卡片 -->
+            <div class="kpi-grid-8">
+              <div class="kpi-card" v-for="kpi in workflowKPIs" :key="kpi.key">
+                <div class="kpi-label">
+                  {{ kpi.label }}
+                  <el-tooltip :content="kpi.tooltip" placement="top">
+                    <span class="tooltip-icon">i</span>
+                  </el-tooltip>
+                </div>
+                <div class="kpi-value">{{ kpi.value }}</div>
+                <div class="kpi-desc" v-if="kpi.desc">{{ kpi.desc }}</div>
+              </div>
+            </div>
+            
+            <!-- 成本与使用分析 -->
+            <h2 class="section-title">成本与使用分析</h2>
+            <div class="charts-grid-2">
+              <div class="chart-card">
+                <div class="chart-title">工作流成本趋势</div>
+                <div class="chart-container-large" id="workflow-cost-trend"></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">Top 20 工作流成本排行</div>
+                <div class="chart-container-large" id="workflow-cost-ranking"></div>
+              </div>
+            </div>
+            
+            <!-- 性能与质量分析 -->
+            <h2 class="section-title">性能与质量分析</h2>
+            <div class="charts-grid-2">
+              <div class="chart-card">
+                <div class="chart-title">工作流运行次数趋势（Top 10）</div>
+                <div class="chart-container-large" id="workflow-usage-trend"></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">工作流成功率排行</div>
+                <div class="chart-container-large" id="workflow-success-rate"></div>
+              </div>
+            </div>
+            
+            <!-- 明细表格 -->
+            <h2 class="section-title">工作流明细</h2>
+            <el-table
+              :data="workflowTableData"
+              style="width: 100%"
+              v-loading="loading"
+              stripe
+              border
+            >
+              <el-table-column prop="name" label="工作流名称" width="200" />
+              <el-table-column prop="status" label="状态" width="100">
+                <template #default="{ row }">
+                  <el-tag :type="row.status === '已发布' ? 'success' : 'info'">{{ row.status }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="runCount" label="运行次数" width="120" sortable />
+              <el-table-column prop="userCount" label="使用用户数" width="120" sortable />
+              <el-table-column prop="totalTokens" label="Token消耗" width="150" sortable>
+                <template #default="{ row }">
+                  {{ Utils.formatToken(row.totalTokens) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="cost" label="成本(元)" width="120" sortable>
+                <template #default="{ row }">
+                  {{ Utils.formatCurrency(row.cost) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="successRate" label="成功率" width="100" sortable>
+                <template #default="{ row }">
+                  {{ row.successRate }}%
+                </template>
+              </el-table-column>
+              <el-table-column prop="avgDuration" label="平均运行时长" width="130" sortable>
+                <template #default="{ row }">
+                  {{ Utils.formatDuration(row.avgDuration) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="nodeCount" label="节点数" width="100" sortable />
+              <el-table-column prop="creator" label="创建人" width="120" />
+              <el-table-column prop="lastRunTime" label="最后运行时间" width="180">
+                <template #default="{ row }">
+                  {{ Utils.formatDateTime(row.lastRunTime) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="100" fixed="right">
+                <template #default="{ row }">
+                  <el-button link type="primary" size="small">查看详情</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-pagination
+              v-model:current-page="workflowPage"
+              v-model:page-size="pageSize"
+              :total="workflowData.length"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleWorkflowPageChange"
+              @current-change="handleWorkflowPageChange"
+              style="margin-top: var(--spacing-4);"
+            />
+          </div>
+        </el-tab-pane>
+        
+        <!-- 用户报表 -->
+        <el-tab-pane label="用户报表" name="users">
+          <div class="tab-content">
+            <!-- KPI卡片 -->
+            <div class="kpi-grid-8">
+              <div class="kpi-card" v-for="kpi in userKPIs" :key="kpi.key">
+                <div class="kpi-label">
+                  {{ kpi.label }}
+                  <el-tooltip :content="kpi.tooltip" placement="top">
+                    <span class="tooltip-icon">i</span>
+                  </el-tooltip>
+                </div>
+                <div class="kpi-value">{{ kpi.value }}</div>
+                <div class="kpi-desc" v-if="kpi.desc">{{ kpi.desc }}</div>
+              </div>
+            </div>
+            
+            <!-- 成本与使用分析 -->
+            <h2 class="section-title">成本与使用分析</h2>
+            <div class="charts-grid-2">
+              <div class="chart-card">
+                <div class="chart-title">用户成本分布</div>
+                <div class="chart-container-large" id="user-cost-distribution"></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">Top 50 用户成本排行</div>
+                <div class="chart-container-large" id="user-cost-ranking"></div>
+              </div>
+            </div>
+            
+            <!-- 行为分析 -->
+            <h2 class="section-title">行为分析</h2>
+            <div class="charts-grid-2">
+              <div class="chart-card">
+                <div class="chart-title">用户活跃度分析</div>
+                <div class="chart-container-large" id="user-activity-scatter"></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">用户使用偏好</div>
+                <div class="chart-container-large" id="user-preference-stacked"></div>
+              </div>
+            </div>
+            
+            <!-- 明细表格 -->
+            <h2 class="section-title">用户明细</h2>
+            <el-table
+              :data="userTableData"
+              style="width: 100%"
+              v-loading="loading"
+              stripe
+              border
+            >
+              <el-table-column label="用户信息" width="200">
+                <template #default="{ row }">
+                  <div style="display: flex; align-items: center; gap: var(--spacing-2);">
+                    <img :src="row.avatar" style="width: 32px; height: 32px; border-radius: 50%;" />
+                    <span>{{ row.name }}</span>
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="tenant" label="所属租户" width="200" />
+              <el-table-column prop="agentCallCount" label="智能体调用次数" width="150" sortable />
+              <el-table-column prop="workflowRunCount" label="工作流运行次数" width="150" sortable />
+              <el-table-column prop="totalTokens" label="Token消耗" width="150" sortable>
+                <template #default="{ row }">
+                  {{ Utils.formatToken(row.totalTokens) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="cost" label="成本(元)" width="120" sortable>
+                <template #default="{ row }">
+                  {{ Utils.formatCurrency(row.cost) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="assetCount" label="使用资产数" width="120" sortable />
+              <el-table-column prop="lastActiveTime" label="最后活跃时间" width="180">
+                <template #default="{ row }">
+                  {{ Utils.formatDateTime(row.lastActiveTime) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="100" fixed="right">
+                <template #default="{ row }">
+                  <el-button link type="primary" size="small">查看详情</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-pagination
+              v-model:current-page="userPage"
+              v-model:page-size="pageSize"
+              :total="userData.length"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleUserPageChange"
+              @current-change="handleUserPageChange"
+              style="margin-top: var(--spacing-4);"
+            />
+          </div>
+        </el-tab-pane>
+        
+        <!-- 大模型报表 -->
+        <el-tab-pane label="大模型报表" name="models">
+          <div class="tab-content">
+            <!-- KPI卡片 -->
+            <div class="kpi-grid-8">
+              <div class="kpi-card" v-for="kpi in modelKPIs" :key="kpi.key">
+                <div class="kpi-label">
+                  {{ kpi.label }}
+                  <el-tooltip :content="kpi.tooltip" placement="top">
+                    <span class="tooltip-icon">i</span>
+                  </el-tooltip>
+                </div>
+                <div class="kpi-value">{{ kpi.value }}</div>
+                <div class="kpi-desc" v-if="kpi.desc">{{ kpi.desc }}</div>
+              </div>
+            </div>
+            
+            <!-- 成本与使用分析 -->
+            <h2 class="section-title">成本与使用分析</h2>
+            <div class="charts-grid-2">
+              <div class="chart-card">
+                <div class="chart-title">模型成本趋势</div>
+                <div class="chart-container-large" id="model-cost-trend"></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">Top 20 模型成本排行</div>
+                <div class="chart-container-large" id="model-cost-ranking"></div>
+              </div>
+            </div>
+            
+            <!-- 性能与质量分析 -->
+            <h2 class="section-title">性能与质量分析</h2>
+            <div class="charts-grid-2">
+              <div class="chart-card">
+                <div class="chart-title">模型响应时间对比</div>
+                <div class="chart-container-large" id="model-response-time"></div>
+              </div>
+              <div class="chart-card">
+                <div class="chart-title">模型错误率分析</div>
+                <div class="chart-container-large" id="model-error-rate"></div>
+              </div>
+            </div>
+            
+            <!-- 明细表格 -->
+            <h2 class="section-title">模型明细</h2>
+            <el-table
+              :data="modelTableData"
+              style="width: 100%"
+              v-loading="loading"
+              stripe
+              border
+            >
+              <el-table-column prop="name" label="模型名称" width="200" />
+              <el-table-column prop="callCount" label="调用次数" width="120" sortable />
+              <el-table-column prop="successCount" label="成功次数" width="120" sortable />
+              <el-table-column prop="failCount" label="失败次数" width="120" sortable />
+              <el-table-column prop="errorRate" label="错误率" width="100" sortable>
+                <template #default="{ row }">
+                  {{ row.errorRate }}%
+                </template>
+              </el-table-column>
+              <el-table-column prop="totalTokens" label="Token消耗" width="150" sortable>
+                <template #default="{ row }">
+                  {{ Utils.formatToken(row.totalTokens) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="cost" label="成本(元)" width="120" sortable>
+                <template #default="{ row }">
+                  {{ Utils.formatCurrency(row.cost) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="avgPrice" label="平均单价" width="120" sortable>
+                <template #default="{ row }">
+                  ¥{{ row.avgPrice }}/1K
+                </template>
+              </el-table-column>
+              <el-table-column prop="avgResponseTime" label="平均响应时间" width="150" sortable>
+                <template #default="{ row }">
+                  {{ row.avgResponseTime }}ms
+                </template>
+              </el-table-column>
+              <el-table-column prop="mainScenario" label="主要使用场景" width="150">
+                <template #default="{ row }">
+                  <el-tag :type="row.mainScenario === '智能体' ? 'primary' : 'success'">{{ row.mainScenario }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="100" fixed="right">
+                <template #default="{ row }">
+                  <el-button link type="primary" size="small">查看详情</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-pagination
+              v-model:current-page="modelPage"
+              v-model:page-size="pageSize"
+              :total="modelData.length"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleModelPageChange"
+              @current-change="handleModelPageChange"
+              style="margin-top: var(--spacing-4);"
+            />
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </div>
+  </div>
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <script src="https://unpkg.com/@element-plus/icons-vue@2/dist/index.iife.js"></script>
+  
+  <!-- ECharts -->
+  <script src="https://unpkg.com/echarts@5.4.3/dist/echarts.min.js"></script>
+  
+  <!-- 工具函数 -->
+  <script src="./assets/js/utils.js"></script>
+  
+  <!-- Mock数据 -->
+  <script src="./assets/js/mock-data.js"></script>
+  
+  <!-- 图表配置 -->
+  <script src="./assets/js/charts.js"></script>
+  
+  <!-- 主应用 -->
+  <script>
+    const { createApp, ref, computed, onMounted, nextTick } = Vue;
+    const { ElMessage } = ElementPlus;
+    
+    // 安全获取图标
+    let Refresh, Download;
+    try {
+      if (typeof ElementPlusIconsVue !== 'undefined') {
+        Refresh = ElementPlusIconsVue.Refresh;
+        Download = ElementPlusIconsVue.Download;
+      } else if (typeof window.ElementPlusIconsVue !== 'undefined') {
+        Refresh = window.ElementPlusIconsVue.Refresh;
+        Download = window.ElementPlusIconsVue.Download;
+      }
+    } catch (e) {
+      console.warn('图标加载失败，将使用文本按钮', e);
+    }
+    
+    createApp({
+      setup() {
+        // 状态
+        const activeTab = ref('agents');
+        const timeRange = ref('最近30天');
+        const customDateRange = ref(null);
+        const loading = ref(false);
+        const pageSize = ref(20);
+        
+        // 分页
+        const agentPage = ref(1);
+        const workflowPage = ref(1);
+        const userPage = ref(1);
+        const modelPage = ref(1);
+        
+        // 数据
+        const agentData = ref([]);
+        const workflowData = ref([]);
+        const userData = ref([]);
+        const modelData = ref([]);
+        
+        // 图表实例
+        const charts = {};
+        
+        // 计算属性
+        const agentKPIs = computed(() => {
+          if (agentData.value.length === 0) return [];
+          const total = agentData.value.length;
+          const active = agentData.value.filter(a => a.status === '已发布').length;
+          const totalCalls = agentData.value.reduce((sum, a) => sum + a.callCount, 0);
+          const totalDialogs = agentData.value.reduce((sum, a) => sum + a.dialogCount, 0);
+          const totalTokens = agentData.value.reduce((sum, a) => sum + a.totalTokens, 0);
+          const totalCost = agentData.value.reduce((sum, a) => sum + a.cost, 0);
+          const avgSuccessRate = (agentData.value.reduce((sum, a) => sum + parseFloat(a.successRate), 0) / total).toFixed(2);
+          const uniqueUsers = new Set(agentData.value.flatMap(a => Array.from({length: a.userCount}, (_, i) => `${a.id}_${i}`))).size;
+          
+          return [
+            { key: 'total', label: '智能体总数', value: total, tooltip: '平台所有智能体数量' },
+            { key: 'active', label: '活跃智能体数', value: active, tooltip: '周期内被调用过的智能体数量' },
+            { key: 'calls', label: '总调用次数', value: Utils.formatNumber(totalCalls), tooltip: '周期内所有智能体的调用次数总和' },
+            { key: 'dialogs', label: '总对话轮次', value: Utils.formatNumber(totalDialogs), tooltip: '用户与智能体的交互轮次总和' },
+            { key: 'tokens', label: '总Token消耗', value: Utils.formatToken(totalTokens), tooltip: '智能体直接Token + 调用的工作流Token' },
+            { key: 'cost', label: '总成本', value: Utils.formatCurrency(totalCost), tooltip: '所有Token消耗对应的成本总和' },
+            { key: 'successRate', label: '平均调用成功率', value: avgSuccessRate + '%', tooltip: '成功调用次数 / 总调用次数' },
+            { key: 'users', label: '活跃用户数', value: uniqueUsers, tooltip: '调用过智能体的去重用户数' },
+          ];
+        });
+        
+        const workflowKPIs = computed(() => {
+          if (workflowData.value.length === 0) return [];
+          const total = workflowData.value.length;
+          const active = workflowData.value.filter(w => w.status === '已发布').length;
+          const totalRuns = workflowData.value.reduce((sum, w) => sum + w.runCount, 0);
+          const totalTokens = workflowData.value.reduce((sum, w) => sum + w.totalTokens, 0);
+          const totalCost = workflowData.value.reduce((sum, w) => sum + w.cost, 0);
+          const avgSuccessRate = (workflowData.value.reduce((sum, w) => sum + parseFloat(w.successRate), 0) / total).toFixed(2);
+          const avgDuration = (workflowData.value.reduce((sum, w) => sum + w.avgDuration, 0) / total).toFixed(1);
+          const uniqueUsers = new Set(workflowData.value.flatMap(w => Array.from({length: w.userCount}, (_, i) => `${w.id}_${i}`))).size;
+          
+          return [
+            { key: 'total', label: '工作流总数', value: total, tooltip: '平台所有工作流数量' },
+            { key: 'active', label: '活跃工作流数', value: active, tooltip: '周期内被运行过的工作流数量' },
+            { key: 'runs', label: '总运行次数', value: Utils.formatNumber(totalRuns), tooltip: '周期内所有工作流的运行次数总和' },
+            { key: 'tokens', label: '总Token消耗', value: Utils.formatToken(totalTokens), tooltip: '工作流运行产生的所有Token' },
+            { key: 'cost', label: '总成本', value: Utils.formatCurrency(totalCost), tooltip: '所有Token消耗对应的成本总和' },
+            { key: 'successRate', label: '平均运行成功率', value: avgSuccessRate + '%', tooltip: '成功运行次数 / 总运行次数' },
+            { key: 'duration', label: '平均运行时长', value: Utils.formatDuration(avgDuration), tooltip: '成功运行工作流的平均持续时间' },
+            { key: 'users', label: '活跃用户数', value: uniqueUsers, tooltip: '运行过工作流的去重用户数' },
+          ];
+        });
+        
+        const userKPIs = computed(() => {
+          if (userData.value.length === 0) return [];
+          const total = userData.value.length;
+          const active = userData.value.filter(u => new Date(u.lastActiveTime) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length;
+          const totalTokens = userData.value.reduce((sum, u) => sum + u.totalTokens, 0);
+          const totalCost = userData.value.reduce((sum, u) => sum + u.cost, 0);
+          const avgTokens = Math.floor(totalTokens / total);
+          const avgCost = totalCost / total;
+          const activeRate = ((active / total) * 100).toFixed(1);
+          const top10Cost = userData.value.slice(0, 10).reduce((sum, u) => sum + u.cost, 0);
+          const top10CostRate = ((top10Cost / totalCost) * 100).toFixed(1);
+          
+          return [
+            { key: 'total', label: '总用户数', value: total, tooltip: '平台所有用户数量' },
+            { key: 'active', label: '活跃用户数', value: active, tooltip: '周期内有使用行为的用户数量' },
+            { key: 'tokens', label: '总Token消耗', value: Utils.formatToken(totalTokens), tooltip: '所有用户的Token消耗总和' },
+            { key: 'cost', label: '总成本', value: Utils.formatCurrency(totalCost), tooltip: '所有用户产生的成本总和' },
+            { key: 'avgTokens', label: '人均Token消耗', value: Utils.formatToken(avgTokens), tooltip: '总Token消耗 / 活跃用户数' },
+            { key: 'avgCost', label: '人均成本', value: Utils.formatCurrency(avgCost), tooltip: '总成本 / 活跃用户数' },
+            { key: 'activeRate', label: '用户活跃度', value: activeRate + '%', tooltip: '活跃用户数 / 总用户数' },
+            { key: 'top10Rate', label: 'Top用户成本占比', value: top10CostRate + '%', tooltip: 'Top 10用户成本 / 总成本' },
+          ];
+        });
+        
+        const modelKPIs = computed(() => {
+          if (modelData.value.length === 0) return [];
+          const total = modelData.value.length;
+          const totalTokens = modelData.value.reduce((sum, m) => sum + m.totalTokens, 0);
+          const totalCost = modelData.value.reduce((sum, m) => sum + m.cost, 0);
+          const avgPrice = (totalCost / totalTokens * 1000).toFixed(4);
+          const totalCalls = modelData.value.reduce((sum, m) => sum + m.callCount, 0);
+          const avgResponseTime = Math.floor(modelData.value.reduce((sum, m) => sum + m.avgResponseTime, 0) / total);
+          const totalErrors = modelData.value.reduce((sum, m) => sum + m.failCount, 0);
+          const errorRate = ((totalErrors / totalCalls) * 100).toFixed(2);
+          const hottestModel = modelData.value.sort((a, b) => b.callCount - a.callCount)[0];
+          
+          return [
+            { key: 'total', label: '使用模型数', value: total, tooltip: '被调用过的去重模型数量' },
+            { key: 'tokens', label: '总Token消耗', value: Utils.formatToken(totalTokens), tooltip: '所有模型的Token消耗总和' },
+            { key: 'cost', label: '总成本', value: Utils.formatCurrency(totalCost), tooltip: '所有模型产生的成本总和' },
+            { key: 'avgPrice', label: '平均Token单价', value: '¥' + avgPrice + '/1K', tooltip: '总成本 / 总Token消耗 * 1000' },
+            { key: 'calls', label: '调用次数', value: Utils.formatNumber(totalCalls), tooltip: '所有模型的API调用次数总和' },
+            { key: 'responseTime', label: '平均响应时间', value: avgResponseTime + 'ms', tooltip: '所有API调用的平均响应时间' },
+            { key: 'errorRate', label: '错误率', value: errorRate + '%', tooltip: '失败调用次数 / 总调用次数' },
+            { key: 'hottest', label: '最热门模型', value: hottestModel.name, tooltip: '调用次数最多的模型' },
+          ];
+        });
+        
+        const agentTableData = computed(() => {
+          const start = (agentPage.value - 1) * pageSize.value;
+          return agentData.value.slice(start, start + pageSize.value);
+        });
+        
+        const workflowTableData = computed(() => {
+          const start = (workflowPage.value - 1) * pageSize.value;
+          return workflowData.value.slice(start, start + pageSize.value);
+        });
+        
+        const userTableData = computed(() => {
+          const start = (userPage.value - 1) * pageSize.value;
+          return userData.value.slice(start, start + pageSize.value);
+        });
+        
+        const modelTableData = computed(() => {
+          const start = (modelPage.value - 1) * pageSize.value;
+          return modelData.value.slice(start, start + pageSize.value);
+        });
+        
+        // 方法
+        const loadData = () => {
+          loading.value = true;
+          setTimeout(() => {
+            try {
+              if (typeof MockData === 'undefined') {
+                console.error('MockData未加载');
+                loading.value = false;
+                return;
+              }
+              const days = timeRange.value === '最近7天' ? 7 : timeRange.value === '最近90天' ? 90 : 30;
+              agentData.value = MockData.generateAgentData(days);
+              workflowData.value = MockData.generateWorkflowData(days);
+              userData.value = MockData.generateUserData(days);
+              modelData.value = MockData.generateModelData(days);
+              loading.value = false;
+              nextTick(() => {
+                renderCharts();
+              });
+            } catch (e) {
+              console.error('数据加载失败:', e);
+              loading.value = false;
+              ElMessage.error('数据加载失败，请刷新页面重试');
+            }
+          }, 500);
+        };
+        
+        const renderCharts = () => {
+          const days = timeRange.value === '最近7天' ? 7 : timeRange.value === '最近90天' ? 90 : 30;
+          
+          // 确保依赖已加载
+          if (typeof Utils === 'undefined' || typeof ChartConfig === 'undefined' || typeof MockData === 'undefined') {
+            console.error('依赖未加载完成');
+            return;
+          }
+          
+          // 智能体图表
+          if (activeTab.value === 'agents' && agentData.value.length > 0) {
+            try {
+              const tokenData = MockData.generateTokenTimeSeriesData(days);
+              if (charts['agent-cost-trend']) charts['agent-cost-trend'].dispose();
+              charts['agent-cost-trend'] = Utils.initChart('agent-cost-trend', ChartConfig.createCostTrendChart(tokenData));
+            
+            const agentRanking = agentData.value.slice(0, 20).map(a => ({ name: a.name, value: a.cost }));
+            if (charts['agent-cost-ranking']) charts['agent-cost-ranking'].dispose();
+            charts['agent-cost-ranking'] = Utils.initChart('agent-cost-ranking', ChartConfig.createTopRankingChart(agentRanking, '成本', Utils.formatCurrency));
+            
+            const top10Agents = agentData.value.slice(0, 10);
+            const usageData = MockData.generateDualTimeSeriesData(days);
+            usageData.forEach((d, i) => {
+              d.value1 = top10Agents[i % 10]?.callCount || d.value1;
+              d.value2 = top10Agents[(i + 5) % 10]?.callCount || d.value2;
+            });
+            if (charts['agent-usage-trend']) charts['agent-usage-trend'].dispose();
+            charts['agent-usage-trend'] = Utils.initChart('agent-usage-trend', ChartConfig.createUsageTrendChart(usageData, ['智能体1', '智能体2']));
+            
+            if (charts['agent-success-rate']) charts['agent-success-rate'].dispose();
+            charts['agent-success-rate'] = Utils.initChart('agent-success-rate', ChartConfig.createSuccessRateChart(agentData.value));
+            } catch (e) {
+              console.error('智能体图表渲染失败:', e);
+            }
+          }
+          
+          // 工作流图表
+          if (activeTab.value === 'workflows' && workflowData.value.length > 0) {
+            try {
+            const tokenData = MockData.generateTokenTimeSeriesData(days);
+            if (charts['workflow-cost-trend']) charts['workflow-cost-trend'].dispose();
+            charts['workflow-cost-trend'] = Utils.initChart('workflow-cost-trend', ChartConfig.createCostTrendChart(tokenData));
+            
+            const workflowRanking = workflowData.value.slice(0, 20).map(w => ({ name: w.name, value: w.cost }));
+            if (charts['workflow-cost-ranking']) charts['workflow-cost-ranking'].dispose();
+            charts['workflow-cost-ranking'] = Utils.initChart('workflow-cost-ranking', ChartConfig.createTopRankingChart(workflowRanking, '成本', Utils.formatCurrency));
+            
+            const top10Workflows = workflowData.value.slice(0, 10);
+            const usageData = MockData.generateDualTimeSeriesData(days);
+            usageData.forEach((d, i) => {
+              d.value1 = top10Workflows[i % 10]?.runCount || d.value1;
+              d.value2 = top10Workflows[(i + 5) % 10]?.runCount || d.value2;
+            });
+            if (charts['workflow-usage-trend']) charts['workflow-usage-trend'].dispose();
+            charts['workflow-usage-trend'] = Utils.initChart('workflow-usage-trend', ChartConfig.createUsageTrendChart(usageData, ['工作流1', '工作流2']));
+            
+            if (charts['workflow-success-rate']) charts['workflow-success-rate'].dispose();
+            charts['workflow-success-rate'] = Utils.initChart('workflow-success-rate', ChartConfig.createSuccessRateChart(workflowData.value));
+            } catch (e) {
+              console.error('工作流图表渲染失败:', e);
+            }
+          }
+          
+          // 用户图表
+          if (activeTab.value === 'users' && userData.value.length > 0) {
+            try {
+            const costBins = [0, 100, 500, 1000, 2000, 5000, 10000, 20000];
+            const costValues = userData.value.map(u => u.cost);
+            if (charts['user-cost-distribution']) charts['user-cost-distribution'].dispose();
+            charts['user-cost-distribution'] = Utils.initChart('user-cost-distribution', ChartConfig.createDistributionChart(costValues, costBins));
+            
+            const userRanking = userData.value.slice(0, 50).map(u => ({ name: u.name, value: u.cost }));
+            if (charts['user-cost-ranking']) charts['user-cost-ranking'].dispose();
+            charts['user-cost-ranking'] = Utils.initChart('user-cost-ranking', ChartConfig.createTopRankingChart(userRanking, '成本', Utils.formatCurrency));
+            
+            const scatterData = userData.value.slice(0, 100).map(u => [u.agentCallCount + u.workflowRunCount, u.assetCount, u.cost]);
+            if (charts['user-activity-scatter']) charts['user-activity-scatter'].dispose();
+            charts['user-activity-scatter'] = Utils.initChart('user-activity-scatter', ChartConfig.createScatterChart(scatterData, '调用次数', '使用资产数'));
+            
+            const top20Users = userData.value.slice(0, 20);
+            const stackedData = top20Users.map(u => ({
+              name: u.name.length > 10 ? u.name.substring(0, 10) + '...' : u.name,
+              value1: u.agentCallCount,
+              value2: u.workflowRunCount,
+            }));
+            if (charts['user-preference-stacked']) charts['user-preference-stacked'].dispose();
+            charts['user-preference-stacked'] = Utils.initChart('user-preference-stacked', ChartConfig.createStackedBarChart(stackedData, ['智能体调用', '工作流运行']));
+            } catch (e) {
+              console.error('用户图表渲染失败:', e);
+            }
+          }
+          
+          // 模型图表
+          if (activeTab.value === 'models' && modelData.value.length > 0) {
+            try {
+            const tokenData = MockData.generateTokenTimeSeriesData(days);
+            if (charts['model-cost-trend']) charts['model-cost-trend'].dispose();
+            charts['model-cost-trend'] = Utils.initChart('model-cost-trend', ChartConfig.createCostTrendChart(tokenData));
+            
+            const modelRanking = modelData.value.slice(0, 20).map(m => ({ name: m.name, value: m.cost }));
+            if (charts['model-cost-ranking']) charts['model-cost-ranking'].dispose();
+            charts['model-cost-ranking'] = Utils.initChart('model-cost-ranking', ChartConfig.createTopRankingChart(modelRanking, '成本', Utils.formatCurrency));
+            
+            const boxData = modelData.value.slice(0, 10).map(m => ({
+              name: m.name,
+              values: Array.from({length: 100}, () => m.avgResponseTime + (Math.random() - 0.5) * m.avgResponseTime * 0.5),
+            }));
+            if (charts['model-response-time']) charts['model-response-time'].dispose();
+            charts['model-response-time'] = Utils.initChart('model-response-time', ChartConfig.createBoxPlotChart(boxData));
+            
+            const errorRanking = modelData.value.map(m => ({ name: m.name, value: m.errorRate, callCount: m.callCount }));
+            if (charts['model-error-rate']) charts['model-error-rate'].dispose();
+            charts['model-error-rate'] = Utils.initChart('model-error-rate', ChartConfig.createTopRankingChart(errorRanking, '错误率', (v) => v + '%'));
+            } catch (e) {
+              console.error('模型图表渲染失败:', e);
+            }
+          }
+        };
+        
+        const handleTimeRangeChange = () => {
+          loadData();
+        };
+        
+        const handleTabChange = () => {
+          nextTick(() => {
+            renderCharts();
+          });
+        };
+        
+        const handleRefresh = () => {
+          loadData();
+        };
+        
+        const handleExport = () => {
+          let data = [];
+          let columns = [];
+          let filename = '';
+          
+          if (activeTab.value === 'agents') {
+            data = agentData.value;
+            columns = [
+              { label: '智能体名称', prop: 'name' },
+              { label: '状态', prop: 'status' },
+              { label: '调用次数', prop: 'callCount' },
+              { label: '使用用户数', prop: 'userCount' },
+              { label: 'Token消耗', prop: 'totalTokens' },
+              { label: '成本(元)', prop: 'cost' },
+              { label: '成功率', prop: 'successRate' },
+              { label: '平均响应时间', prop: 'avgResponseTime' },
+            ];
+            filename = `智能体报表_${new Date().toISOString().slice(0, 10)}.csv`;
+          } else if (activeTab.value === 'workflows') {
+            data = workflowData.value;
+            columns = [
+              { label: '工作流名称', prop: 'name' },
+              { label: '状态', prop: 'status' },
+              { label: '运行次数', prop: 'runCount' },
+              { label: '使用用户数', prop: 'userCount' },
+              { label: 'Token消耗', prop: 'totalTokens' },
+              { label: '成本(元)', prop: 'cost' },
+              { label: '成功率', prop: 'successRate' },
+              { label: '平均运行时长', prop: 'avgDuration' },
+            ];
+            filename = `工作流报表_${new Date().toISOString().slice(0, 10)}.csv`;
+          } else if (activeTab.value === 'users') {
+            data = userData.value;
+            columns = [
+              { label: '用户名称', prop: 'name' },
+              { label: '所属租户', prop: 'tenant' },
+              { label: '智能体调用次数', prop: 'agentCallCount' },
+              { label: '工作流运行次数', prop: 'workflowRunCount' },
+              { label: 'Token消耗', prop: 'totalTokens' },
+              { label: '成本(元)', prop: 'cost' },
+              { label: '使用资产数', prop: 'assetCount' },
+            ];
+            filename = `用户报表_${new Date().toISOString().slice(0, 10)}.csv`;
+          } else if (activeTab.value === 'models') {
+            data = modelData.value;
+            columns = [
+              { label: '模型名称', prop: 'name' },
+              { label: '调用次数', prop: 'callCount' },
+              { label: '成功次数', prop: 'successCount' },
+              { label: '失败次数', prop: 'failCount' },
+              { label: '错误率', prop: 'errorRate' },
+              { label: 'Token消耗', prop: 'totalTokens' },
+              { label: '成本(元)', prop: 'cost' },
+              { label: '平均单价', prop: 'avgPrice' },
+            ];
+            filename = `大模型报表_${new Date().toISOString().slice(0, 10)}.csv`;
+          }
+          
+          Utils.exportToCSV(data, filename, columns);
+        };
+        
+        const handleAgentPageChange = () => {};
+        const handleWorkflowPageChange = () => {};
+        const handleUserPageChange = () => {};
+        const handleModelPageChange = () => {};
+        
+        // 初始化
+        onMounted(() => {
+          loadData();
+        });
+        
+        return {
+          Refresh: Refresh || null,
+          Download: Download || null,
+          Utils: typeof Utils !== 'undefined' ? Utils : {},
+          activeTab,
+          timeRange,
+          customDateRange,
+          loading,
+          pageSize,
+          agentPage,
+          workflowPage,
+          userPage,
+          modelPage,
+          agentData,
+          workflowData,
+          userData,
+          modelData,
+          agentKPIs,
+          workflowKPIs,
+          userKPIs,
+          modelKPIs,
+          agentTableData,
+          workflowTableData,
+          userTableData,
+          modelTableData,
+          handleTimeRangeChange,
+          handleTabChange,
+          handleRefresh,
+          handleExport,
+          handleAgentPageChange,
+          handleWorkflowPageChange,
+          handleUserPageChange,
+          handleModelPageChange,
+        };
+      },
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

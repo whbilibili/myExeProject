@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>积分计费规则</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 24px 24px 0;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #9ca3af;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            color: #3b82f6;
+        }
+
+        .modal-content {
+            padding: 24px;
+        }
+
+        .description {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .example-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+        }
+
+        .points-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .points-table th {
+            background: #f8fafc;
+            color: #374151;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .points-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .points-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .model-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .model-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .model-icon::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+
+        .model-icon::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            right: 4px;
+            top: 4px;
+        }
+
+        .model-name {
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .usage-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .usage-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .usage-row:not(:last-child) {
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .usage-type {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .consumption {
+            color: #059669;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .info-banner {
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .info-icon {
+            width: 20px;
+            height: 20px;
+            color: #3b82f6;
+            flex-shrink: 0;
+        }
+
+        .info-text {
+            color: #1e40af;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .modal {
+                margin: 20px;
+                max-width: calc(100vw - 40px);
+            }
+            
+            .modal-content {
+                padding: 16px;
+            }
+            
+            .points-table th,
+            .points-table td {
+                padding: 12px 8px;
+                font-size: 13px;
+            }
+            
+            .model-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">积分计费规则</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('consumption')">消耗规则</button>
+                    <button class="tab" onclick="switchTab('addition')">增加规则</button>
+                </div>
+            </div>
+            
+            <div class="modal-content">
+                <div class="description">
+                    积分是平台内用于计量资源消耗的统一单位。当您使用需要计算资源的功能时，系统会自动扣除相应积分。
+                </div>
+                
+                <div class="example-title">详细计费表示例：</div>
+                
+                <table class="points-table">
+                    <thead>
+                        <tr>
+                            <th>模型名称</th>
+                            <th>用量</th>
+                            <th>消耗</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="model-info">
+                                    <div class="model-icon"></div>
+                                    <span class="model-name">豆包·通用模型·Lite·128k</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="usage-item">
+                                    <div class="usage-row">
+                                        <span class="usage-type">千Tokens输入</span>
+                                    </div>
+                                    <div class="usage-row">
+                                        <span class="usage-type">千Tokens输出</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="usage-item">
+                                    <div class="usage-row">
+                                        <span class="consumption">0.8 积分点</span>
+                                    </div>
+                                    <div class="usage-row">
+                                        <span class="consumption">1 积分点</span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="info-banner">
+                    <svg class="info-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M11 3a1 1 0 112 0v6a1 1 0 11-2 0V3zM9 9a1 1 0 00-2 0v4a1 1 0 102 0V9z" clip-rule="evenodd"></path>
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div class="info-text">
+                        功能开发中：此处的积分消耗规则为功能示例，详细的自动化计费系统正在开发中，敬请期待！
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function closeModal() {
+            document.querySelector('.modal-overlay').style.display = 'none';
+        }
+
+        function switchTab(tabName) {
+            // 移除所有tab的active类
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 为当前点击的tab添加active类
+            event.target.classList.add('active');
+            
+            // 这里可以添加切换内容的逻辑
+            if (tabName === 'consumption') {
+                // 显示消耗规则内容
+                console.log('切换到消耗规则');
+            } else if (tabName === 'addition') {
+                // 显示增加规则内容
+                console.log('切换到增加规则');
+            }
+        }
+
+        // 点击遮罩层关闭弹窗
+        document.querySelector('.modal-overlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // ESC键关闭弹窗
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

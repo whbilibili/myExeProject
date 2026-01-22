@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>租户管理 - 运营后台</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 飞书设计系统 -->
+  <link rel="stylesheet" href="./assets/css/feishu-design.css">
+  
+  <style>
+    /* 仪表盘网格 */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    /* 筛选区域 */
+    .filter-bar {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      margin-bottom: var(--spacing-4);
+      box-shadow: var(--shadow-1);
+    }
+    
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-4);
+      flex-wrap: wrap;
+    }
+    
+    .filter-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .filter-label {
+      font-size: var(--font-size-13);
+      color: var(--text-2);
+      white-space: nowrap;
+    }
+    
+    /* 租户名称单元格 */
+    .tenant-cell {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-in-out);
+      padding: var(--spacing-2) 0;
+    }
+    
+    .tenant-cell:hover {
+      color: var(--primary-color);
+    }
+    
+    .tenant-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-large);
+      object-fit: cover;
+      border: 1px solid var(--border-2);
+      flex-shrink: 0;
+      background: var(--fill-1);
+    }
+    
+    .tenant-cell:hover .tenant-logo {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px var(--primary-lightest);
+    }
+    
+    .tenant-info {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-1);
+    }
+    
+    .tenant-name {
+      font-weight: var(--font-weight-medium);
+      color: var(--text-1);
+      transition: color var(--duration-fast);
+    }
+    
+    .tenant-cell:hover .tenant-name {
+      color: var(--primary-color);
+    }
+    
+    .tenant-id {
+      font-size: var(--font-size-12);
+      color: var(--text-3);
+      font-family: var(--font-family-mono);
+    }
+    
+    /* 版本单元格 */
+    .version-cell {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-1);
+    }
+    
+    .expire-date {
+      font-size: var(--font-size-12);
+      color: var(--text-3);
+    }
+    
+    /* 数字单元格（可点击） */
+    .number-cell {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      padding: var(--spacing-1) var(--spacing-2);
+      border-radius: var(--radius-medium);
+      transition: all var(--duration-fast) var(--ease-in-out);
+      color: var(--primary-color);
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .number-cell:hover {
+      background-color: var(--primary-lightest);
+    }
+    
+    /* 操作按钮 */
+    .action-buttons {
+      display: flex;
+      gap: var(--spacing-2);
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <div class="page-container">
+      <!-- 页面头部 -->
+      <div class="page-header">
+        <h1 class="page-title">租户管理</h1>
+      </div>
+      
+      <!-- 页面内容 -->
+      <div class="page-content">
+        <!-- 仪表盘 -->
+        <div class="dashboard-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">
+              租户总数
+            </div>
+            <div class="kpi-value">{{ formatNumber(stats.totalTenants) }}</div>
+          </div>
+          
+          <div class="kpi-card">
+            <div class="kpi-label">
+              正常租户
+            </div>
+            <div class="kpi-value text-success">{{ formatNumber(stats.normalTenants) }}</div>
+          </div>
+          
+          <div class="kpi-card">
+            <div class="kpi-label">
+              已禁用租户
+            </div>
+            <div class="kpi-value text-danger">{{ formatNumber(stats.disabledTenants) }}</div>
+          </div>
+          
+          <div class="kpi-card">
+            <div class="kpi-label">
+              套餐到期
+            </div>
+            <div class="kpi-value text-warning">{{ formatNumber(stats.expiredTenants) }}</div>
+          </div>
+          
+          <div class="kpi-card">
+            <div class="kpi-label">
+              今日新增租户
+            </div>
+            <div class="kpi-value">{{ formatNumber(stats.todayNewTenants) }}</div>
+            <div class="kpi-trend up">
+              <el-icon><CaretTop /></el-icon>
+              12.5%
+            </div>
+          </div>
+        </div>
+        
+        <!-- 筛选区域 -->
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-item" style="flex: 1; min-width: 280px;">
+              <el-input
+                v-model="searchKeyword"
+                placeholder="搜索租户名称、租户ID"
+                clearable
+                @input="handleSearch"
+              >
+                <template #prefix>
+                  <el-icon><Search /></el-icon>
+                </template>
+              </el-input>
+            </div>
+            
+            <div class="filter-item">
+              <span class="filter-label">版本:</span>
+              <el-select v-model="filters.version" placeholder="全部版本" clearable multiple collapse-tags style="width: 180px;">
+                <el-option label="试用版" value="试用版" />
+                <el-option label="团队版" value="团队版" />
+                <el-option label="企业版" value="企业版" />
+              </el-select>
+            </div>
+            
+            <div class="filter-item">
+              <span class="filter-label">状态:</span>
+              <el-select v-model="filters.status" placeholder="全部状态" clearable style="width: 140px;">
+                <el-option label="全部" value="" />
+                <el-option label="正常" value="正常" />
+                <el-option label="已禁用" value="已禁用" />
+                <el-option label="套餐到期" value="套餐到期" />
+              </el-select>
+            </div>
+            
+            <div class="filter-item">
+              <span class="filter-label">创建时间:</span>
+              <el-date-picker
+                v-model="filters.dateRange"
+                type="daterange"
+                range-separator="-"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                style="width: 260px;"
+              />
+            </div>
+            
+            <el-button @click="resetFilters">重置</el-button>
+          </div>
+        </div>
+        
+        <!-- 租户列表 -->
+        <div class="table-container">
+          <el-table
+            :data="paginatedData"
+            style="width: 100%"
+            :default-sort="{ prop: 'createTime', order: 'descending' }"
+            @sort-change="handleSortChange"
+          >
+            <el-table-column prop="id" label="租户ID" width="120" sortable="custom">
+              <template #default="{ row }">
+                <span style="font-family: var(--font-family-mono); font-size: 13px;">{{ row.id }}</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="name" label="租户名称" min-width="220" sortable="custom">
+              <template #default="{ row }">
+                <div class="tenant-cell" @click="goToDetail(row.id)">
+                  <img :src="row.logo" :alt="row.name" class="tenant-logo" />
+                  <div class="tenant-info">
+                    <span class="tenant-name">{{ row.name }}</span>
+                    <span class="tenant-id">{{ row.id }}</span>
+                  </div>
+                </div>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="version" label="版本" width="140" sortable="custom">
+              <template #default="{ row }">
+                <div class="version-cell">
+                  <el-tag :type="getVersionType(row.version)" size="small">{{ row.version }}</el-tag>
+                  <span v-if="row.expireDate" class="expire-date">{{ formatDate(row.expireDate) }} 到期</span>
+                  <span v-else class="expire-date">永久有效</span>
+                </div>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="owner" label="所有者" width="140">
+              <template #default="{ row }">
+                <div class="user-info">
+                  <img :src="row.ownerAvatar" :alt="row.owner" class="avatar avatar-small" />
+                  <span class="user-name">{{ row.owner }}</span>
+                </div>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="memberCount" label="成员数量" width="100" align="right" sortable="custom">
+              <template #default="{ row }">
+                <span class="number-cell" @click="goToDetailTab(row.id, 'members')">
+                  {{ formatNumber(row.memberCount) }}
+                </span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="agentCount" label="智能体数" width="100" align="right" sortable="custom">
+              <template #default="{ row }">
+                <span class="number-cell">{{ formatNumber(row.agentCount) }}</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="workflowCount" label="工作流数" width="100" align="right" sortable="custom">
+              <template #default="{ row }">
+                <span class="number-cell">{{ formatNumber(row.workflowCount) }}</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="toolLibraryCount" label="工具库数" width="100" align="right" sortable="custom">
+              <template #default="{ row }">
+                <span class="number-cell">{{ formatNumber(row.toolLibraryCount) }}</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="toolCount" label="工具数" width="90" align="right" sortable="custom">
+              <template #default="{ row }">
+                <span class="number-cell">{{ formatNumber(row.toolCount) }}</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="spaceCount" label="团队空间数" width="110" align="right" sortable="custom">
+              <template #default="{ row }">
+                <span class="number-cell">{{ formatNumber(row.spaceCount) }}</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="status" label="状态" width="100" sortable="custom">
+              <template #default="{ row }">
+                <el-tag :type="getStatusType(row.status)" size="small">{{ row.status }}</el-tag>
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="createTime" label="创建时间" width="160" sortable="custom">
+              <template #default="{ row }">
+                {{ formatDateTime(row.createTime) }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column prop="creator" label="创建人" width="140">
+              <template #default="{ row }">
+                <div class="user-info">
+                  <img :src="row.creatorAvatar" :alt="row.creator" class="avatar avatar-small" />
+                  <span class="user-name">{{ row.creator }}</span>
+                </div>
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="操作" width="140" fixed="right">
+              <template #default="{ row }">
+                <div class="action-buttons">
+                  <el-button
+                    v-if="row.status === '正常' || row.status === '套餐到期'"
+                    link
+                    type="warning"
+                    size="small"
+                    @click="handleDisable(row)"
+                  >
+                    禁用
+                  </el-button>
+                  <el-button
+                    v-else
+                    link
+                    type="success"
+                    size="small"
+                    @click="handleEnable(row)"
+                  >
+                    启用
+                  </el-button>
+                  <el-button
+                    link
+                    type="danger"
+                    size="small"
+                    @click="handleDeactivate(row)"
+                  >
+                    注销
+                  </el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+          
+          <!-- 分页 -->
+          <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+            <el-pagination
+              v-model:current-page="pagination.page"
+              v-model:page-size="pagination.pageSize"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="filteredData.length"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleSizeChange"
+              @current-change="handlePageChange"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- Mock数据 -->
+  <script src="./assets/js/mock-data.js"></script>
+  <!-- 工具函数 -->
+  <script src="./assets/js/utils.js"></script>
+  
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+    const { ElMessage, ElMessageBox } = ElementPlus;
+    
+    const app = createApp({
+      setup() {
+        // 数据
+        const tenants = ref(MockData.tenants);
+        const stats = ref(MockData.dashboardStats);
+        
+        // 搜索和筛选
+        const searchKeyword = ref('');
+        const filters = ref({
+          version: [],
+          status: '',
+          dateRange: null,
+        });
+        
+        // 排序
+        const sortProp = ref('createTime');
+        const sortOrder = ref('descending');
+        
+        // 分页
+        const pagination = ref({
+          page: 1,
+          pageSize: 20,
+        });
+        
+        // 过滤后的数据
+        const filteredData = computed(() => {
+          let data = [...tenants.value];
+          
+          // 搜索
+          if (searchKeyword.value) {
+            const keyword = searchKeyword.value.toLowerCase();
+            data = data.filter(t =>
+              t.name.toLowerCase().includes(keyword) ||
+              t.id.toLowerCase().includes(keyword)
+            );
+          }
+          
+          // 版本筛选
+          if (filters.value.version && filters.value.version.length > 0) {
+            data = data.filter(t => filters.value.version.includes(t.version));
+          }
+          
+          // 状态筛选
+          if (filters.value.status) {
+            data = data.filter(t => t.status === filters.value.status);
+          }
+          
+          // 时间筛选
+          if (filters.value.dateRange && filters.value.dateRange.length === 2) {
+            const [start, end] = filters.value.dateRange;
+            data = data.filter(t => {
+              const createTime = new Date(t.createTime);
+              return createTime >= start && createTime <= end;
+            });
+          }
+          
+          // 排序
+          if (sortProp.value) {
+            data.sort((a, b) => {
+              const aVal = a[sortProp.value];
+              const bVal = b[sortProp.value];
+              
+              if (typeof aVal === 'number' && typeof bVal === 'number') {
+                return sortOrder.value === 'ascending' ? aVal - bVal : bVal - aVal;
+              }
+              
+              if (typeof aVal === 'string' && typeof bVal === 'string') {
+                return sortOrder.value === 'ascending'
+                  ? aVal.localeCompare(bVal, 'zh-CN')
+                  : bVal.localeCompare(aVal, 'zh-CN');
+              }
+              
+              return 0;
+            });
+          }
+          
+          return data;
+        });
+        
+        // 分页后的数据
+        const paginatedData = computed(() => {
+          const start = (pagination.value.page - 1) * pagination.value.pageSize;
+          const end = start + pagination.value.pageSize;
+          return filteredData.value.slice(start, end);
+        });
+        
+        // 方法
+        const formatNumber = (num) => Utils.formatNumber(num);
+        const formatDate = (date) => Utils.formatDate(date);
+        const formatDateTime = (date) => Utils.formatDateTime(date);
+        const getStatusType = (status) => Utils.getStatusType(status);
+        const getVersionType = (version) => Utils.getVersionType(version);
+        
+        const handleSearch = Utils.debounce(() => {
+          pagination.value.page = 1;
+        }, 300);
+        
+        const handleSortChange = ({ prop, order }) => {
+          sortProp.value = prop;
+          sortOrder.value = order;
+        };
+        
+        const handlePageChange = (page) => {
+          pagination.value.page = page;
+        };
+        
+        const handleSizeChange = (size) => {
+          pagination.value.pageSize = size;
+          pagination.value.page = 1;
+        };
+        
+        const resetFilters = () => {
+          searchKeyword.value = '';
+          filters.value = {
+            version: [],
+            status: '',
+            dateRange: null,
+          };
+          pagination.value.page = 1;
+        };
+        
+        const goToDetail = (tenantId) => {
+          window.location.href = `tenant-detail.html?id=${tenantId}`;
+        };
+        
+        const goToDetailTab = (tenantId, tab) => {
+          window.location.href = `tenant-detail.html?id=${tenantId}&tab=${tab}`;
+        };
+        
+        const handleDisable = async (row) => {
+          const confirmed = await Utils.confirmAction(
+            `确定要禁用租户"${row.name}"吗？禁用后该租户将无法使用平台功能。`,
+            '禁用租户'
+          );
+          
+          if (confirmed) {
+            row.status = '已禁用';
+            Utils.showSuccess('租户已禁用');
+          }
+        };
+        
+        const handleEnable = async (row) => {
+          const confirmed = await Utils.confirmAction(
+            `确定要启用租户"${row.name}"吗？`,
+            '启用租户'
+          );
+          
+          if (confirmed) {
+            // 根据套餐有效期决定状态
+            if (row.version === '试用版' || (row.expireDate && new Date(row.expireDate) > new Date())) {
+              row.status = '正常';
+            } else {
+              row.status = '套餐到期';
+            }
+            Utils.showSuccess('租户已启用');
+          }
+        };
+        
+        const handleDeactivate = async (row) => {
+          const confirmed = await Utils.confirmWithInput(
+            `您即将注销租户"${row.name}"。<br>注销后，该租户的所有数据将被永久删除，此操作不可恢复！`,
+            '确认注销',
+            '危险操作'
+          );
+          
+          if (confirmed) {
+            const index = tenants.value.findIndex(t => t.id === row.id);
+            if (index > -1) {
+              tenants.value.splice(index, 1);
+              Utils.showSuccess('租户已注销');
+              // 更新统计数据
+              stats.value.totalTenants--;
+              if (row.status === '正常') stats.value.normalTenants--;
+              if (row.status === '已禁用') stats.value.disabledTenants--;
+              if (row.status === '套餐到期') stats.value.expiredTenants--;
+            }
+          }
+        };
+        
+        return {
+          tenants,
+          stats,
+          searchKeyword,
+          filters,
+          pagination,
+          filteredData,
+          paginatedData,
+          formatNumber,
+          formatDate,
+          formatDateTime,
+          getStatusType,
+          getVersionType,
+          handleSearch,
+          handleSortChange,
+          handlePageChange,
+          handleSizeChange,
+          resetFilters,
+          goToDetail,
+          goToDetailTab,
+          handleDisable,
+          handleEnable,
+          handleDeactivate,
+        };
+      },
+    });
+    
+    // 注册图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据总览</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 飞书设计系统 -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--spacing-6);
+      background: var(--bg-2);
+    }
+    
+    /* 时间范围选择器 */
+    .time-range-selector {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      margin-bottom: var(--spacing-6);
+      box-shadow: var(--shadow-1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: fit-content;
+      max-width: 600px;
+    }
+    
+    .date-range-picker {
+      width: 320px;
+    }
+    
+    .time-range-label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-1);
+    }
+    
+    .time-range-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+    
+    /* 模块标题 */
+    .module-title {
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-5);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    /* KPI网格 */
+    .kpi-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .kpi-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .kpi-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .kpi-grid-6 {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    /* 图表网格 */
+    .chart-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    /* 图表卡片 */
+    .chart-card {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      box-shadow: var(--shadow-1);
+    }
+    
+    .chart-title {
+      font-size: var(--font-size-16);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .chart-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    /* 筛选器容器样式 */
+    .chart-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    /* 自定义分段控制器样式 - 图二样式 */
+    .custom-segmented-control {
+      display: inline-flex;
+      background: #F2F3F5;
+      border-radius: 20px;
+      padding: 3px;
+      border: 1px solid #E5E6EB;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .custom-segmented-control .segment-item {
+      position: relative;
+      padding: 6px 16px;
+      font-size: var(--font-size-13);
+      font-weight: var(--font-weight-medium);
+      color: #4E5969;
+      background: transparent;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+      min-width: 40px;
+      text-align: center;
+    }
+    
+    .custom-segmented-control .segment-item:hover {
+      color: #1D2129;
+      background: rgba(51, 112, 255, 0.05);
+    }
+    
+    .custom-segmented-control .segment-item.active {
+      background: #3370FF;
+      color: white;
+      box-shadow: 0 2px 4px rgba(51, 112, 255, 0.3);
+      transform: translateY(-1px);
+    }
+    
+    .custom-segmented-control .segment-item:first-child {
+      border-top-left-radius: 16px;
+      border-bottom-left-radius: 16px;
+    }
+    
+    .custom-segmented-control .segment-item:last-child {
+      border-top-right-radius: 16px;
+      border-bottom-right-radius: 16px;
+    }
+    
+    /* 隐藏Element Plus默认样式 */
+    .unit-control,
+    .time-control {
+      display: none !important;
+    }
+    
+    .kpi-tooltip-icon {
+      margin-left: var(--spacing-1);
+      color: var(--text-3);
+      cursor: help;
+    }
+    
+    .chart-container {
+      width: 100%;
+      height: 300px;
+    }
+    
+    /* Top10列表 */
+    .top10-list {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      box-shadow: var(--shadow-1);
+    }
+    
+    .top10-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-3) 0;
+      border-bottom: 1px solid var(--border-1);
+    }
+    
+    .top10-item:last-child {
+      border-bottom: none;
+    }
+    
+    .top10-rank {
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-medium);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-13);
+      font-weight: var(--font-weight-semibold);
+      margin-right: var(--spacing-3);
+    }
+    
+    .top10-rank.top3 {
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: white;
+    }
+    
+    .top10-rank.normal {
+      background: var(--fill-2);
+      color: var(--text-3);
+    }
+    
+    .top10-user {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      flex: 1;
+    }
+    
+    .top10-value {
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+    }
+    
+    /* 分隔区域 */
+    .section {
+      margin-bottom: var(--spacing-8);
+    }
+    
+    .section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .kpi-desc {
+      font-size: var(--font-size-12);
+      color: var(--text-3);
+      line-height: 1.4;
+      margin-top: var(--spacing-1);
+    }
+    
+    /* 积分卡片专用样式 */
+    .credits-card {
+      position: relative;
+    }
+    
+    .credits-card .kpi-label {
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-2);
+      margin-bottom: var(--spacing-3);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-1);
+    }
+    
+    .credits-card .kpi-value {
+      margin-bottom: var(--spacing-2);
+    }
+    
+    .credits-card .kpi-number {
+      font-size: var(--font-size-32);
+      font-weight: var(--font-weight-bold);
+      line-height: 1.2;
+    }
+    
+    .credits-card .kpi-unit {
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-normal);
+      color: var(--text-2);
+      margin-left: var(--spacing-1);
+    }
+    
+    .credits-total .kpi-number {
+      color: var(--text-1);
+    }
+    
+    .credits-token .kpi-number {
+      color: var(--primary);
+    }
+    
+    .credits-device .kpi-number {
+      color: var(--success);
+    }
+    
+     .credits-card .kpi-desc {
+       font-size: var(--font-size-12);
+       color: var(--text-3);
+       line-height: 1.4;
+     }
+     
+     /* Token卡片专用样式 */
+     .token-card {
+       position: relative;
+     }
+     
+     .token-card .kpi-label {
+       font-size: var(--font-size-14);
+       font-weight: var(--font-weight-medium);
+       color: var(--text-2);
+       margin-bottom: var(--spacing-3);
+       display: flex;
+       align-items: center;
+       gap: var(--spacing-1);
+     }
+     
+     .token-card .kpi-value {
+       margin-bottom: var(--spacing-2);
+     }
+     
+     .token-card .kpi-number {
+       font-size: var(--font-size-32);
+       font-weight: var(--font-weight-bold);
+       line-height: 1.2;
+     }
+     
+     .token-primary .kpi-number {
+       color: var(--primary);
+     }
+     
+     .token-card .kpi-desc {
+       font-size: var(--font-size-12);
+       color: var(--text-3);
+       line-height: 1.4;
+     }
+     
+     /* 设备卡片专用样式 */
+     .device-card {
+       position: relative;
+     }
+     
+     .device-card .kpi-label {
+       font-size: var(--font-size-14);
+       font-weight: var(--font-weight-medium);
+       color: var(--text-2);
+       margin-bottom: var(--spacing-3);
+       display: flex;
+       align-items: center;
+       gap: var(--spacing-1);
+     }
+     
+     .device-card .kpi-value {
+       margin-bottom: var(--spacing-2);
+     }
+     
+     .device-card .kpi-number {
+       font-size: var(--font-size-32);
+       font-weight: var(--font-weight-bold);
+       line-height: 1.2;
+     }
+     
+     .device-card .kpi-unit {
+       font-size: var(--font-size-14);
+       font-weight: var(--font-weight-normal);
+       color: var(--text-2);
+       margin-left: var(--spacing-1);
+     }
+     
+     .device-primary .kpi-number {
+       color: var(--primary);
+     }
+     
+     .device-card .kpi-desc {
+       font-size: var(--font-size-12);
+       color: var(--text-3);
+       line-height: 1.4;
+     }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <!-- 时间范围选择器 -->
+    <div class="time-range-selector">
+      <div class="time-range-label">
+        <span>时间范围</span>
+        <el-tooltip content="选择时间范围来查看对应时间段的数据统计" placement="top">
+          <el-icon class="tooltip-icon"><QuestionFilled /></el-icon>
+        </el-tooltip>
+      </div>
+      <div class="time-range-controls">
+        <el-date-picker
+          v-model="dateRange"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          format="YYYY-MM-DD"
+          value-format="YYYY-MM-DD"
+          :shortcuts="shortcuts"
+          @change="handleDateRangeChange"
+          size="default"
+          class="date-range-picker"
+          clearable
+        />
+      </div>
+    </div>
+    
+    <!-- 模块一：资产创建总数 -->
+    <div class="section">
+      <h2 class="module-title">
+        <span>资产创建总数</span>
+        <el-tooltip content="在选定时间范围内创建的各类资产数量" placement="right">
+          <el-icon class="tooltip-icon"><QuestionFilled /></el-icon>
+        </el-tooltip>
+      </h2>
+      
+      <div class="kpi-grid-6">
+        <div class="kpi-card">
+          <div class="kpi-label">
+            智能体总数
+            <el-tooltip content="在选定时间范围内创建的智能体数量" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.agentCount) }}</div>
+          <div class="kpi-desc">在选定时间范围内创建</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            工作流总数
+            <el-tooltip content="在选定时间范围内创建的工作流数量" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.workflowCount) }}</div>
+          <div class="kpi-desc">在选定时间范围内创建</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            工具总数
+            <el-tooltip content="在选定时间范围内创建的工具数量" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.toolCount) }}</div>
+          <div class="kpi-desc">在选定时间范围内创建</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            工具库总数
+            <el-tooltip content="在选定时间范围内创建的工具库数量" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.toolLibraryCount) }}</div>
+          <div class="kpi-desc">在选定时间范围内创建</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            知识库总数
+            <el-tooltip content="在选定时间范围内创建的知识库数量" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.knowledgeBaseCount) }}</div>
+          <div class="kpi-desc">在选定时间范围内创建</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            团队空间总数
+            <el-tooltip content="在选定时间范围内创建的团队空间数量" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.spaceCount) }}</div>
+          <div class="kpi-desc">在选定时间范围内创建</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 模块二：核心资产活跃度 -->
+    <div class="section">
+      <h2 class="module-title">
+        <span>核心资产活跃度</span>
+        <el-tooltip content="各类资产的使用情况和活跃度指标" placement="right">
+          <el-icon class="tooltip-icon"><QuestionFilled /></el-icon>
+        </el-tooltip>
+      </h2>
+      
+      <div class="kpi-grid-5">
+        <div class="kpi-card">
+          <div class="kpi-label">
+            智能体总运行次数
+            <el-tooltip content="智能体被调用的总次数统计" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.agentRunCount) }}</div>
+          <div class="kpi-desc">智能体运行统计</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            智能体用户数
+            <el-tooltip content="调用智能体的去重用户数量" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.agentUserCount) }}</div>
+          <div class="kpi-desc">调用智能体的去重用户数</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            智能体累积对话次数
+            <el-tooltip content="智能体与用户的所有对话轮次统计" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.agentDialogCount) }}</div>
+          <div class="kpi-desc">所有对话轮次统计</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            智能体累积Token消耗
+            <el-tooltip content="智能体运行消耗的总Token数量" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatLargeNumber(dashboardData.assets.agentTokenUsage) }}</div>
+          <div class="kpi-desc">智能体消耗的总Token数</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            工作流总运行次数
+            <el-tooltip content="工作流被执行的总次数统计" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.workflowRunCount) }}</div>
+          <div class="kpi-desc">工作流运行统计</div>
+        </div>
+      </div>
+      
+      <div class="kpi-grid-5">
+        <div class="kpi-card">
+          <div class="kpi-label">
+            工作流运行成功率
+            <el-tooltip content="成功运行的工作流占总运行次数的百分比" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value text-success">{{ dashboardData.assets.workflowSuccessRate }}%</div>
+          <div class="kpi-desc">成功运行的工作流占比</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            工作流用户数
+            <el-tooltip content="调用工作流的去重用户数量" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.workflowUserCount) }}</div>
+          <div class="kpi-desc">调用工作流的去重用户数</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            工作流累积Token消耗
+            <el-tooltip content="工作流运行消耗的总Token数量" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatLargeNumber(dashboardData.assets.workflowTokenUsage) }}</div>
+          <div class="kpi-desc">工作流消耗的总Token数</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            工具总引用数
+            <el-tooltip content="工具被智能体和工作流引用的总次数" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.toolReferenceCount) }}</div>
+          <div class="kpi-desc">被智能体和工作流引用的次数</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">
+            知识库总引用数
+            <el-tooltip content="知识库被智能体和工作流引用的总次数" placement="top">
+              <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value">{{ formatNumber(dashboardData.assets.knowledgeBaseReferenceCount) }}</div>
+          <div class="kpi-desc">被智能体和工作流引用的次数</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 模块二：积分总览 -->
+    <div class="section">
+      <h2 class="module-title">
+        <span>积分总览</span>
+        <el-tooltip content="评估租户的总体成本" placement="right">
+          <el-icon class="tooltip-icon"><QuestionFilled /></el-icon>
+        </el-tooltip>
+      </h2>
+      
+      <div class="kpi-grid-3">
+        <div class="kpi-card credits-card">
+          <div class="kpi-label">
+            积分总消耗
+            <el-tooltip content="在选定时间范围内，租户所有消耗行为产生的积分总和" placement="top">
+              <el-icon class="tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value credits-total">
+            <span class="kpi-number">{{ formatNumber(dashboardData.credits.totalConsumption) }}</span>
+            <span class="kpi-unit">点</span>
+          </div>
+          <div class="kpi-desc">包含所有类型的积分消耗</div>
+        </div>
+        <div class="kpi-card credits-card">
+          <div class="kpi-label">
+            Token消耗积分
+            <el-tooltip content="仅因模型Token消耗所产生的积分部分" placement="top">
+              <el-icon class="tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value credits-token">
+            <span class="kpi-number">{{ formatNumber(dashboardData.credits.tokenConsumption) }}</span>
+            <span class="kpi-unit">点</span>
+          </div>
+          <div class="kpi-desc">仅因模型Token消耗产生</div>
+        </div>
+        <div class="kpi-card credits-card">
+          <div class="kpi-label">
+            设备抵扣消耗积分
+            <el-tooltip content="仅因设备时长抵扣所产生的积分部分" placement="top">
+              <el-icon class="tooltip-icon"><QuestionFilled /></el-icon>
+            </el-tooltip>
+          </div>
+          <div class="kpi-value credits-device">
+            <span class="kpi-number">{{ formatNumber(dashboardData.credits.deviceConsumption) }}</span>
+            <span class="kpi-unit">点</span>
+          </div>
+          <div class="kpi-desc">仅因设备时长抵扣产生</div>
+        </div>
+      </div>
+      
+      <!-- 积分图表 -->
+      <div class="chart-grid-2">
+         <div class="chart-card">
+           <div class="chart-title">
+             <span>积分消耗趋势图（对比）</span>
+             <div class="chart-controls">
+               <div class="custom-segmented-control">
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: creditsTimeRange === '日' }"
+                   @click="handleCreditsTimeRangeChange('日')"
+                 >
+                   日
+                 </div>
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: creditsTimeRange === '周' }"
+                   @click="handleCreditsTimeRangeChange('周')"
+                 >
+                   周
+                 </div>
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: creditsTimeRange === '月' }"
+                   @click="handleCreditsTimeRangeChange('月')"
+                 >
+                   月
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div id="creditsTrendChart" class="chart-container"></div>
+         </div>
+        <div class="chart-card">
+          <div class="chart-title">积分消耗构成</div>
+          <div id="creditsCompositionChart" class="chart-container"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">按模型积分消耗排行</div>
+          <div id="modelRankingChart" class="chart-container"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">按设备积分消耗分布</div>
+          <div id="deviceDistributionChart" class="chart-container"></div>
+        </div>
+      </div>
+      
+      <!-- 成员积分消耗Top10 -->
+      <div class="top10-list">
+        <div class="chart-title">成员积分消耗 Top10</div>
+        <div v-for="(user, index) in creditsTop10Users" :key="index" class="top10-item">
+          <div style="display: flex; align-items: center; flex: 1;">
+            <div :class="['top10-rank', index < 3 ? 'top3' : 'normal']">{{ index + 1 }}</div>
+            <div class="top10-user">
+              <img :src="user.avatar" :alt="user.name" class="avatar avatar-small" />
+              <span>{{ user.name }}</span>
+            </div>
+          </div>
+          <div class="top10-value">{{ formatNumber(user.value) }} 点</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 模块三：核心资源消耗分析 -->
+    <div class="section">
+      <h2 class="module-title">
+        <span>核心资源消耗分析 - Token消耗</span>
+      </h2>
+      
+       <div class="kpi-grid-5">
+         <div class="kpi-card token-card">
+           <div class="kpi-label">
+             Token总消耗数
+             <el-tooltip content="输入+输出Token总计" placement="top">
+               <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+             </el-tooltip>
+           </div>
+           <div class="kpi-value token-primary">
+             <span class="kpi-number">{{ formatLargeNumber(dashboardData.tokens.totalTokens) }}</span>
+           </div>
+           <div class="kpi-desc">输入+输出Token总计</div>
+         </div>
+         <div class="kpi-card token-card">
+           <div class="kpi-label">
+             总输入Token
+             <el-tooltip content="模型输入的Token数量" placement="top">
+               <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+             </el-tooltip>
+           </div>
+           <div class="kpi-value token-primary">
+             <span class="kpi-number">{{ formatLargeNumber(dashboardData.tokens.inputTokens) }}</span>
+           </div>
+           <div class="kpi-desc">模型输入的Token数量</div>
+         </div>
+         <div class="kpi-card token-card">
+           <div class="kpi-label">
+             总输出Token
+             <el-tooltip content="模型输出的Token数量" placement="top">
+               <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+             </el-tooltip>
+           </div>
+           <div class="kpi-value token-primary">
+             <span class="kpi-number">{{ formatLargeNumber(dashboardData.tokens.outputTokens) }}</span>
+           </div>
+           <div class="kpi-desc">模型输出的Token数量</div>
+         </div>
+         <div class="kpi-card token-card">
+           <div class="kpi-label">
+             智能体累积Token消耗
+             <el-tooltip content="智能体+其调用工作流产生" placement="top">
+               <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+             </el-tooltip>
+           </div>
+           <div class="kpi-value token-primary">
+             <span class="kpi-number">{{ formatLargeNumber(dashboardData.tokens.agentTokens) }}</span>
+           </div>
+           <div class="kpi-desc">智能体+其调用工作流产生</div>
+         </div>
+         <div class="kpi-card token-card">
+           <div class="kpi-label">
+             工作流累积Token消耗
+             <el-tooltip content="工作流运行时产生" placement="top">
+               <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+             </el-tooltip>
+           </div>
+           <div class="kpi-value token-primary">
+             <span class="kpi-number">{{ formatLargeNumber(dashboardData.tokens.workflowTokens) }}</span>
+           </div>
+           <div class="kpi-desc">工作流运行时产生</div>
+         </div>
+       </div>
+      
+      <!-- Token图表 -->
+      <div class="chart-grid-2">
+         <div class="chart-card">
+           <div class="chart-title">
+             <span>Token消耗趋势图</span>
+             <div class="chart-controls">
+               <div class="custom-segmented-control">
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: tokenTimeRange === '日' }"
+                   @click="handleTokenTimeRangeChange('日')"
+                 >
+                   日
+                 </div>
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: tokenTimeRange === '周' }"
+                   @click="handleTokenTimeRangeChange('周')"
+                 >
+                   周
+                 </div>
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: tokenTimeRange === '月' }"
+                   @click="handleTokenTimeRangeChange('月')"
+                 >
+                   月
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div id="tokenTrendChart" class="chart-container"></div>
+         </div>
+        <div class="chart-card">
+          <div class="chart-title">输入/输出Token构成</div>
+          <div id="tokenCompositionChart" class="chart-container"></div>
+        </div>
+         <div class="chart-card">
+           <div class="chart-title">
+             <span>按模型Token消耗排行</span>
+             <div class="chart-controls">
+               <div class="custom-segmented-control">
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: modelTokenUnit === 'token' }"
+                   @click="handleModelTokenUnitChange('token')"
+                 >
+                   token
+                 </div>
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: modelTokenUnit === '千token' }"
+                   @click="handleModelTokenUnitChange('千token')"
+                 >
+                   千token
+                 </div>
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: modelTokenUnit === '百万token' }"
+                   @click="handleModelTokenUnitChange('百万token')"
+                 >
+                   百万token
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div id="modelTokenRankingChart" class="chart-container"></div>
+         </div>
+         <div class="chart-card">
+           <div class="chart-title">
+             <span>按资产Token消耗分析</span>
+             <div class="chart-controls">
+               <div class="custom-segmented-control">
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: assetTokenUnit === 'token' }"
+                   @click="handleAssetTokenUnitChange('token')"
+                 >
+                   token
+                 </div>
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: assetTokenUnit === '千token' }"
+                   @click="handleAssetTokenUnitChange('千token')"
+                 >
+                   千token
+                 </div>
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: assetTokenUnit === '百万token' }"
+                   @click="handleAssetTokenUnitChange('百万token')"
+                 >
+                   百万token
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div id="assetTokenRankingChart" class="chart-container"></div>
+         </div>
+      </div>
+      
+      <!-- 成员Token消耗Top10 -->
+      <div class="top10-list" style="margin-top: var(--spacing-4);">
+        <div class="chart-title">成员Token消耗 Top10</div>
+        <div v-for="(user, index) in tokenTop10Users" :key="index" class="top10-item">
+          <div style="display: flex; align-items: center; flex: 1;">
+            <div :class="['top10-rank', index < 3 ? 'top3' : 'normal']">{{ index + 1 }}</div>
+            <div class="top10-user">
+              <img :src="user.avatar" :alt="user.name" class="avatar avatar-small" />
+              <span>{{ user.name }}</span>
+            </div>
+          </div>
+          <div class="top10-value">{{ formatLargeNumber(user.value) }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 模块四：设备时长分析 -->
+    <div class="section">
+      <h2 class="module-title">
+        <span>核心资源消耗分析 - 设备时长</span>
+      </h2>
+      
+       <div class="kpi-grid-3">
+         <div class="kpi-card device-card">
+           <div class="kpi-label">
+             总设备使用时长
+             <el-tooltip content="云电脑+云手机总使用时长" placement="top">
+               <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+             </el-tooltip>
+           </div>
+           <div class="kpi-value device-primary">
+             <span class="kpi-number">{{ formatNumber(dashboardData.devices.totalMinutes) }}</span>
+             <span class="kpi-unit">分钟</span>
+           </div>
+           <div class="kpi-desc">云电脑+云手机总使用时长</div>
+         </div>
+         <div class="kpi-card device-card">
+           <div class="kpi-label">
+             云电脑使用时长
+             <el-tooltip content="云电脑设备使用统计" placement="top">
+               <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+             </el-tooltip>
+           </div>
+           <div class="kpi-value device-primary">
+             <span class="kpi-number">{{ formatNumber(dashboardData.devices.desktopMinutes) }}</span>
+             <span class="kpi-unit">分钟</span>
+           </div>
+           <div class="kpi-desc">云电脑设备使用统计</div>
+         </div>
+         <div class="kpi-card device-card">
+           <div class="kpi-label">
+             云手机使用时长
+             <el-tooltip content="云手机设备使用统计" placement="top">
+               <el-icon class="kpi-tooltip-icon"><QuestionFilled /></el-icon>
+             </el-tooltip>
+           </div>
+           <div class="kpi-value device-primary">
+             <span class="kpi-number">{{ formatNumber(dashboardData.devices.mobileMinutes) }}</span>
+             <span class="kpi-unit">分钟</span>
+           </div>
+           <div class="kpi-desc">云手机设备使用统计</div>
+         </div>
+       </div>
+      
+      <!-- 设备图表 -->
+      <div class="chart-grid-2">
+         <div class="chart-card">
+           <div class="chart-title">
+             <span>设备使用时长趋势图</span>
+             <div class="chart-controls">
+               <div class="custom-segmented-control">
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: deviceTimeRange === '日' }"
+                   @click="handleDeviceTimeRangeChange('日')"
+                 >
+                   日
+                 </div>
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: deviceTimeRange === '周' }"
+                   @click="handleDeviceTimeRangeChange('周')"
+                 >
+                   周
+                 </div>
+                 <div 
+                   class="segment-item" 
+                   :class="{ active: deviceTimeRange === '月' }"
+                   @click="handleDeviceTimeRangeChange('月')"
+                 >
+                   月
+                 </div>
+               </div>
+             </div>
+           </div>
+           <div id="deviceTrendChart" class="chart-container"></div>
+         </div>
+        <div class="chart-card">
+          <div class="chart-title">设备使用时长构成</div>
+          <div id="deviceCompositionChart" class="chart-container"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">使用与抵扣趋势</div>
+          <div id="deviceUsageDeductionChart" class="chart-container"></div>
+        </div>
+      </div>
+      
+      <!-- 成员设备消耗Top10 -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-4); margin-top: var(--spacing-4);">
+        <div class="top10-list">
+          <div class="chart-title">成员云电脑设备时长消耗 Top10</div>
+          <div v-for="(user, index) in desktopTop10Users" :key="index" class="top10-item">
+            <div style="display: flex; align-items: center; flex: 1;">
+              <div :class="['top10-rank', index < 3 ? 'top3' : 'normal']">{{ index + 1 }}</div>
+              <div class="top10-user">
+                <img :src="user.avatar" :alt="user.name" class="avatar avatar-small" />
+                <span>{{ user.name }}</span>
+              </div>
+            </div>
+            <div class="top10-value">{{ formatNumber(user.value) }} 分钟</div>
+          </div>
+        </div>
+        
+        <div class="top10-list">
+          <div class="chart-title">成员云手机设备时长消耗 Top10</div>
+          <div v-for="(user, index) in mobileTop10Users" :key="index" class="top10-item">
+            <div style="display: flex; align-items: center; flex: 1;">
+              <div :class="['top10-rank', index < 3 ? 'top3' : 'normal']">{{ index + 1 }}</div>
+              <div class="top10-user">
+                <img :src="user.avatar" :alt="user.name" class="avatar avatar-small" />
+                <span>{{ user.name }}</span>
+              </div>
+            </div>
+            <div class="top10-value">{{ formatNumber(user.value) }} 分钟</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  <!-- ECharts -->
+  <script src="https://unpkg.com/echarts@5.4.3/dist/echarts.min.js"></script>
+  
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  <!-- 图表配置 -->
+  <script src="../assets/js/charts.js"></script>
+  
+  <script>
+    const { createApp, ref, onMounted } = Vue;
+    
+    const app = createApp({
+      setup() {
+        // 获取租户ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenantId = urlParams.get('tenantId') || 'T000001';
+        
+        // 数据
+        const dateRange = ref([]);
+        const modelTokenUnit = ref('千token');
+        const assetTokenUnit = ref('千token');
+        const creditsTimeRange = ref('日');
+        const tokenTimeRange = ref('日');
+        const deviceTimeRange = ref('日');
+        const dashboardData = ref(MockData.generateDashboardData(tenantId));
+        
+        // 快捷选项
+        const shortcuts = [
+          {
+            text: '最近7天',
+            value: () => {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              return [start, end];
+            }
+          },
+          {
+            text: '最近30天',
+            value: () => {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              return [start, end];
+            }
+          },
+          {
+            text: '最近90天',
+            value: () => {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+              return [start, end];
+            }
+          },
+          {
+            text: '最近一年',
+            value: () => {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 365);
+              return [start, end];
+            }
+          }
+        ];
+        const creditsTop10Users = ref(MockData.generateTop10Users('credits'));
+        const tokenTop10Users = ref(MockData.generateTop10Users('tokens'));
+        const desktopTop10Users = ref(MockData.generateTop10Users('desktop'));
+        const mobileTop10Users = ref(MockData.generateTop10Users('mobile'));
+        
+        // 图表实例
+        let charts = {};
+        
+        // 方法
+        const formatNumber = (num) => Utils.formatNumber(num);
+        const formatLargeNumber = (num) => Utils.formatLargeNumber(num);
+        
+        const handleDateRangeChange = (val) => {
+          console.log('日期范围变更:', val);
+          dateRange.value = val;
+          // 重新加载数据和图表
+          loadData();
+          initCharts();
+        };
+        
+        const handleModelTokenUnitChange = (val) => {
+          console.log('模型Token单位变更:', val);
+          modelTokenUnit.value = val;
+          // 重新生成模型Token图表
+          initModelTokenChart();
+        };
+        
+        const handleAssetTokenUnitChange = (val) => {
+          console.log('资产Token单位变更:', val);
+          assetTokenUnit.value = val;
+          // 重新生成资产Token图表
+          initAssetTokenChart();
+        };
+        
+        const handleCreditsTimeRangeChange = (val) => {
+          console.log('积分时间轴变更:', val);
+          creditsTimeRange.value = val;
+          // 重新生成积分趋势图
+          initCreditsTrendChart();
+        };
+        
+        const handleTokenTimeRangeChange = (val) => {
+          console.log('Token时间轴变更:', val);
+          tokenTimeRange.value = val;
+          // 重新生成Token趋势图
+          initTokenTrendChart();
+        };
+        
+        const handleDeviceTimeRangeChange = (val) => {
+          console.log('设备时间轴变更:', val);
+          deviceTimeRange.value = val;
+          // 重新生成设备趋势图
+          initDeviceTrendChart();
+        };
+        
+        const loadData = () => {
+          dashboardData.value = MockData.generateDashboardData(tenantId);
+          creditsTop10Users.value = MockData.generateTop10Users('credits');
+          tokenTop10Users.value = MockData.generateTop10Users('tokens');
+          desktopTop10Users.value = MockData.generateTop10Users('desktop');
+          mobileTop10Users.value = MockData.generateTop10Users('mobile');
+        };
+        
+        const initCharts = () => {
+          // 初始化趋势图
+          initCreditsTrendChart();
+          initTokenTrendChart();
+          initDeviceTrendChart();
+          
+          // 积分消耗构成
+          charts.creditsComposition = Utils.initChart(
+            'creditsCompositionChart',
+            ChartConfigs.createCreditsCompositionChart(
+              dashboardData.value.credits.tokenConsumption,
+              dashboardData.value.credits.deviceConsumption
+            )
+          );
+          
+          // 按模型积分消耗排行
+          const modelRankingData = MockData.generateModelRankingData();
+          charts.modelRanking = Utils.initChart(
+            'modelRankingChart',
+            ChartConfigs.createModelRankingChart(modelRankingData)
+          );
+          
+          // 按设备积分消耗分布
+          charts.deviceDistribution = Utils.initChart(
+            'deviceDistributionChart',
+            ChartConfigs.createDeviceDistributionChart(
+              Math.floor(dashboardData.value.credits.deviceConsumption * 0.7),
+              Math.floor(dashboardData.value.credits.deviceConsumption * 0.3)
+            )
+          );
+          
+          // 输入/输出Token构成
+          charts.tokenComposition = Utils.initChart(
+            'tokenCompositionChart',
+            ChartConfigs.createTokenCompositionChart(
+              dashboardData.value.tokens.inputTokens,
+              dashboardData.value.tokens.outputTokens
+            )
+          );
+          
+          // 初始化Token相关图表
+          initModelTokenChart();
+          initAssetTokenChart();
+          
+          // 设备使用时长构成
+          charts.deviceComposition = Utils.initChart(
+            'deviceCompositionChart',
+            ChartConfigs.createDeviceCompositionChart(
+              dashboardData.value.devices.desktopMinutes,
+              dashboardData.value.devices.mobileMinutes
+            )
+          );
+          
+          // 使用与抵扣趋势
+          const usageDeductionData = MockData.generateDualLineData(30);
+          charts.deviceUsageDeduction = Utils.initChart(
+            'deviceUsageDeductionChart',
+            ChartConfigs.createUsageDeductionChart(usageDeductionData)
+          );
+        };
+        
+        // 初始化模型Token图表
+        const initModelTokenChart = () => {
+          const modelTokenRankingData = MockData.generateModelRankingData();
+          const processedData = processTokenData(modelTokenRankingData, modelTokenUnit.value);
+          charts.modelTokenRanking = Utils.initChart(
+            'modelTokenRankingChart',
+            ChartConfigs.createModelTokenRankingChart(processedData)
+          );
+        };
+        
+        // 初始化资产Token图表
+        const initAssetTokenChart = () => {
+          const assetTokenRankingData = MockData.generateAssetRankingData();
+          const processedData = processTokenData(assetTokenRankingData, assetTokenUnit.value);
+          charts.assetTokenRanking = Utils.initChart(
+            'assetTokenRankingChart',
+            ChartConfigs.createAssetTokenRankingChart(processedData)
+          );
+        };
+        
+        // 处理Token数据单位转换
+        const processTokenData = (data, unit) => {
+          return data.map(item => {
+            let value = item.value;
+            switch (unit) {
+              case 'token':
+                return { ...item, value: value };
+              case '千token':
+                return { ...item, value: Math.round(value / 1000) };
+              case '百万token':
+                return { ...item, value: Math.round(value / 1000000 * 100) / 100 };
+              default:
+                return item;
+            }
+          });
+        };
+        
+        // 初始化积分趋势图
+        const initCreditsTrendChart = () => {
+          const creditsTrendData = MockData.generateDualLineData(30);
+          charts.creditsTrend = Utils.initChart(
+            'creditsTrendChart',
+            ChartConfigs.createCreditsTrendChart(creditsTrendData)
+          );
+        };
+        
+        // 初始化Token趋势图
+        const initTokenTrendChart = () => {
+          const tokenTrendData = MockData.generateDualLineData(30);
+          charts.tokenTrend = Utils.initChart(
+            'tokenTrendChart',
+            ChartConfigs.createTokenTrendChart(tokenTrendData)
+          );
+        };
+        
+        // 初始化设备趋势图
+        const initDeviceTrendChart = () => {
+          const deviceTrendData = MockData.generateDualLineData(30);
+          charts.deviceTrend = Utils.initChart(
+            'deviceTrendChart',
+            ChartConfigs.createDeviceTrendChart(deviceTrendData)
+          );
+        };
+        
+        onMounted(() => {
+          initCharts();
+        });
+        
+        return {
+          dateRange,
+          shortcuts,
+          modelTokenUnit,
+          assetTokenUnit,
+          creditsTimeRange,
+          tokenTimeRange,
+          deviceTimeRange,
+          dashboardData,
+          creditsTop10Users,
+          tokenTop10Users,
+          desktopTop10Users,
+          mobileTop10Users,
+          formatNumber,
+          formatLargeNumber,
+          handleDateRangeChange,
+          handleModelTokenUnitChange,
+          handleAssetTokenUnitChange,
+          handleCreditsTimeRangeChange,
+          handleTokenTimeRangeChange,
+          handleDeviceTimeRangeChange,
+        };
+      },
+    });
+    
+    // 注册图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

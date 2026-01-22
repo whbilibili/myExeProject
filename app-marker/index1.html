@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bots 应用市场 - V3 (方案A)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        secondary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                        }
+                    },
+                    lineClamp: {
+                        7: '7',
+                        8: '8',
+                    }
+                },
+            },
+            plugins: [
+                require('@tailwindcss/line-clamp'),
+            ],
+        }
+    </script>
+    <style>
+        .modal-body { max-height: 70vh; overflow-y: auto; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen" x-data="appMarket()">
+    <!-- 主要内容区域 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 页面标题和操作区域 -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">应用市场</h2>
+                    <p class="text-gray-600 mt-1">管理和发现在工作流中使用的平台特定应用包</p>
+                </div>
+                <button @click="openUploadNewAppModal()" class="mt-4 sm:mt-0 bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 shadow-md">
+                    <i class="fas fa-plus mr-2"></i>上传新应用
+                </button>
+            </div>
+
+            <!-- 搜索栏 -->
+            <div class="relative max-w-lg">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input x-model="searchQuery" @input.debounce.300ms="filterApps" type="text" placeholder="搜索应用名称、描述、标签..." 
+                       class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 shadow-sm">
+            </div>
+        </div>
+
+        <!-- 标签页导航 -->
+        <div class="border-b border-gray-300 mb-8">
+            <nav class="-mb-px flex space-x-6 overflow-x-auto">
+                <template x-for="tab in tabs" :key="tab.id">
+                    <button @click="changeTab(tab.id)" 
+                            :class="activeTab === tab.id ? 'border-primary-500 text-primary-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                            class="whitespace-nowrap py-4 px-2 border-b-2 font-medium text-sm transition-colors duration-200 focus:outline-none">
+                        <i :class="tab.icon" class="mr-2"></i>
+                        <span x-text="tab.name"></span>
+                        <span x-text="'(' + getAppCountForTab(tab.id) + ')'" class="ml-1.5 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full"></span>
+                    </button>
+                </template>
+            </nav>
+        </div>
+
+        <!-- 应用列表 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <template x-for="app in displayedApps" :key="app.id">
+                <div class="bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col">
+                    <div class="p-5 flex-grow">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex items-center">
+                                <img :src="app.icon" :alt="app.name" class="w-12 h-12 rounded-lg object-cover border border-gray-200">
+                                <div class="ml-3">
+                                    <h3 class="text-lg font-semibold text-gray-900 leading-tight" x-text="app.name"></h3>
+                                    <div class="flex items-center text-sm text-gray-500 mt-1">
+                                        <i :class="getPlatformIcon(app.platform)" class="mr-1.5" :style="{ color: getPlatformColor(app.platform) }"></i>
+                                        <span x-text="app.platform"></span>
+                                        <span class="mx-1.5">·</span>
+                                        <span class="font-mono text-xs" x-text="app.latestVersion || 'N/A'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="text-xs bg-secondary-100 text-secondary-700 px-2.5 py-1 rounded-full whitespace-nowrap" x-text="app.creator"></span>
+                        </div>
+
+                        <p class="text-gray-600 text-sm mb-3 line-clamp-3" x-text="app.description"></p>
+
+                        <div class="flex flex-wrap gap-1.5 mb-3" x-show="app.tags && app.tags.length > 0">
+                            <template x-for="tag in app.tags" :key="tag">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-700" x-text="tag"></span>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <div class="px-5 py-3 bg-gray-50 border-t border-gray-200">
+                         <div class="text-xs text-gray-500 mb-2">
+                            最新包更新：<span x-text="app.lastPackageUpdateTime || 'N/A'"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <button @click="openAppDetailsModal(app)" class="text-primary-600 hover:text-primary-700 text-sm font-medium transition-colors duration-200">
+                                查看详情及包列表
+                            </button>
+                            <div class="flex space-x-2" x-show="activeTab === 'my-uploads'">
+                                <button @click="openEditAppModal(app)" class="text-gray-500 hover:text-gray-700 transition-colors duration-200" title="编辑应用信息">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button @click="confirmDeleteApp(app)" class="text-red-500 hover:text-red-700 transition-colors duration-200" title="删除应用">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- 空状态 -->
+        <div x-show="displayedApps.length === 0 && !isLoading" class="text-center py-16">
+            <div class="mx-auto h-28 w-28 text-gray-400 mb-5">
+                <i class="fas fa-archive text-7xl"></i>
+            </div>
+            <h3 class="text-xl font-medium text-gray-800 mb-2">暂无应用</h3>
+            <p class="text-gray-500 mb-7">当前分类下还没有应用。如果是"我的上传"，快来上传第一个吧！</p>
+            <button x-show="activeTab === 'my-uploads'" @click="openUploadNewAppModal()" class="bg-primary-600 hover:bg-primary-700 text-white px-7 py-3 rounded-lg font-medium transition-colors duration-200 shadow-md">
+                <i class="fas fa-plus mr-2"></i>上传我的第一个应用
+            </button>
+        </div>
+    </div>
+
+    <!-- 1. 上传新应用 (及第一个包) 模态框 -->
+    <div x-show="modals.uploadNewApp" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-700 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div @click.away="modals.uploadNewApp = false" class="relative mx-auto p-6 border w-full max-w-2xl shadow-xl rounded-xl bg-white modal-body">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-2xl font-bold text-gray-800">上传新应用</h3>
+                <button @click="modals.uploadNewApp = false" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form @submit.prevent="submitNewApp" class="space-y-5">
+                <fieldset class="border border-gray-300 p-4 rounded-lg">
+                    <legend class="text-sm font-medium text-primary-600 px-1">应用基本信息</legend>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">应用名称 (基础名) *</label>
+                            <input x-model="newAppForm.appNameBase" type="text" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="例如：外卖助手">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">平台类型 *</label>
+                            <select x-model="newAppForm.platform" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white">
+                                <option value="Android">Android</option>
+                                <option value="iOS">iOS</option>
+                                <option value="HarmonyOS">HarmonyOS</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">应用描述 *</label>
+                        <textarea x-model="newAppForm.appDescription" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="描述该平台应用的核心功能和用途"></textarea>
+                    </div>
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">应用图标 URL</label>
+                            <input x-model="newAppForm.appIcon" type="url" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="https://images.unsplash.com/...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">分类标签</label>
+                            <input x-model="newAppForm.categoryTags" type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="逗号分隔, 如：工具,生活">
+                        </div>
+                    </div>
+                     <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">共享设置 *</label>
+                        <div class="flex space-x-4">
+                            <label class="flex items-center"><input x-model="newAppForm.sharing" type="radio" value="private" class="text-primary-600 focus:ring-primary-500"><span class="ml-2 text-sm">私有</span></label>
+                            <label class="flex items-center"><input x-model="newAppForm.sharing" type="radio" value="internal" class="text-primary-600 focus:ring-primary-500"><span class="ml-2 text-sm">共享至内部市场</span></label>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="border border-gray-300 p-4 rounded-lg">
+                    <legend class="text-sm font-medium text-primary-600 px-1">首个包信息</legend>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">版本号 *</label>
+                            <input x-model="newAppForm.version" type="text" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="例如：1.0.0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">包 ID (Package ID) *</label>
+                            <input x-model="newAppForm.packageId" type="text" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="应用包的唯一标识">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">下载链接 (Package URL) *</label>
+                        <input x-model="newAppForm.packageURL" type="url" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="完整的包下载地址">
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">更新日志/包描述</label>
+                        <textarea x-model="newAppForm.changelog" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="描述此包的更新内容"></textarea>
+                    </div>
+                </fieldset>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button @click="modals.uploadNewApp = false" type="button" class="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200">取消</button>
+                    <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-sm">创建应用并上传包</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. 应用详情 (及包列表) 模态框 -->
+    <div x-show="modals.appDetails" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-700 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div @click.away="modals.appDetails = false" class="relative mx-auto p-6 border w-full max-w-4xl shadow-xl rounded-xl bg-white modal-body">
+            <div class="flex justify-between items-center mb-5 pb-4 border-b border-gray-200">
+                <h3 class="text-2xl font-bold text-gray-800">应用详情</h3>
+                <button @click="modals.appDetails = false" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div x-show="selectedApp" class="space-y-6">
+                <!-- 应用基本信息 -->
+                <div class="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6 pb-5 border-b border-gray-200">
+                    <img :src="selectedApp?.icon" :alt="selectedApp?.name" class="w-28 h-28 rounded-xl object-cover border-2 border-white shadow-md">
+                    <div class="flex-1">
+                        <h4 class="text-3xl font-bold text-gray-800 mb-1" x-text="selectedApp?.name"></h4>
+                        <div class="flex items-center text-gray-500 mb-2">
+                            <i :class="getPlatformIcon(selectedApp?.platform)" class="mr-2 text-lg" :style="{ color: getPlatformColor(selectedApp?.platform) }"></i>
+                            <span class="font-medium" x-text="selectedApp?.platform"></span>
+                            <span class="mx-2 text-gray-300">|</span>
+                            <span>创建者：<span class="font-medium text-gray-700" x-text="selectedApp?.creator"></span></span>
+                            <span class="mx-2 text-gray-300">|</span>
+                             <span>共享：<span class="font-medium" :class="selectedApp?.sharing === 'internal' ? 'text-green-600' : 'text-yellow-600'" x-text="selectedApp?.sharing === 'internal' ? '内部共享' : '私有'"></span></span>
+                        </div>
+                         <p class="text-gray-600 text-sm mb-3" x-text="selectedApp?.description"></p>
+                        <div class="flex flex-wrap gap-2" x-show="selectedApp?.tags && selectedApp?.tags.length > 0">
+                            <template x-for="tag in selectedApp?.tags" :key="tag">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-700" x-text="tag"></span>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0 sm:ml-auto" x-show="activeTab === 'my-uploads' && selectedApp?.creator === currentUser.name">
+                         <button @click="openUploadNewPackageModal(selectedApp)" class="bg-secondary-500 hover:bg-secondary-600 text-white px-5 py-2.5 rounded-lg font-medium transition-colors duration-200 shadow-sm text-sm">
+                            <i class="fas fa-plus mr-1.5"></i>为此应用上传新包
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 包列表 -->
+                <div>
+                    <h5 class="text-xl font-semibold text-gray-800 mb-4">包列表 
+                        <span class="text-base font-normal text-gray-500" x-text="'(' + (selectedApp?.packages?.length || 0) + '个包)'"></span>
+                    </h5>
+                    <div class="space-y-4" x-show="selectedApp?.packages && selectedApp?.packages.length > 0">
+                        <template x-for="(pkg, index) in selectedApp?.packages" :key="pkg.packageUUID">
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200 bg-white">
+                                <div class="flex flex-col sm:flex-row justify-between items-start mb-2">
+                                    <div class="mb-2 sm:mb-0">
+                                        <span class="font-semibold text-lg text-primary-600 mr-2" x-text="'版本 ' + pkg.version"></span>
+                                        <span x-show="pkg.isRecommended" class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">推荐</span>
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        <span>上传者: <span class="font-medium" x-text="pkg.uploader"></span></span>
+                                        <span class="mx-1.5">·</span>
+                                        <span x-text="pkg.uploadTime"></span>
+                                    </div>
+                                </div>
+                                <p class="text-gray-700 text-sm mb-3 prose prose-sm max-w-none" x-html="pkg.changelog ? formatMarkdown(pkg.changelog) : '<em>暂无更新日志</em>'"></p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm mb-3">
+                                    <div class="bg-gray-50 p-2 rounded-md">
+                                        <span class="text-gray-500">包 ID (PackageID): </span>
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-mono text-gray-800 truncate" x-text="pkg.packageId"></span>
+                                            <button @click="copyToClipboard(pkg.packageId, '包 ID')" class="ml-2 text-primary-500 hover:text-primary-700 text-xs" title="复制包 ID"><i class="fas fa-copy"></i></button>
+                                        </div>
+                                    </div>
+                                     <div class="bg-gray-50 p-2 rounded-md">
+                                        <span class="text-gray-500">下载链接 (PackageURL): </span>
+                                        <div class="flex items-center justify-between">
+                                            <a :href="pkg.packageURL" target="_blank" class="font-mono text-blue-600 hover:text-blue-700 hover:underline truncate" x-text="pkg.packageURL"></a>
+                                            <button @click="copyToClipboard(pkg.packageURL, '下载链接')" class="ml-2 text-primary-500 hover:text-primary-700 text-xs" title="复制下载链接"><i class="fas fa-copy"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-right" x-show="activeTab === 'my-uploads' && pkg.uploader === currentUser.name">
+                                    <button @click="confirmDeletePackage(selectedApp, pkg.packageUUID)" class="text-red-500 hover:text-red-700 text-xs font-medium transition-colors duration-200">
+                                        <i class="fas fa-trash-alt mr-1"></i>删除此包
+                                    </button>
+                                     <!-- 编辑包信息按钮 (未来可添加) -->
+                                     <!-- <button @click="openEditPackageModal(selectedApp, pkg)" class="ml-3 text-gray-500 hover:text-gray-700 text-xs font-medium transition-colors duration-200">
+                                        <i class="fas fa-edit mr-1"></i>编辑包信息
+                                    </button> -->
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                     <div x-show="!selectedApp?.packages || selectedApp?.packages.length === 0" class="text-center py-8 text-gray-500">
+                        <i class="fas fa-box-open text-4xl mb-3"></i>
+                        <p>此应用下暂无任何包</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 上传新包 (到现有应用) 模态框 -->
+    <div x-show="modals.uploadNewPackage" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-700 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div @click.away="modals.uploadNewPackage = false" class="relative mx-auto p-6 border w-full max-w-xl shadow-xl rounded-xl bg-white modal-body">
+            <div class="flex justify-between items-center mb-5">
+                 <div>
+                    <h3 class="text-2xl font-bold text-gray-800">上传新包</h3>
+                    <p class="text-gray-600 text-sm mt-1">为应用: <span class="font-semibold" x-text="currentAppForUpload?.name"></span></p>
+                 </div>
+                <button @click="modals.uploadNewPackage = false" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form @submit.prevent="submitNewPackage" class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">版本号 *</label>
+                        <input x-model="newPackageForm.version" type="text" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="例如：1.0.1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">包 ID (Package ID) *</label>
+                        <input x-model="newPackageForm.packageId" type="text" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="此包的唯一标识">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">下载链接 (Package URL) *</label>
+                    <input x-model="newPackageForm.packageURL" type="url" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="完整的包下载地址">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">更新日志/包描述</label>
+                    <textarea x-model="newPackageForm.changelog" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="描述此包的更新内容"></textarea>
+                </div>
+                 <div class="flex items-center">
+                    <input x-model="newPackageForm.isRecommended" type="checkbox" id="isRecommendedPackage" class="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                    <label for="isRecommendedPackage" class="ml-2 block text-sm text-gray-700">标记为推荐版本</label>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button @click="modals.uploadNewPackage = false" type="button" class="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200">取消</button>
+                    <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-sm">上传包</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. 编辑应用信息 模态框 -->
+     <div x-show="modals.editApp" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-700 bg-opacity-60 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+        <div @click.away="modals.editApp = false" class="relative mx-auto p-6 border w-full max-w-xl shadow-xl rounded-xl bg-white modal-body">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-2xl font-bold text-gray-800">编辑应用信息</h3>
+                <button @click="modals.editApp = false" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form @submit.prevent="submitEditApp" class="space-y-5" x-show="currentEditingApp">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">应用名称</label>
+                    <input x-model="editAppForm.name" type="text" disabled class="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed" placeholder="应用名称 (平台特定)">
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">平台类型</label>
+                    <input x-model="editAppForm.platform" type="text" disabled class="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">应用描述 *</label>
+                    <textarea x-model="editAppForm.appDescription" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="描述该平台应用的核心功能和用途"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">应用图标 URL</label>
+                        <input x-model="editAppForm.appIcon" type="url" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="https://images.unsplash.com/...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">分类标签</label>
+                        <input x-model="editAppForm.categoryTags" type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="逗号分隔, 如：工具,生活">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">共享设置 *</label>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center"><input x-model="editAppForm.sharing" type="radio" value="private" class="text-primary-600 focus:ring-primary-500"><span class="ml-2 text-sm">私有</span></label>
+                        <label class="flex items-center"><input x-model="editAppForm.sharing" type="radio" value="internal" class="text-primary-600 focus:ring-primary-500"><span class="ml-2 text-sm">共享至内部市场</span></label>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button @click="modals.editApp = false" type="button" class="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200">取消</button>
+                    <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors duration-200 shadow-sm">保存更改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 通知提示 -->
+    <div x-show="notification.show" 
+         x-transition:enter="transition ease-out duration-300" 
+         x-transition:enter-start="opacity-0 transform translate-y-2" 
+         x-transition:enter-end="opacity-100 transform translate-y-0" 
+         x-transition:leave="transition ease-in duration-200" 
+         x-transition:leave-start="opacity-100 transform translate-y-0" 
+         x-transition:leave-end="opacity-0 transform translate-y-2" 
+         class="fixed bottom-5 right-5 z-[100]">
+        <div :class="{ 
+            'bg-green-500': notification.type === 'success', 
+            'bg-red-500': notification.type === 'error',
+            'bg-blue-500': notification.type === 'info'
+            }" 
+            class="text-white px-5 py-3 rounded-lg shadow-xl flex items-center">
+            <i :class="{ 
+                'fas fa-check-circle': notification.type === 'success', 
+                'fas fa-exclamation-circle': notification.type === 'error',
+                'fas fa-info-circle': notification.type === 'info'
+               }" class="mr-2.5 text-lg"></i>
+            <span x-text="notification.message"></span>
+            <button @click="notification.show = false" class="ml-4 text-white opacity-70 hover:opacity-100">&times;</button>
+        </div>
+    </div>
+    
+    <script>
+        // Basic Markdown to HTML (for changelogs) - very simplified
+        function formatMarkdown(text) {
+            if (!text) return '';
+            return text
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');       // Italic
+        }
+
+        function appMarket() {
+            return {
+                currentUser: { name: '张三' }, // Simulating logged-in user
+                activeTab: 'my-uploads',
+                searchQuery: '',
+                isLoading: false,
+                modals: {
+                    uploadNewApp: false,
+                    appDetails: false,
+                    uploadNewPackage: false,
+                    editApp: false,
+                },
+                selectedApp: null, // For App Details modal
+                currentAppForUpload: null, // For Upload New Package modal (the app context)
+                currentEditingApp: null, // For Edit App modal
+
+                notification: { show: false, type: 'success', message: '' },
+                
+                newAppForm: {}, // Initialized in openUploadNewAppModal
+                newPackageForm: {}, // Initialized in openUploadNewPackageModal
+                editAppForm: {}, // Initialized in openEditAppModal
+
+                tabs: [
+                    { id: 'my-uploads', name: '我的上传', icon: 'fas fa-cloud-upload-alt' },
+                    { id: 'internal-market', name: '内部市场', icon: 'fas fa-building' },
+                    { id: 'external-market', name: '外部市场', icon: 'fas fa-globe-americas' },
+                    { id: 'my-shares', name: '我的共享', icon: 'fas fa-share-square' }
+                ],
+                // This is the main data store for all applications
+                allApplications: [ // Platform-Specific Applications
+                    {
+                        id: 'app_meituan_android', // Unique ID for this platform-specific app
+                        appNameBase: '外卖助手', 
+                        platform: 'Android',
+                        name: '外卖助手 (Android)', 
+                        icon: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=128&h=128&fit=crop&crop=center',
+                        description: '智能外卖下单助手，支持美团、饿了么等主流平台的自动化下单流程。此为安卓版本。',
+                        creator: '张三',
+                        sharing: 'internal', // 'private' or 'internal'
+                        tags: ['生活服务', '餐饮', '安卓'],
+                        createdAt: '2024-01-01',
+                        // These are derived from packages, or could be app-level if packages don't exist yet
+                        latestVersion: '1.2.1', 
+                        lastPackageUpdateTime: '2024-03-10',
+                        packages: [
+                            {
+                                packageUUID: 'uuid_pkg_mt_android_121',
+                                version: '1.2.1',
+                                packageId: 'com.meituan.android.v121.automation',
+                                packageURL: 'https://example.com/meituan_android_1.2.1.apk',
+                                changelog: '- 紧急修复支付页面卡顿问题。\n- 优化了优惠券识别逻辑。',
+                                uploader: '张三',
+                                uploadTime: '2024-03-10',
+                                isRecommended: true,
+                            },
+                            {
+                                packageUUID: 'uuid_pkg_mt_android_120',
+                                version: '1.2.0',
+                                packageId: 'com.meituan.android.v120',
+                                packageURL: 'https://example.com/meituan_android_1.2.0.apk',
+                                changelog: '新增饿了么平台支持，优化下单流程。',
+                                uploader: '张三',
+                                uploadTime: '2024-01-15',
+                                isRecommended: false,
+                            }
+                        ]
+                    },
+                    {
+                        id: 'app_meituan_ios', 
+                        appNameBase: '外卖助手', 
+                        platform: 'iOS',
+                        name: '外卖助手 (iOS)', 
+                        icon: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=128&h=128&fit=crop&crop=center', // Same base icon
+                        description: '智能外卖下单助手iOS版，流畅体验，专为苹果用户打造。',
+                        creator: '李四',
+                        sharing: 'private',
+                        tags: ['生活服务', '餐饮', 'iOS'],
+                        createdAt: '2024-02-01',
+                        latestVersion: '1.1.0',
+                        lastPackageUpdateTime: '2024-03-05',
+                        packages: [
+                            {
+                                packageUUID: 'uuid_pkg_mt_ios_110',
+                                version: '1.1.0',
+                                packageId: 'com.meituan.ios.v110',
+                                packageURL: 'https://example.com/meituan_ios_1.1.0.ipa',
+                                changelog: '适配最新iOS系统，提升性能。',
+                                uploader: '李四',
+                                uploadTime: '2024-03-05',
+                                isRecommended: true,
+                            }
+                        ]
+                    },
+                     {
+                        id: 'app_corpmail_android',
+                        appNameBase: '企业邮箱', 
+                        platform: 'Android',
+                        name: '企业邮箱 (Android)', 
+                        icon: 'https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=128&h=128&fit=crop&crop=center',
+                        description: '公司内部邮箱系统客户端，安全高效，支持自动化邮件处理。',
+                        creator: '官方', // Could be a system user
+                        sharing: 'internal',
+                        tags: ['办公工具', '邮箱', '安卓'],
+                        createdAt: '2023-12-01',
+                        latestVersion: '3.1.5',
+                        lastPackageUpdateTime: '2024-03-01',
+                        packages: [
+                             {
+                                packageUUID: 'uuid_pkg_email_android_315',
+                                version: '3.1.5',
+                                packageId: 'com.mycorp.email.android.v315',
+                                packageURL: 'https://example.com/corpmail_android_3.1.5.apk',
+                                changelog: '优化附件下载速度。',
+                                uploader: '管理员',
+                                uploadTime: '2024-03-01',
+                                isRecommended: true,
+                            }
+                        ]
+                    },
+                    {
+                        id: 'app_jd_android',
+                        appNameBase: '京东商城',
+                        platform: 'Android',
+                        name: '京东商城 (Android)',
+                        icon: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=128&h=128&fit=crop&crop=center',
+                        description: '京东官方购物应用安卓版，海量商品，急速送达。',
+                        creator: 'Bots 平台', // Simulating external app added by platform
+                        provider: '京东', // As per V3 plan
+                        sharing: 'external', // Special type for external market
+                        tags: ['购物', '电商', '安卓'],
+                        createdAt: '2023-11-01',
+                        latestVersion: '11.5.0',
+                        lastPackageUpdateTime: '2024-02-20',
+                        packages: [
+                             {
+                                packageUUID: 'uuid_pkg_jd_android_1150',
+                                version: '11.5.0',
+                                packageId: 'com.jd.android.v1150',
+                                packageURL: 'https://example.com/jd_android_11.5.0.apk',
+                                changelog: '支持最新的促销活动。',
+                                uploader: 'Bots 平台',
+                                uploadTime: '2024-02-20',
+                                isRecommended: true,
+                            }
+                        ]
+                    },
+                ],
+                displayedApps: [], // Apps currently shown based on tab and search
+
+                init() {
+                    this.changeTab(this.activeTab); // Initial filter
+                },
+
+                getAppCountForTab(tabId) {
+                    switch (tabId) {
+                        case 'my-uploads':
+                            return this.allApplications.filter(app => app.creator === this.currentUser.name).length;
+                        case 'internal-market':
+                            return this.allApplications.filter(app => app.sharing === 'internal').length;
+                        case 'external-market':
+                             return this.allApplications.filter(app => app.sharing === 'external').length; // Assuming 'external' is a sharing type
+                        case 'my-shares':
+                            return this.allApplications.filter(app => app.creator === this.currentUser.name && app.sharing === 'internal').length;
+                        default:
+                            return 0;
+                    }
+                },
+                
+                changeTab(tabId) {
+                    this.activeTab = tabId;
+                    this.filterApps();
+                },
+
+                filterApps() {
+                    let tempApps = [];
+                    switch (this.activeTab) {
+                        case 'my-uploads':
+                            tempApps = this.allApplications.filter(app => app.creator === this.currentUser.name);
+                            break;
+                        case 'internal-market':
+                            tempApps = this.allApplications.filter(app => app.sharing === 'internal');
+                            break;
+                        case 'external-market':
+                            tempApps = this.allApplications.filter(app => app.sharing === 'external');
+                            break;
+                        case 'my-shares':
+                            tempApps = this.allApplications.filter(app => app.creator === this.currentUser.name && app.sharing === 'internal');
+                            break;
+                        default:
+                            tempApps = [];
+                    }
+
+                    if (this.searchQuery.trim() !== '') {
+                        const query = this.searchQuery.toLowerCase().trim();
+                        tempApps = tempApps.filter(app =>
+                            app.name.toLowerCase().includes(query) ||
+                            app.description.toLowerCase().includes(query) ||
+                            (app.tags && app.tags.some(tag => tag.toLowerCase().includes(query)))
+                        );
+                    }
+                    this.displayedApps = tempApps;
+                },
+                
+                getPlatformIcon(platform) {
+                    if (platform === 'Android') return 'fab fa-android';
+                    if (platform === 'iOS') return 'fab fa-apple';
+                    if (platform === 'HarmonyOS') return 'fab fa-hooli'; // Placeholder, find a better one
+                    return 'fas fa-question-circle';
+                },
+                getPlatformColor(platform) {
+                    if (platform === 'Android') return '#3ddc84'; // Green
+                    if (platform === 'iOS') return '#555555'; // Dark Gray
+                    if (platform === 'HarmonyOS') return '#de4040'; // Reddish
+                    return '#888888';
+                },
+
+                // --- Modal Openers ---
+                openUploadNewAppModal() {
+                    this.newAppForm = {
+                        appNameBase: '',
+                        platform: 'Android',
+                        appIcon: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=128&h=128&fit=crop&crop=center', // Default
+                        appDescription: '',
+                        categoryTags: '',
+                        sharing: 'private',
+                        version: '',
+                        packageId: '',
+                        packageURL: '',
+                        changelog: ''
+                    };
+                    this.modals.uploadNewApp = true;
+                },
+                openAppDetailsModal(app) {
+                    this.selectedApp = app;
+                    this.modals.appDetails = true;
+                },
+                openUploadNewPackageModal(appContext) {
+                    this.currentAppForUpload = appContext; // The app we are adding a package to
+                     this.newPackageForm = {
+                        version: '',
+                        packageId: '',
+                        packageURL: '',
+                        changelog: '',
+                        isRecommended: false,
+                    };
+                    this.modals.uploadNewPackage = true;
+                },
+                openEditAppModal(app) {
+                    this.currentEditingApp = app;
+                    this.editAppForm = {
+                        id: app.id,
+                        name: app.name, // Display name, likely non-editable directly
+                        platform: app.platform, // Non-editable
+                        appIcon: app.icon,
+                        appDescription: app.description,
+                        categoryTags: app.tags ? app.tags.join(', ') : '',
+                        sharing: app.sharing,
+                    };
+                    this.modals.editApp = true;
+                },
+
+                // --- Form Submissions ---
+                submitNewApp() {
+                    const appName = `${this.newAppForm.appNameBase.trim()} (${this.newAppForm.platform})`;
+                    // Check for duplicate app name + platform
+                    if (this.allApplications.some(app => app.name.toLowerCase() === appName.toLowerCase())) {
+                        this.showNotification(`应用 "${appName}" 已存在。请使用不同的应用名称或平台组合。`, 'error');
+                        return;
+                    }
+
+                    const newAppEntry = {
+                        id: `app_${this.newAppForm.appNameBase.toLowerCase().replace(/\s+/g, '_')}_${this.newAppForm.platform.toLowerCase()}_${Date.now()}`,
+                        appNameBase: this.newAppForm.appNameBase.trim(),
+                        platform: this.newAppForm.platform,
+                        name: appName,
+                        icon: this.newAppForm.appIcon || `https://via.placeholder.com/128?text=${this.newAppForm.appNameBase.substring(0,1)}`,
+                        description: this.newAppForm.appDescription,
+                        creator: this.currentUser.name,
+                        sharing: this.newAppForm.sharing,
+                        tags: this.newAppForm.categoryTags ? this.newAppForm.categoryTags.split(',').map(t => t.trim()).filter(t=>t) : [],
+                        createdAt: new Date().toISOString().split('T')[0],
+                        latestVersion: this.newAppForm.version,
+                        lastPackageUpdateTime: new Date().toISOString().split('T')[0],
+                        packages: [{
+                            packageUUID: `uuid_pkg_${Date.now()}`,
+                            version: this.newAppForm.version,
+                            packageId: this.newAppForm.packageId,
+                            packageURL: this.newAppForm.packageURL,
+                            changelog: this.newAppForm.changelog,
+                            uploader: this.currentUser.name,
+                            uploadTime: new Date().toISOString().split('T')[0],
+                            isRecommended: true, // First package is often recommended
+                        }]
+                    };
+                    this.allApplications.unshift(newAppEntry);
+                    this.filterApps(); // Refresh list
+                    this.modals.uploadNewApp = false;
+                    this.showNotification(`应用 "${newAppEntry.name}" 创建成功！`, 'success');
+                },
+
+                submitNewPackage() {
+                    if (!this.currentAppForUpload) return;
+                    
+                    // Check for duplicate packageId or version within this app
+                    if (this.currentAppForUpload.packages.some(p => p.packageId === this.newPackageForm.packageId)) {
+                         this.showNotification(`包ID "${this.newPackageForm.packageId}" 在此应用中已存在。`, 'error');
+                         return;
+                    }
+                     if (this.currentAppForUpload.packages.some(p => p.version === this.newPackageForm.version)) {
+                         this.showNotification(`版本号 "${this.newPackageForm.version}" 在此应用中已存在。`, 'error');
+                         return;
+                    }
+
+                    const newPackageEntry = {
+                        packageUUID: `uuid_pkg_${Date.now()}`,
+                        version: this.newPackageForm.version,
+                        packageId: this.newPackageForm.packageId,
+                        packageURL: this.newPackageForm.packageURL,
+                        changelog: this.newPackageForm.changelog,
+                        uploader: this.currentUser.name,
+                        uploadTime: new Date().toISOString().split('T')[0],
+                        isRecommended: this.newPackageForm.isRecommended,
+                    };
+
+                    const appIndex = this.allApplications.findIndex(app => app.id === this.currentAppForUpload.id);
+                    if (appIndex !== -1) {
+                        if (newPackageEntry.isRecommended) { // Unset other recommended
+                           this.allApplications[appIndex].packages.forEach(p => p.isRecommended = false);
+                        }
+                        this.allApplications[appIndex].packages.unshift(newPackageEntry);
+                        // Update app's latestVersion and lastPackageUpdateTime
+                        this.updateAppVersionInfo(this.allApplications[appIndex]);
+                    }
+                    
+                    this.filterApps();
+                    this.modals.uploadNewPackage = false;
+                    // Refresh selectedApp if it's the one being updated for the details modal
+                    if (this.selectedApp && this.selectedApp.id === this.currentAppForUpload.id) {
+                        this.selectedApp = this.allApplications.find(app => app.id === this.currentAppForUpload.id);
+                    }
+                    this.showNotification(`成功为 "${this.currentAppForUpload.name}" 添加新包版本 ${newPackageEntry.version}！`, 'success');
+                },
+
+                submitEditApp() {
+                    if (!this.currentEditingApp) return;
+                    const appIndex = this.allApplications.findIndex(app => app.id === this.currentEditingApp.id);
+                    if (appIndex !== -1) {
+                        this.allApplications[appIndex].icon = this.editAppForm.appIcon;
+                        this.allApplications[appIndex].description = this.editAppForm.appDescription;
+                        this.allApplications[appIndex].tags = this.editAppForm.categoryTags ? this.editAppForm.categoryTags.split(',').map(t=>t.trim()).filter(t=>t) : [];
+                        
+                        const oldSharing = this.allApplications[appIndex].sharing;
+                        this.allApplications[appIndex].sharing = this.editAppForm.sharing;
+
+                        // If sharing status changed, it might affect "Internal Market" or "My Shares"
+                        if (oldSharing !== this.editAppForm.sharing) {
+                             this.filterApps(); // Re-filter based on new sharing status
+                        }
+                    }
+                    this.filterApps();
+                    this.modals.editApp = false;
+                    this.showNotification(`应用 "${this.currentEditingApp.name}" 信息更新成功！`, 'success');
+                    this.currentEditingApp = null;
+                },
+                
+                updateAppVersionInfo(app) { // Call this after adding/deleting packages
+                    if (!app.packages || app.packages.length === 0) {
+                        app.latestVersion = 'N/A';
+                        app.lastPackageUpdateTime = app.createdAt; // Or some other default
+                        return;
+                    }
+                    // Sort packages by uploadTime or version to find the latest
+                    // For simplicity, let's assume the first one after unshift is the latest, or a recommended one
+                    let latestPkg = app.packages.find(p => p.isRecommended) || app.packages[0];
+                    // A more robust way to find latest by version:
+                    // app.packages.sort((a, b) => semverCompare(b.version, a.version)); latestPkg = app.packages[0];
+                    
+                    app.latestVersion = latestPkg.version;
+                    app.lastPackageUpdateTime = latestPkg.uploadTime;
+                },
+
+                confirmDeleteApp(appToDelete) {
+                    if (confirm(`确定要删除应用 "${appToDelete.name}" 吗？\n这将删除该应用及其下所有包。此操作不可恢复。`)) {
+                        this.allApplications = this.allApplications.filter(app => app.id !== appToDelete.id);
+                        this.filterApps();
+                        this.showNotification(`应用 "${appToDelete.name}" 已删除。`, 'success');
+                    }
+                },
+                confirmDeletePackage(appContext, packageUUIDToDelete) {
+                     if (confirm(`确定要删除版本为 "${appContext.packages.find(p=>p.packageUUID === packageUUIDToDelete)?.version}" 的这个包吗？此操作不可恢复。`)) {
+                        const appIndex = this.allApplications.findIndex(app => app.id === appContext.id);
+                        if (appIndex !== -1) {
+                            this.allApplications[appIndex].packages = this.allApplications[appIndex].packages.filter(p => p.packageUUID !== packageUUIDToDelete);
+                            this.updateAppVersionInfo(this.allApplications[appIndex]);
+
+                            // Refresh selectedApp for details modal
+                            if (this.selectedApp && this.selectedApp.id === appContext.id) {
+                                this.selectedApp = JSON.parse(JSON.stringify(this.allApplications[appIndex])); // Deep copy to refresh Alpine
+                            }
+                        }
+                        this.filterApps();
+                        this.showNotification(`包已从 "${appContext.name}" 中删除。`, 'success');
+                    }
+                },
+
+                copyToClipboard(text, itemType = '内容') {
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.showNotification(`${itemType}已复制到剪贴板`, 'success');
+                    }).catch(() => {
+                        this.showNotification('复制失败，请手动复制', 'error');
+                    });
+                },
+
+                showNotification(message, type = 'success') {
+                    this.notification = { show: true, message, type };
+                    setTimeout(() => this.notification.show = false, 3000);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>订阅与配额</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 飞书设计系统 -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--spacing-6);
+      background: var(--bg-2);
+    }
+    
+    /* 订阅信息卡片 */
+    .subscription-card {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      box-shadow: var(--shadow-1);
+      margin-bottom: var(--spacing-6);
+      overflow: hidden;
+    }
+    
+    .subscription-content {
+      padding: var(--spacing-6);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--spacing-8);
+      align-items: center;
+    }
+    
+    .sub-item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+    
+    .sub-label {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .sub-value {
+      font-size: var(--font-size-20);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+    
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-2) var(--spacing-3);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: var(--radius-medium);
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-semibold);
+    }
+    
+    .credits-value {
+      color: var(--primary-color);
+      font-size: var(--font-size-28);
+    }
+    
+    .link-button {
+      color: var(--primary-color);
+      cursor: pointer;
+      font-size: var(--font-size-13);
+      transition: opacity var(--duration-fast);
+    }
+    
+    .link-button:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+    
+    .subscription-actions {
+      padding: var(--spacing-4) var(--spacing-6);
+      border-top: 1px solid var(--border-2);
+      background: var(--fill-1);
+      display: flex;
+      gap: var(--spacing-3);
+    }
+    
+    /* 配额区域 */
+    .quota-section {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      box-shadow: var(--shadow-1);
+      padding: var(--spacing-6);
+    }
+    
+    .quota-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-5);
+    }
+    
+    .quota-title {
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+    }
+    
+    .quota-subtitle {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+      margin-bottom: var(--spacing-5);
+    }
+    
+    /* 配额卡片网格 */
+    .quota-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-4);
+    }
+    
+    .quota-card {
+      background: var(--fill-1);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      transition: all var(--duration-base) var(--ease-in-out);
+    }
+    
+    .quota-card:hover {
+      border-color: var(--primary-lighter);
+      box-shadow: var(--shadow-1);
+    }
+    
+    .quota-card.exceeded {
+      border-color: var(--danger-light);
+      background: var(--danger-lightest);
+    }
+    
+    .quota-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .quota-name {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-1);
+    }
+    
+    .quota-icon {
+      font-size: 24px;
+    }
+    
+    .quota-adjust-btn {
+      font-size: var(--font-size-12);
+      padding: var(--spacing-1) var(--spacing-2);
+    }
+    
+    .quota-progress {
+      margin-bottom: var(--spacing-3);
+    }
+    
+    .quota-stats {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: var(--font-size-13);
+    }
+    
+    .quota-used {
+      color: var(--text-2);
+    }
+    
+    .quota-used strong {
+      color: var(--text-1);
+      font-weight: var(--font-weight-semibold);
+    }
+    
+    .quota-percentage {
+      color: var(--text-3);
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .quota-percentage.exceeded {
+      color: var(--danger-color);
+    }
+    
+    .quota-warning {
+      margin-top: var(--spacing-2);
+      font-size: var(--font-size-12);
+      color: var(--danger-color);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-1);
+    }
+    
+    /* 修改套餐弹窗样式 */
+    .plan-dialog-content {
+      padding: var(--spacing-2) 0;
+    }
+    
+    .current-plan-info {
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .plan-selection {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    .plan-card {
+      position: relative;
+      background: var(--bg-1);
+      border: 2px solid var(--border-2);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+      cursor: pointer;
+      transition: all var(--duration-base) var(--ease-in-out);
+      overflow: hidden;
+    }
+    
+    .plan-card:hover {
+      border-color: var(--primary-lighter);
+      box-shadow: var(--shadow-2);
+      transform: translateY(-2px);
+    }
+    
+    .plan-card.selected {
+      border-color: var(--primary-color);
+      background: var(--primary-lightest);
+      box-shadow: var(--shadow-2);
+    }
+    
+    .plan-card.recommended {
+      border-color: var(--success-color);
+    }
+    
+    .plan-badge-recommended,
+    .plan-badge-current {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 2px 12px;
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-12);
+      font-weight: var(--font-weight-semibold);
+    }
+    
+    .plan-badge-recommended {
+      background: var(--success-color);
+      color: white;
+    }
+    
+    .plan-badge-current {
+      background: var(--info-color);
+      color: white;
+    }
+    
+    .plan-header {
+      text-align: center;
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .plan-icon {
+      font-size: 48px;
+      margin-bottom: var(--spacing-2);
+    }
+    
+    .plan-name {
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+      margin-bottom: var(--spacing-1);
+    }
+    
+    .plan-description {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+    }
+    
+    .plan-price {
+      text-align: center;
+      padding: var(--spacing-4) 0;
+      border-top: 1px solid var(--border-2);
+      border-bottom: 1px solid var(--border-2);
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .price-amount {
+      font-size: var(--font-size-28);
+      font-weight: var(--font-weight-bold);
+      color: var(--primary-color);
+    }
+    
+    .price-unit {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+      margin-left: var(--spacing-1);
+    }
+    
+    .plan-features {
+      margin-bottom: var(--spacing-10);
+    }
+    
+    .feature-section {
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .feature-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .feature-section-title {
+      font-size: var(--font-size-13);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-2);
+      margin-bottom: var(--spacing-2);
+    }
+    
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-2);
+      font-size: var(--font-size-13);
+      color: var(--text-2);
+      margin-bottom: var(--spacing-2);
+      line-height: 1.6;
+    }
+    
+    .feature-icon {
+      color: var(--success-color);
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    
+    .plan-select-indicator {
+      position: absolute;
+      bottom: var(--spacing-4);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      color: var(--primary-color);
+    }
+    
+    .plan-card:not(.selected) .plan-select-indicator {
+      color: var(--border-3);
+    }
+    
+    .plan-form {
+      background: var(--fill-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-5);
+    }
+    
+    .dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-3);
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <!-- 当前订阅信息 -->
+    <div class="subscription-card">
+      <div class="subscription-content">
+        <div class="sub-item">
+          <div class="sub-label">当前方案</div>
+          <div class="sub-value">
+            <span class="plan-badge">
+              <el-icon><Medal /></el-icon>
+              {{ subscriptionData.currentPlan.version }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="sub-item">
+          <div class="sub-label">到期时间</div>
+          <div class="sub-value">
+            {{ subscriptionData.currentPlan.expireDate }} 到期
+          </div>
+        </div>
+        
+        <div class="sub-item">
+          <div class="sub-label">
+            <span>可用积分</span>
+            <!-- <span class="link-button" @click="showRecordsDialog">查看操作记录 →</span> -->
+          </div>
+          <div class="sub-value">
+            <span class="credits-value">{{ formatNumber(subscriptionData.currentPlan.credits) }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="subscription-actions">
+        <el-button @click="planDialogVisible = true">
+          <el-icon><Edit /></el-icon>
+          修改套餐
+        </el-button>
+        <el-button>
+          <el-icon><CoinIcon /></el-icon>
+          调整积分
+        </el-button>
+        <!-- <el-button>
+          <el-icon><Document /></el-icon>
+          查看订阅历史
+        </el-button> -->
+      </div>
+    </div>
+    
+    <!-- 额度用量概览 -->
+    <div class="quota-section">
+      <div class="quota-header">
+        <div>
+          <div class="quota-title">额度用量概览</div>
+          <div class="quota-subtitle">查看各项资源的使用情况和配额限制</div>
+        </div>
+        <!-- <span class="link-button" @click="showRecordsDialog">查看操作记录 →</span> -->
+      </div>
+      
+      <div class="quota-grid">
+        <div
+          v-for="quota in subscriptionData.quotas"
+          :key="quota.id"
+          :class="['quota-card', quota.status === 'exceeded' ? 'exceeded' : '']"
+        >
+          <div class="quota-card-header">
+            <div class="quota-name">
+              <span class="quota-icon">{{ quota.icon }}</span>
+              <span>{{ quota.name }}</span>
+            </div>
+            <el-button class="quota-adjust-btn" size="small" @click="handleAdjustQuota(quota)">
+              调整
+            </el-button>
+          </div>
+          
+          <div class="quota-progress">
+            <el-progress
+              :percentage="Math.min(quota.percentage, 100)"
+              :color="getProgressColor(quota.percentage)"
+              :show-text="false"
+            />
+          </div>
+          
+          <div class="quota-stats">
+            <span class="quota-used">
+              已使用 <strong>{{ quota.used }}</strong> / {{ quota.total }} {{ quota.unit }}
+            </span>
+            <span :class="['quota-percentage', quota.percentage > 100 ? 'exceeded' : '']">
+              {{ quota.percentage }}%
+            </span>
+          </div>
+          
+          <div v-if="quota.warningText" class="quota-warning">
+            <el-icon><WarningFilled /></el-icon>
+            <span>{{ quota.warningText }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 修改套餐对话框 -->
+    <el-dialog
+      v-model="planDialogVisible"
+      title="修改租户套餐"
+      width="900px"
+      :close-on-click-modal="false"
+    >
+      <div class="plan-dialog-content">
+        <div class="current-plan-info">
+          <el-alert
+            type="info"
+            :closable="false"
+            show-icon
+          >
+            <template #title>
+              <span>当前租户套餐：<strong>{{ subscriptionData.currentPlan.version }}</strong>，到期时间：<strong>{{ subscriptionData.currentPlan.expireDate }}</strong></span>
+            </template>
+          </el-alert>
+        </div>
+        
+        <div class="plan-selection">
+          <div
+            v-for="plan in planOptions"
+            :key="plan.id"
+            :class="['plan-card', { 'selected': selectedPlan === plan.id, 'current': subscriptionData.currentPlan.version === plan.name, 'recommended': plan.recommended }]"
+            @click="selectedPlan = plan.id"
+          >
+            <div v-if="plan.recommended" class="plan-badge-recommended">推荐</div>
+            <div v-if="subscriptionData.currentPlan.version === plan.name" class="plan-badge-current">当前</div>
+            
+            <div class="plan-header">
+              <div class="plan-icon">{{ plan.icon }}</div>
+              <div class="plan-name">{{ plan.name }}</div>
+              <div class="plan-description">{{ plan.description }}</div>
+            </div>
+            
+            <div class="plan-price">
+              <span class="price-amount">{{ plan.price }}</span>
+              <span class="price-unit">{{ plan.priceUnit }}</span>
+            </div>
+            
+            <div class="plan-features">
+              <div class="feature-section">
+                <div class="feature-section-title">核心权益</div>
+                <div v-for="(feature, idx) in plan.features" :key="idx" class="feature-item">
+                  <el-icon class="feature-icon"><Check /></el-icon>
+                  <span>{{ feature }}</span>
+                </div>
+              </div>
+              
+              <div class="feature-section">
+                <div class="feature-section-title">配额</div>
+                <div v-for="(quota, idx) in plan.quotas" :key="idx" class="feature-item">
+                  <el-icon class="feature-icon"><Check /></el-icon>
+                  <span>{{ quota }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="plan-select-indicator">
+              <el-icon v-if="selectedPlan === plan.id"><CircleCheck /></el-icon>
+              <el-icon v-else><Circle /></el-icon>
+            </div>
+          </div>
+        </div>
+        
+        <div class="plan-form">
+          <el-form :model="planForm" label-width="100px">
+            <el-form-item label="到期时间">
+              <el-date-picker
+                v-model="planForm.expireDate"
+                type="date"
+                placeholder="选择到期时间"
+                :disabled-date="disabledDate"
+                style="width: 100%;"
+              />
+            </el-form-item>
+            
+            <el-form-item label="初始积分">
+              <el-input-number
+                v-model="planForm.credits"
+                :min="0"
+                :max="1000000"
+                :step="1000"
+                controls-position="right"
+                style="width: 200px;"
+              />
+              <span style="margin-left: 8px; color: var(--text-3);">点（修改套餐时可赠送积分）</span>
+            </el-form-item>
+            
+            <el-form-item label="操作原因">
+              <el-input
+                v-model="planForm.reason"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入修改套餐的原因，如：客户申请升级、商务谈判结果等"
+                maxlength="200"
+                show-word-limit
+              />
+            </el-form-item>
+            
+            <el-form-item label="通知租户">
+              <el-switch
+                v-model="planForm.notifyTenant"
+                active-text="发送站内信通知租户所有者"
+              />
+            </el-form-item>
+          </el-form>
+        </div>
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="planDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleConfirmPlanChange" :disabled="!selectedPlan || !planForm.expireDate">
+            确认修改
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+    
+    <!-- 调整配额对话框 -->
+    <el-dialog
+      v-model="adjustDialogVisible"
+      title="调整配额"
+      width="500px"
+    >
+      <el-form v-if="currentQuota" label-width="100px">
+        <el-form-item label="资源类型">
+          <span>{{ currentQuota.name }}</span>
+        </el-form-item>
+        <el-form-item label="当前配额">
+          <span>{{ currentQuota.total }} {{ currentQuota.unit }}</span>
+        </el-form-item>
+        <el-form-item label="已使用">
+          <span>{{ currentQuota.used }} {{ currentQuota.unit }}</span>
+        </el-form-item>
+        <el-form-item label="新配额">
+          <el-input-number
+            v-model="newQuotaValue"
+            :min="currentQuota.used"
+            :max="100000"
+            :step="currentQuota.id.includes('device') ? 1000 : 10"
+          />
+          <span style="margin-left: 8px; color: var(--text-3);">{{ currentQuota.unit }}</span>
+        </el-form-item>
+        <el-form-item label="调整原因">
+          <el-input
+            v-model="adjustReason"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入调整原因"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="adjustDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleConfirmAdjust">确认调整</el-button>
+      </template>
+    </el-dialog>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  
+  <script>
+    const { createApp, ref } = Vue;
+    
+    const app = createApp({
+      setup() {
+        // 数据
+        const subscriptionData = ref(MockData.generateSubscriptionData());
+        const adjustDialogVisible = ref(false);
+        const currentQuota = ref(null);
+        const newQuotaValue = ref(0);
+        const adjustReason = ref('');
+        
+        // 修改套餐相关
+        const planDialogVisible = ref(false);
+        const selectedPlan = ref(null);
+        const planForm = ref({
+          expireDate: null,
+          credits: 10000,
+          reason: '',
+          notifyTenant: true,
+        });
+        
+        // 套餐选项数据
+        const planOptions = ref([
+          {
+            id: 'trial',
+            name: '体验版',
+            icon: '🎯',
+            description: '适合个人用户和小团队体验',
+            price: '免费',
+            priceUnit: '',
+            features: [
+              '基础AI对话功能',
+              '标准响应速度',
+              '社区技术支持',
+              '基础数据分析',
+            ],
+            quotas: [
+              '智能体: 3个',
+              '工作流: 2个',
+              '工具库: 1个',
+              '团队空间: 1个',
+              '成员数: 5人',
+            ],
+            recommended: false,
+          },
+          {
+            id: 'team',
+            name: '团队版',
+            icon: '👥',
+            description: '适合中小团队协作使用',
+            price: '¥2,999',
+            priceUnit: '/年',
+            features: [
+              '完整AI功能',
+              '优先响应速度',
+              '专属客户支持',
+              '高级数据分析',
+              '自定义品牌',
+            ],
+            quotas: [
+              '智能体: 10个',
+              '工作流: 10个',
+              '工具库: 5个',
+              '团队空间: 10个',
+              '成员数: 50人',
+            ],
+            recommended: true,
+          },
+          {
+            id: 'enterprise',
+            name: '企业版',
+            icon: '🏢',
+            description: '适合大型企业和组织',
+            price: '¥29,999',
+            priceUnit: '/年',
+            features: [
+              '企业级AI功能',
+              '最高响应优先级',
+              '7×24专属服务',
+              '企业级数据分析',
+              '定制化开发',
+              'SSO单点登录',
+              '数据私有化部署',
+            ],
+            quotas: [
+              '智能体: 无限',
+              '工作流: 无限',
+              '工具库: 无限',
+              '团队空间: 无限',
+              '成员数: 无限',
+            ],
+            recommended: false,
+          },
+        ]);
+        
+        // 方法
+        const formatNumber = (num) => Utils.formatNumber(num);
+        
+        const getProgressColor = (percentage) => {
+          if (percentage >= 100) return '#F53F3F';
+          if (percentage >= 80) return '#FF7D00';
+          return '#3370FF';
+        };
+        
+        const showRecordsDialog = () => {
+          Utils.showInfo('查看操作记录功能（演示）');
+        };
+        
+        const handleAdjustQuota = (quota) => {
+          currentQuota.value = quota;
+          newQuotaValue.value = quota.total;
+          adjustReason.value = '';
+          adjustDialogVisible.value = true;
+        };
+        
+        const handleConfirmAdjust = () => {
+          if (!adjustReason.value) {
+            Utils.showWarning('请输入调整原因');
+            return;
+          }
+          
+          // 更新配额
+          currentQuota.value.total = newQuotaValue.value;
+          currentQuota.value.percentage = Math.floor((currentQuota.value.used / currentQuota.value.total) * 100);
+          
+          if (currentQuota.value.percentage > 100) {
+            currentQuota.value.status = 'exceeded';
+            currentQuota.value.warningText = '用量已超额，请调整配额';
+          } else {
+            currentQuota.value.status = 'normal';
+            currentQuota.value.warningText = '';
+          }
+          
+          adjustDialogVisible.value = false;
+          Utils.showSuccess('配额调整成功');
+        };
+        
+        // 修改套餐相关方法
+        const disabledDate = (time) => {
+          // 禁用今天之前的日期
+          return time.getTime() < Date.now() - 24 * 60 * 60 * 1000;
+        };
+        
+        const handleConfirmPlanChange = async () => {
+          if (!selectedPlan.value) {
+            Utils.showWarning('请选择套餐类型');
+            return;
+          }
+          
+          if (!planForm.value.expireDate) {
+            Utils.showWarning('请选择到期时间');
+            return;
+          }
+          
+          if (!planForm.value.reason) {
+            Utils.showWarning('请输入操作原因');
+            return;
+          }
+          
+          const selectedPlanData = planOptions.value.find(p => p.id === selectedPlan.value);
+          
+          const confirmed = await Utils.confirmAction(
+            `确认将租户套餐修改为"${selectedPlanData.name}"吗？<br>到期时间：${Utils.formatDate(planForm.value.expireDate)}<br>初始积分：${planForm.value.credits} 点`,
+            '确认修改套餐'
+          );
+          
+          if (!confirmed) return;
+          
+          // 更新订阅数据
+          subscriptionData.value.currentPlan.version = selectedPlanData.name;
+          subscriptionData.value.currentPlan.expireDate = Utils.formatDate(planForm.value.expireDate);
+          subscriptionData.value.currentPlan.credits = planForm.value.credits;
+          
+          // 关闭弹窗
+          planDialogVisible.value = false;
+          
+          // 显示成功消息
+          let message = `套餐已修改为"${selectedPlanData.name}"`;
+          if (planForm.value.notifyTenant) {
+            message += '，已发送通知给租户所有者';
+          }
+          Utils.showSuccess(message);
+          
+          // 重置表单
+          selectedPlan.value = null;
+          planForm.value = {
+            expireDate: null,
+            credits: 10000,
+            reason: '',
+            notifyTenant: true,
+          };
+        };
+        
+        return {
+          subscriptionData,
+          adjustDialogVisible,
+          currentQuota,
+          newQuotaValue,
+          adjustReason,
+          planDialogVisible,
+          selectedPlan,
+          planForm,
+          planOptions,
+          formatNumber,
+          getProgressColor,
+          showRecordsDialog,
+          handleAdjustQuota,
+          handleConfirmAdjust,
+          disabledDate,
+          handleConfirmPlanChange,
+        };
+      },
+    });
+    
+    // 注册图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    
+    // 手动注册 Coin 图标（Element Plus 没有这个图标，用 Money 代替）
+    app.component('CoinIcon', ElementPlusIconsVue.Money);
+    
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

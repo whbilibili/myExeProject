@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户管理 - 用户列表</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <div class="page-container" id="user-list-page">
+    <!-- 页面头部 -->
+    <header class="page-header">
+      <div class="breadcrumb">
+        <span class="breadcrumb-item">系统管理</span>
+        <span class="breadcrumb-item">用户管理</span>
+      </div>
+      <h1 class="page-title">用户管理</h1>
+    </header>
+
+    <!-- 页面内容 -->
+    <main class="page-content">
+      <!-- 筛选区域 -->
+      <div class="filter-section">
+        <div class="filter-grid">
+          <div class="filter-item">
+            <label class="filter-label">搜索</label>
+            <input 
+              type="text" 
+              class="input" 
+              placeholder="筛选用户名称、用户ID、手机号、邮箱号、MIS号"
+              id="search-input"
+            >
+          </div>
+          
+          <div class="filter-item">
+            <label class="filter-label">状态</label>
+            <select class="select" id="status-filter">
+              <option value="all">全部</option>
+              <option value="active">正常</option>
+              <option value="disabled">已禁用</option>
+            </select>
+          </div>
+          
+          <div class="filter-item">
+            <label class="filter-label">归属租户</label>
+            <select class="select" id="tenant-filter">
+              <option value="all">全部租户</option>
+              <option value="TNT-001">腾讯科技</option>
+              <option value="TNT-002">阿里巴巴</option>
+              <option value="TNT-003">字节跳动</option>
+              <option value="TNT-004">百度在线</option>
+              <option value="TNT-005">网易公司</option>
+            </select>
+          </div>
+          
+          <div class="filter-item">
+            <label class="filter-label">创建时间</label>
+            <input 
+              type="text" 
+              class="input" 
+              placeholder="选择时间范围"
+              id="date-range-filter"
+            >
+          </div>
+          
+          <div class="filter-item" style="align-self: flex-end;">
+            <button class="btn btn-primary" onclick="applyFilters()">
+              <span>🔍</span>
+              <span>搜索</span>
+            </button>
+          </div>
+          
+          <div class="filter-item" style="align-self: flex-end;">
+            <button class="btn btn-secondary" onclick="resetFilters()">
+              <span>↺</span>
+              <span>重置</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 数据表格 -->
+      <div class="table-container">
+        <table class="table" id="users-table">
+          <thead>
+            <tr>
+              <th>用户ID</th>
+              <th>用户名称</th>
+              <th>归属租户</th>
+              <th>绑定手机</th>
+              <th>绑定邮箱</th>
+              <th>绑定MIS</th>
+              <th>创建时间</th>
+              <th>最后登录时间</th>
+              <th>状态</th>
+              <th>账号金额</th>
+              <th style="width: 200px;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <!-- 数据行将通过JavaScript动态生成 -->
+          </tbody>
+        </table>
+        
+        <!-- 分页 -->
+        <div class="pagination">
+          <div class="pagination-info">
+            显示 <strong>1-6</strong> 条，共 <strong>6</strong> 条记录
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" disabled>上一页</button>
+            <button class="pagination-btn active">1</button>
+            <button class="pagination-btn" disabled>下一页</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 重置密码模态框 -->
+  <div class="modal-overlay" id="reset-password-modal">
+    <div class="modal" style="width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">重置密码</h3>
+        <button class="modal-close" onclick="hideModal('reset-password-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: var(--spacing-lg);">
+          <label class="filter-label">新密码</label>
+          <input type="password" class="input" placeholder="请输入新密码" id="new-password">
+        </div>
+        <div style="margin-bottom: var(--spacing-lg);">
+          <label class="filter-label">确认密码</label>
+          <input type="password" class="input" placeholder="请再次输入新密码" id="confirm-password">
+        </div>
+        <div class="info-banner" style="margin-top: var(--spacing-lg);">
+          <span class="info-banner-icon">⚠️</span>
+          <span class="info-banner-text">重置密码是高危操作，请谨慎操作。</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('reset-password-modal')">取消</button>
+        <button class="btn btn-danger" onclick="confirmResetPassword()">确认重置</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 注销账号模态框 -->
+  <div class="modal-overlay" id="delete-user-modal">
+    <div class="modal" style="width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">注销账号</h3>
+        <button class="modal-close" onclick="hideModal('delete-user-modal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-banner" style="background: linear-gradient(135deg, #fff2f0 0%, #ffccc7 100%); border-left-color: var(--danger-color);">
+          <span class="info-banner-icon">🚨</span>
+          <span class="info-banner-text">注销账号是不可逆操作，账号相关的所有数据将被永久删除！</span>
+        </div>
+        <div style="margin-top: var(--spacing-lg);">
+          <label class="filter-label">请输入"确认注销"以继续</label>
+          <input type="text" class="input" placeholder="确认注销" id="delete-confirm-text">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal('delete-user-modal')">取消</button>
+        <button class="btn btn-danger" onclick="confirmDeleteUser()">确认注销</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/mock-data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    let currentUserId = null;
+
+    // 渲染用户列表
+    function renderUserList(users = mockUsers) {
+      const tbody = document.getElementById('users-tbody');
+      tbody.innerHTML = users.map(user => `
+        <tr>
+          <td>${user.id}</td>
+          <td>
+            <div class="avatar-group">
+              <div class="avatar">${getAvatarText(user.name)}</div>
+              <a href="user-detail.html?id=${user.id}" class="avatar-name clickable">${user.name}</a>
+            </div>
+          </td>
+          <td>
+            <div class="tooltip">
+              <span>${user.tenants.slice(0, 2).join(', ')}</span>
+              ${user.tenants.length > 2 ? `<span style="color: var(--text-tertiary);">... +${user.tenants.length - 2}</span>` : ''}
+              ${user.tenants.length > 2 ? `<span class="tooltip-text">${user.tenants.join(', ')}</span>` : ''}
+            </div>
+          </td>
+          <td>
+            <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+              <span>${user.phone}</span>
+              <span class="copy-icon" onclick="copyToClipboard('${user.phone}')">📋</span>
+            </div>
+          </td>
+          <td>
+            <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+              <span>${user.email}</span>
+              <span class="copy-icon" onclick="copyToClipboard('${user.email}')">📋</span>
+            </div>
+          </td>
+          <td>
+            ${user.mis ? `
+              <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                <span>${user.mis}</span>
+                <span class="copy-icon" onclick="copyToClipboard('${user.mis}')">📋</span>
+              </div>
+            ` : '<span style="color: var(--text-tertiary);">-</span>'}
+          </td>
+          <td>${user.createdTime}</td>
+          <td>${user.lastLoginTime}</td>
+          <td>
+            <span class="badge ${getStatusClass(user.status)}">
+              ${getStatusText(user.status)}
+            </span>
+          </td>
+          <td>
+            <strong style="color: var(--primary-color);">${user.balance.toLocaleString()}</strong> w币
+          </td>
+          <td>
+            <div class="table-actions">
+              <button class="btn btn-text btn-sm" onclick="showResetPasswordModal('${user.id}')">
+                重置密码
+              </button>
+              <button class="btn btn-text btn-sm" onclick="toggleUserStatus('${user.id}', '${user.status}')">
+                ${user.status === 'active' ? '禁用' : '启用'}
+              </button>
+              <button class="btn btn-text btn-sm" style="color: var(--danger-color);" onclick="showDeleteUserModal('${user.id}')">
+                注销
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 应用筛选
+    function applyFilters() {
+      const searchText = document.getElementById('search-input').value.toLowerCase();
+      const status = document.getElementById('status-filter').value;
+      const tenant = document.getElementById('tenant-filter').value;
+      
+      let filtered = mockUsers;
+      
+      // 搜索筛选
+      if (searchText) {
+        filtered = filtered.filter(user => 
+          user.id.toLowerCase().includes(searchText) ||
+          user.name.toLowerCase().includes(searchText) ||
+          user.phone.includes(searchText) ||
+          user.email.toLowerCase().includes(searchText) ||
+          (user.mis && user.mis.toLowerCase().includes(searchText))
+        );
+      }
+      
+      // 状态筛选
+      if (status !== 'all') {
+        filtered = filtered.filter(user => user.status === status);
+      }
+      
+      // 租户筛选
+      if (tenant !== 'all') {
+        const tenantName = mockTenants.find(t => t.id === tenant)?.name;
+        if (tenantName) {
+          filtered = filtered.filter(user => user.tenants.includes(tenantName));
+        }
+      }
+      
+      renderUserList(filtered);
+    }
+
+    // 重置筛选
+    function resetFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('status-filter').value = 'all';
+      document.getElementById('tenant-filter').value = 'all';
+      document.getElementById('date-range-filter').value = '';
+      renderUserList(mockUsers);
+    }
+
+    // 显示重置密码模态框
+    function showResetPasswordModal(userId) {
+      currentUserId = userId;
+      showModal('reset-password-modal');
+    }
+
+    // 确认重置密码
+    function confirmResetPassword() {
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      if (!newPassword || !confirmPassword) {
+        showErrorMessage('请填写完整的密码信息');
+        return;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        showErrorMessage('两次输入的密码不一致');
+        return;
+      }
+      
+      // 模拟重置密码
+      showSuccessMessage('密码重置成功');
+      hideModal('reset-password-modal');
+      document.getElementById('new-password').value = '';
+      document.getElementById('confirm-password').value = '';
+    }
+
+    // 切换用户状态
+    function toggleUserStatus(userId, currentStatus) {
+      const action = currentStatus === 'active' ? '禁用' : '启用';
+      const user = mockUsers.find(u => u.id === userId);
+      
+      showConfirmDialog(
+        `${action}用户`,
+        `确认要${action}用户 "${user.name}" 吗？`,
+        () => {
+          // 模拟状态切换
+          user.status = currentStatus === 'active' ? 'disabled' : 'active';
+          renderUserList(mockUsers);
+          showSuccessMessage(`用户已${action}`);
+        }
+      );
+    }
+
+    // 显示注销用户模态框
+    function showDeleteUserModal(userId) {
+      currentUserId = userId;
+      showModal('delete-user-modal');
+    }
+
+    // 确认注销用户
+    function confirmDeleteUser() {
+      const confirmText = document.getElementById('delete-confirm-text').value;
+      
+      if (confirmText !== '确认注销') {
+        showErrorMessage('请输入"确认注销"以继续');
+        return;
+      }
+      
+      // 模拟注销用户
+      const index = mockUsers.findIndex(u => u.id === currentUserId);
+      if (index > -1) {
+        const userName = mockUsers[index].name;
+        mockUsers.splice(index, 1);
+        renderUserList(mockUsers);
+        showSuccessMessage(`用户 "${userName}" 已注销`);
+      }
+      
+      hideModal('delete-user-modal');
+      document.getElementById('delete-confirm-text').value = '';
+    }
+
+    // 页面加载时渲染用户列表
+    document.addEventListener('DOMContentLoaded', () => {
+      renderUserList(mockUsers);
+    });
+  </script>
+</body>
+</html>
+
+

@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的订阅计划</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --primary-color: #4F46E5;
+            --primary-hover: #4338CA;
+            --secondary-color: #10B981;
+            --secondary-hover: #059669;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --bg-color: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --border-color: #E5E7EB;
+        }
+
+        body {
+            font-family: 'Inter', 'Helvetica Neue', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', 'Microsoft Yahei', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex-shrink: 0; 
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: var(--secondary-hover);
+        }
+        
+        .btn-link {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0;
+        }
+        .btn-link:hover {
+            text-decoration: underline;
+        }
+
+        /* --- 1. 统一的订阅概览卡片 --- */
+        .plan-card-unified {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap; 
+        }
+        .plan-card-unified .main-info {
+            flex-grow: 1;
+        }
+        .plan-card-unified .main-info .plan-name {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0 0 12px 0;
+        }
+        .plan-card-unified .info-block .value {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .plan-card-unified .info-block .label-part {
+            color: var(--text-secondary);
+            font-weight: 400; 
+        }
+        .plan-card-unified .highlight {
+            background-color: #FEF3C7; 
+            color: #92400E; 
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .plan-card-unified .action-area {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        /* --- 2. 积分中心卡片 --- */
+        .credits-hub-final {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            padding-bottom: 24px;
+        }
+        .credits-progress-area {
+            flex-grow: 1;
+        }
+        .credits-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+        .credits-header .title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .credits-header .title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .credits-header .quota-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .credits-header .quota-text strong {
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+        .secondary-links {
+            position: absolute;
+            bottom: 16px;
+            right: 24px;
+            font-size: 12px;
+        }
+        .secondary-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-left: 16px;
+        }
+        .secondary-links a:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+        /* --- Tooltip 样式 --- */
+        .tooltip {
+            position: relative;
+            display: inline-flex;
+            cursor: help;
+        }
+        .tooltip-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: var(--border-color);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .tooltip-text {
+            visibility: hidden;
+            width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 150%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+
+        /* --- 3. 用量概览卡片 (表格样式) --- */
+        .usage-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .usage-table th, .usage-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        .usage-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .usage-table td {
+            color: var(--text-primary);
+        }
+        .usage-table .feature-name {
+            font-weight: 500;
+        }
+        .usage-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .usage-display-combined .quota-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 4px;
+        }
+        .progress.is-high { background-color: #F59E0B; }
+        .progress.is-full { background-color: #EF4444; }
+
+        /* --- 弹窗样式 --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .modal-body .log-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-body .log-item:last-child {
+            border-bottom: none;
+        }
+        .modal-body .log-time {
+            color: var(--text-secondary);
+        }
+
+        /* --- 资源包弹窗样式 --- */
+        .resource-pack-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .resource-pack-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #F9FAFB;
+        }
+        .pack-info .pack-name {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        .pack-info .pack-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .pack-action {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+        .pack-action .pack-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .card-header > div {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* --- 分页控件样式 --- */
+        .pagination-controls {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 20px;
+            gap: 8px;
+        }
+        .page-btn {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .page-btn:hover {
+            background-color: #F3F4F6;
+        }
+        .page-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 1. 当前订阅概览 -->
+        <div class="card">
+            <div class="plan-card-unified">
+                <div class="main-info">
+                    <div class="plan-name">当前方案：团队版</div>
+                    <div class="info-block">
+                        <div class="value">
+                            <span class="label-part">到期时间：</span><span class="highlight">2025年8月15日</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-area">
+                    <button class="btn btn-primary">管理订阅</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 积分中心 -->
+        <div class="card">
+            <div class="credits-hub-final">
+                <div class="credits-progress-area">
+                    <div class="credits-header">
+                        <div class="title-wrapper">
+                            <span class="title">积分</span>
+                            <div class="tooltip">
+                                <span class="tooltip-icon">?</span>
+                                <span class="tooltip-text">
+                                    积分是您使用高级AI功能（如智能体交互、工作流运行）时所需消耗的资源。不同操作消耗的积分数量不同。
+                                </span>
+                            </div>
+                        </div>
+                        <span class="quota-text"><strong>6,500</strong> / 25,000</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 74%;"></div>
+                    </div>
+                </div>
+                <div class="credits-actions">
+                    <button class="btn btn-secondary">充值积分</button>
+                </div>
+            </div>
+            <div class="secondary-links">
+                <a href="#">查看流水</a>
+                <a href="#">消耗规则</a>
+            </div>
+        </div>
+
+        <!-- 3. 额度用量概览 -->
+        <div class="card">
+            <div class="card-header">
+                <h2>额度用量概览</h2>
+                <div>
+                    <button class="btn-link" id="purchase-pack-btn">购买资源包</button>
+                    <button class="btn-link" id="show-logs-btn">查看操作记录</button>
+                </div>
+            </div>
+            <table class="usage-table">
+                <thead>
+                    <tr>
+                        <th>功能</th>
+                        <th style="width: 200px;">用量</th>
+                    </tr>
+                </thead>
+                <tbody id="usage-table-body">
+                    <!-- 模拟更多数据 -->
+                    <tr>
+                        <td class="feature-name">工作流</td>
+                        <td>
+                            <div class="usage-display-combined">
+                                <div class="quota-text">15 / 20 个</div>
+                                <div class="progress-bar"><div class="progress is-high" style="width: 75%;"></div></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">智能体 (Agent)</td>
+                        <td>
+                            <div class="usage-display-combined">
+                                <div class="quota-text">8 / 10 个</div>
+                                <div class="progress-bar"><div class="progress is-high" style="width: 80%;"></div></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">工具</td>
+                        <td>
+                            <div class="usage-display-combined">
+                                <div class="quota-text">43 / 50 个</div>
+                                <div class="progress-bar"><div class="progress is-high" style="width: 86%;"></div></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">知识库</td>
+                        <td>
+                             <div class="usage-display-combined">
+                                <div class="quota-text">5 / 5 个</div>
+                                <div class="progress-bar"><div class="progress is-full" style="width: 100%;"></div></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">团队空间</td>
+                        <td>
+                             <div class="usage-display-combined">
+                                <div class="quota-text">1 / 1 个</div>
+                                <div class="progress-bar"><div class="progress is-full" style="width: 100%;"></div></div>
+                            </div>
+                        </td>
+                    </tr>
+                     <tr>
+                        <td class="feature-name">API 调用</td>
+                        <td>
+                            <div class="usage-display-combined">
+                                <div class="quota-text">1,234 / 10,000 次</div>
+                                <div class="progress-bar"><div class="progress" style="width: 12.34%;"></div></div>
+                            </div>
+                        </td>
+                    </tr>
+                     <tr>
+                        <td class="feature-name">自定义角色</td>
+                        <td>
+                            <div class="usage-display-combined">
+                                <div class="quota-text">2 / 3 个</div>
+                                <div class="progress-bar"><div class="progress is-high" style="width: 66.6%;"></div></div>
+                            </div>
+                        </td>
+                    </tr>
+                     <tr>
+                        <td class="feature-name">数据导出</td>
+                        <td>
+                            <div class="usage-display-combined">
+                                <div class="quota-text">9 / 10 次/月</div>
+                                <div class="progress-bar"><div class="progress is-high" style="width: 90%;"></div></div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="pagination-controls" id="pagination"></div>
+        </div>
+    </div>
+
+    <!-- 资源包购买弹窗 -->
+    <div class="modal-overlay" id="purchase-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>资源包商店</h3>
+                <button class="modal-close-btn" id="close-purchase-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="resource-pack-list">
+                    <div class="resource-pack-item">
+                        <div class="pack-info">
+                            <div class="pack-name">知识库加油包 (+5个)</div>
+                            <div class="pack-description">将您的知识库上限提升5个。</div>
+                        </div>
+                        <div class="pack-action">
+                            <span class="pack-price">¥50 /月</span>
+                            <button class="btn btn-secondary">购买</button>
+                        </div>
+                    </div>
+                    <div class="resource-pack-item">
+                        <div class="pack-info">
+                            <div class="pack-name">智能体加油包 (+10个)</div>
+                            <div class="pack-description">额外创建10个智能体，释放更多自动化潜力。</div>
+                        </div>
+                        <div class="pack-action">
+                            <span class="pack-price">¥120 /月</span>
+                            <button class="btn btn-secondary">购买</button>
+                        </div>
+                    </div>
+                    <div class="resource-pack-item">
+                        <div class="pack-info">
+                            <div class="pack-name">API调用加油包 (+50,000次)</div>
+                            <div class="pack-description">增加每月API调用次数上限，支持更大规模集成。</div>
+                        </div>
+                        <div class="pack-action">
+                            <span class="pack-price">¥80 /月</span>
+                            <button class="btn btn-secondary">购买</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作记录弹窗 -->
+    <div class="modal-overlay" id="logs-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>关键操作记录</h3>
+                <button class="modal-close-btn" id="close-logs-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="log-item">
+                    <span class="log-action">用户 'admin' 创建了新的工作流 '用户增长分析'。</span>
+                    <span class="log-time">2025-07-14 10:30</span>
+                </div>
+                <div class="log-item">
+                    <span class="log-action">用户 'test@example.com' 删除了知识库 'Q2财报'。</span>
+                    <span class="log-time">2025-07-13 15:02</span>
+                </div>
+                 <div class="log-item">
+                    <span class="log-action">订阅计划从 '团队版' 升级为 '企业版'。</span>
+                    <span class="log-time">2025-07-12 09:00</span>
+                </div>
+                 <div class="log-item">
+                    <span class="log-action">用户 'admin' 新增了工具 'API数据抓取'。</span>
+                    <span class="log-time">2025-07-11 18:21</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 弹窗逻辑 ---
+        const showLogsBtn = document.getElementById('show-logs-btn');
+        const logsModal = document.getElementById('logs-modal');
+        const closeLogsBtn = document.getElementById('close-logs-btn');
+
+        if (showLogsBtn) {
+            showLogsBtn.addEventListener('click', () => logsModal.style.display = 'flex');
+        }
+        if (closeLogsBtn) {
+            closeLogsBtn.addEventListener('click', () => logsModal.style.display = 'none');
+        }
+        if (logsModal) {
+            logsModal.addEventListener('click', (event) => {
+                if (event.target === logsModal) {
+                    logsModal.style.display = 'none';
+                }
+            });
+        }
+
+        // --- 资源包弹窗逻辑 ---
+        const purchasePackBtn = document.getElementById('purchase-pack-btn');
+        const purchaseModal = document.getElementById('purchase-modal');
+        const closePurchaseBtn = document.getElementById('close-purchase-btn');
+
+        if (purchasePackBtn) {
+            purchasePackBtn.addEventListener('click', () => purchaseModal.style.display = 'flex');
+        }
+        if (closePurchaseBtn) {
+            closePurchaseBtn.addEventListener('click', () => purchaseModal.style.display = 'none');
+        }
+        if (purchaseModal) {
+            purchaseModal.addEventListener('click', (event) => {
+                if (event.target === purchaseModal) {
+                    purchaseModal.style.display = 'none';
+                }
+            });
+        }
+
+        // --- 分页逻辑 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBody = document.getElementById('usage-table-body');
+            const paginationContainer = document.getElementById('pagination');
+            const rows = Array.from(tableBody.getElementsByTagName('tr'));
+            const rowsPerPage = 5;
+            let currentPage = 1;
+            const pageCount = Math.ceil(rows.length / rowsPerPage);
+
+            function displayPage(page) {
+                currentPage = page;
+                const start = (page - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+
+                rows.forEach((row, index) => {
+                    row.style.display = (index >= start && index < end) ? '' : 'none';
+                });
+
+                updatePaginationButtons();
+            }
+
+            function setupPagination() {
+                paginationContainer.innerHTML = '';
+                
+                // Previous Button
+                const prevButton = document.createElement('button');
+                prevButton.textContent = '上一页';
+                prevButton.classList.add('page-btn');
+                prevButton.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        displayPage(currentPage - 1);
+                    }
+                });
+                paginationContainer.appendChild(prevButton);
+
+                // Page Number Buttons
+                for (let i = 1; i <= pageCount; i++) {
+                    const btn = document.createElement('button');
+                    btn.textContent = i;
+                    btn.classList.add('page-btn');
+                    btn.addEventListener('click', () => displayPage(i));
+                    paginationContainer.appendChild(btn);
+                }
+                
+                // Next Button
+                const nextButton = document.createElement('button');
+                nextButton.textContent = '下一页';
+                nextButton.classList.add('page-btn');
+                nextButton.addEventListener('click', () => {
+                    if (currentPage < pageCount) {
+                        displayPage(currentPage + 1);
+                    }
+                });
+                paginationContainer.appendChild(nextButton);
+
+                updatePaginationButtons();
+            }
+
+            function updatePaginationButtons() {
+                const buttons = paginationContainer.querySelectorAll('.page-btn');
+                buttons.forEach(button => {
+                    // Handle prev/next buttons
+                    if (button.textContent === '上一页') {
+                        button.disabled = currentPage === 1;
+                    } else if (button.textContent === '下一页') {
+                        button.disabled = currentPage === pageCount;
+                    } 
+                    // Handle page number buttons
+                    else if (parseInt(button.textContent) === currentPage) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                });
+            }
+
+            if (rows.length > rowsPerPage) {
+                setupPagination();
+                displayPage(1);
+            }
+        });
+    </script>
+</body>
+</html>

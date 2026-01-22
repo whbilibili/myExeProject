@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>加入的租户</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义CSS -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--space-6);
+    }
+
+    .page-header {
+      margin-bottom: var(--space-4);
+    }
+
+    .page-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .action-bar {
+      display: flex;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+      align-items: center;
+    }
+
+    .action-bar .el-input {
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <h1 class="page-title">
+        <el-icon color="var(--primary-color)"><el-icon-office-building /></el-icon>
+        加入的租户
+      </h1>
+    </div>
+
+    <!-- 操作栏 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="showAddDialog">
+        <el-icon><el-icon-plus /></el-icon>
+        添加到租户
+      </el-button>
+
+      <el-button
+        type="danger"
+        :disabled="selectedTenants.length === 0"
+        @click="batchRemove"
+      >
+        <el-icon><el-icon-delete /></el-icon>
+        批量移出租户 {{ selectedTenants.length > 0 ? `(${selectedTenants.length})` : '' }}
+      </el-button>
+
+      <div style="flex: 1;"></div>
+
+      <el-input
+        v-model="searchText"
+        placeholder="搜索租户名称/ID"
+        clearable
+        @input="handleSearch"
+      >
+        <template #prefix>
+          <el-icon><el-icon-search /></el-icon>
+        </template>
+      </el-input>
+    </div>
+
+    <!-- 租户列表 -->
+    <div class="table-container">
+      <el-table
+        :data="tableData"
+        style="width: 100%"
+        v-loading="loading"
+        @selection-change="handleSelectionChange"
+        stripe
+        border
+        table-layout="fixed"
+      >
+        <el-table-column
+          type="selection"
+          width="55"
+          :selectable="row => !row.isOwner"
+        />
+
+        <el-table-column prop="tenantId" label="租户ID" width="150" show-overflow-tooltip />
+        
+        <el-table-column prop="tenantName" label="租户名称" min-width="180" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span style="font-weight: 500;">{{ row.tenantName }}</span>
+            <el-tag
+              v-if="row.isOwner"
+              type="warning"
+              size="small"
+              style="margin-left: var(--space-2);"
+            >
+              所有者
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          prop="joinTime"
+          label="加入时间"
+          width="180"
+          sortable
+        >
+          <template #default="{ row }">
+            {{ Utils.formatDate(row.joinTime) }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="version" label="租户版本" width="120">
+          <template #default="{ row }">
+            <el-tag
+              :type="row.version === '企业版' ? 'success' : (row.version === '团队版' ? 'primary' : 'info')"
+              size="small"
+            >
+              {{ row.version }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="creator" label="创建人" width="120" show-overflow-tooltip />
+
+        <el-table-column prop="createTime" label="创建时间" width="180">
+          <template #default="{ row }">
+            {{ Utils.formatDate(row.createTime) }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="owner" label="所有者" width="120" show-overflow-tooltip />
+
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              v-if="!row.isOwner"
+              link
+              type="danger"
+              size="small"
+              @click="removeTenant(row)"
+            >
+              移出租户
+            </el-button>
+            <el-tooltip
+              v-else
+              content="用户是该租户的所有者，不可移除。"
+              placement="top"
+            >
+              <el-button
+                link
+                type="info"
+                size="small"
+                disabled
+              >
+                移出租户
+              </el-button>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div style="padding: var(--space-4); display: flex; justify-content: space-between; align-items: center;">
+        <div style="color: var(--text-secondary); font-size: var(--font-size-sm);">
+          共 {{ pagination.total }} 个租户，已选择 {{ selectedTenants.length }} 个
+        </div>
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :page-sizes="[10, 20, 50]"
+          :total="pagination.total"
+          layout="sizes, prev, pager, next"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
+    </div>
+
+    <!-- 添加到租户对话框 -->
+    <el-dialog
+      v-model="addDialog.visible"
+      title="添加到租户"
+      width="700px"
+    >
+      <div style="margin-bottom: var(--space-4);">
+        <el-input
+          v-model="addDialog.searchText"
+          placeholder="搜索租户名称/ID"
+          clearable
+        >
+          <template #prefix>
+            <el-icon><el-icon-search /></el-icon>
+          </template>
+        </el-input>
+      </div>
+
+      <el-table
+        :data="addDialog.availableTenants"
+        style="width: 100%"
+        max-height="400px"
+        @selection-change="handleAddSelectionChange"
+      >
+        <el-table-column
+          type="selection"
+          width="55"
+          :selectable="row => !row.joined"
+        />
+
+        <el-table-column prop="id" label="租户ID" width="130" />
+        
+        <el-table-column prop="name" label="租户名称" min-width="180">
+          <template #default="{ row }">
+            {{ row.name }}
+            <el-tag
+              v-if="row.joined"
+              type="info"
+              size="small"
+              style="margin-left: var(--space-2);"
+            >
+              已加入
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="version" label="版本" width="100">
+          <template #default="{ row }">
+            <el-tag size="small">{{ row.version }}</el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="owner" label="所有者" width="120" />
+      </el-table>
+
+      <template #footer>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-secondary); font-size: var(--font-size-sm);">
+            已选择 {{ addDialog.selectedTenants.length }} 个租户
+          </span>
+          <div>
+            <el-button @click="addDialog.visible = false">取消</el-button>
+            <el-button
+              type="primary"
+              @click="confirmAdd"
+              :disabled="addDialog.selectedTenants.length === 0"
+            >
+              确认添加
+            </el-button>
+          </div>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+
+  <script>
+    const { createApp, ref, computed, onMounted, watch } = Vue;
+
+    const app = createApp({
+      setup() {
+        const userId = ref('');
+        const loading = ref(false);
+        const tableData = ref([]);
+        const searchText = ref('');
+        const selectedTenants = ref([]);
+        
+        const pagination = ref({
+          page: 1,
+          pageSize: 10,
+          total: 0
+        });
+
+        const addDialog = ref({
+          visible: false,
+          searchText: '',
+          availableTenants: [],
+          selectedTenants: []
+        });
+
+        // 获取用户ID
+        const getUserId = () => {
+          const params = Utils.parseUrlParams();
+          return params.userId || '';
+        };
+
+        // 加载用户租户列表
+        const loadData = () => {
+          loading.value = true;
+          
+          let userTenants = MockData.getUserTenants(userId.value);
+          
+          // 搜索过滤
+          if (searchText.value) {
+            const search = searchText.value.toLowerCase();
+            userTenants = userTenants.filter(t => 
+              t.tenantName.toLowerCase().includes(search) ||
+              t.tenantId.toLowerCase().includes(search)
+            );
+          }
+
+          // 获取租户的详细信息
+          userTenants = userTenants.map(ut => {
+            const tenant = MockData.tenants.find(t => t.id === ut.tenantId);
+            return {
+              ...ut,
+              version: tenant?.version || '未知',
+              creator: tenant?.creator || '-',
+              createTime: tenant?.createTime || null,
+              owner: tenant?.owner || '-'
+            };
+          });
+
+          pagination.value.total = userTenants.length;
+          
+          // 分页
+          const start = (pagination.value.page - 1) * pagination.value.pageSize;
+          const end = start + pagination.value.pageSize;
+          tableData.value = userTenants.slice(start, end);
+
+          setTimeout(() => {
+            loading.value = false;
+          }, 300);
+        };
+
+        // 搜索处理
+        const handleSearch = Utils.debounce(() => {
+          pagination.value.page = 1;
+          loadData();
+        }, 500);
+
+        // 分页处理
+        const handlePageChange = () => {
+          loadData();
+        };
+
+        const handleSizeChange = () => {
+          pagination.value.page = 1;
+          loadData();
+        };
+
+        // 选择处理
+        const handleSelectionChange = (selection) => {
+          selectedTenants.value = selection;
+        };
+
+        // 移出租户
+        const removeTenant = (row) => {
+          ElementPlus.ElMessageBox.confirm(
+            `确认将用户从租户 "${row.tenantName}" 中移除吗？`,
+            '移出租户',
+            {
+              confirmButtonText: '确认',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            MockData.removeUserFromTenant(userId.value, [row.tenantId]);
+            ElementPlus.ElMessage.success('已移出租户');
+            loadData();
+          }).catch(() => {});
+        };
+
+        // 批量移出
+        const batchRemove = () => {
+          if (selectedTenants.value.length === 0) return;
+
+          const tenantNames = selectedTenants.value.map(t => t.tenantName).join('、');
+          
+          ElementPlus.ElMessageBox.confirm(
+            `确认将用户从以下租户中移除吗？\n\n${tenantNames}`,
+            `批量移出租户 (${selectedTenants.value.length}个)`,
+            {
+              confirmButtonText: '确认',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          ).then(() => {
+            const tenantIds = selectedTenants.value.map(t => t.tenantId);
+            MockData.removeUserFromTenant(userId.value, tenantIds);
+            ElementPlus.ElMessage.success(`已从${tenantIds.length}个租户中移除`);
+            selectedTenants.value = [];
+            loadData();
+          }).catch(() => {});
+        };
+
+        // 显示添加对话框
+        const showAddDialog = () => {
+          // 获取所有租户
+          const allTenants = MockData.tenants;
+          const userTenants = MockData.getUserTenants(userId.value);
+          const userTenantIds = userTenants.map(t => t.tenantId);
+
+          addDialog.value.availableTenants = allTenants.map(t => ({
+            ...t,
+            joined: userTenantIds.includes(t.id)
+          }));
+
+          addDialog.value.visible = true;
+          addDialog.value.searchText = '';
+          addDialog.value.selectedTenants = [];
+        };
+
+        // 添加对话框选择处理
+        const handleAddSelectionChange = (selection) => {
+          addDialog.value.selectedTenants = selection;
+        };
+
+        // 确认添加
+        const confirmAdd = () => {
+          const tenantIds = addDialog.value.selectedTenants.map(t => t.id);
+          
+          if (tenantIds.length === 0) return;
+
+          MockData.addUserToTenant(userId.value, tenantIds);
+          ElementPlus.ElMessage.success(`已添加到${tenantIds.length}个租户`);
+          
+          addDialog.value.visible = false;
+          loadData();
+        };
+
+        // 监听添加对话框搜索
+        watch(() => addDialog.value.searchText, (newVal) => {
+          if (newVal) {
+            const search = newVal.toLowerCase();
+            const allTenants = MockData.tenants;
+            const userTenants = MockData.getUserTenants(userId.value);
+            const userTenantIds = userTenants.map(t => t.tenantId);
+
+            addDialog.value.availableTenants = allTenants
+              .filter(t => 
+                t.name.toLowerCase().includes(search) ||
+                t.id.toLowerCase().includes(search)
+              )
+              .map(t => ({
+                ...t,
+                joined: userTenantIds.includes(t.id)
+              }));
+          } else {
+            showAddDialog();
+          }
+        });
+
+        // 初始化
+        onMounted(() => {
+          userId.value = getUserId();
+          loadData();
+        });
+
+        return {
+          loading,
+          tableData,
+          searchText,
+          selectedTenants,
+          pagination,
+          addDialog,
+          handleSearch,
+          handlePageChange,
+          handleSizeChange,
+          handleSelectionChange,
+          removeTenant,
+          batchRemove,
+          showAddDialog,
+          handleAddSelectionChange,
+          confirmAdd,
+          Utils
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

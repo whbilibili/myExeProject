@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导入结果弹窗原型 (极致体验版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f7f8fa;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e5e6eb;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #c9cdd4;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in-item {
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .toast {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .progress-bar-inner {
+            transition: width 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen">
+    
+    <div class="p-8 bg-white rounded-xl shadow-sm text-center">
+        <h1 class="text-xl font-bold text-gray-800 mb-2">导入流程体验</h1>
+        <p class="text-gray-500 mb-6">点击下方按钮，模拟一个完整的导入流程</p>
+        <div class="flex flex-col space-y-4">
+             <button id="startFullFlowBtn" class="bg-violet-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-violet-700 transition-all duration-300 transform hover:scale-105">
+                🚀 开始导入流程
+            </button>
+            <div class="text-sm text-gray-400">--- 或单独查看结果 ---</div>
+            <div class="flex space-x-4">
+                 <button data-scenario="partial-success" class="scenario-btn bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300">
+                    部分成功
+                </button>
+                <button data-scenario="all-success" class="scenario-btn bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-green-700 transition-all duration-300">
+                    全部成功
+                </button>
+                <button data-scenario="all-fail" class="scenario-btn bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-red-700 transition-all duration-300">
+                    全部失败
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Import Progress Modal -->
+    <div id="progressModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md m-4 p-8 text-center transform scale-95 transition-all duration-300">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">正在导入成员...</h2>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full progress-bar-inner" style="width: 0%"></div>
+            </div>
+            <p id="progressPercentage" class="text-lg font-bold text-blue-600">0%</p>
+        </div>
+    </div>
+
+
+    <!-- Import Result Modal -->
+    <div id="importResultModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div id="modalContainer" class="bg-white rounded-xl shadow-2xl w-full max-w-3xl m-4 flex flex-col transform scale-95 transition-all duration-300">
+            
+            <div id="view-has-errors">
+                <div class="flex justify-between items-center p-5 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-800">导入结果</h2>
+                    <button class="close-btn text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+                </div>
+                <div class="p-6">
+                    <!-- New Card-based Summary -->
+                    <div class="flex flex-col md:flex-row gap-4 pb-5 mb-5 border-b border-gray-200">
+                        <div id="summary-success" class="flex-1 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center">
+                            <div class="flex-shrink-0 bg-green-100 rounded-full p-2 mr-4">
+                                <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">导入成功</p>
+                                <span class="text-2xl font-bold text-gray-800 count-up" data-target="152">0</span>
+                                <span class="text-gray-800 font-semibold ml-1">人</span>
+                            </div>
+                        </div>
+                        <div id="summary-fail" class="flex-1 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
+                             <div class="flex-shrink-0 bg-red-100 rounded-full p-2 mr-4">
+                                <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">导入失败</p>
+                                <span class="text-2xl font-bold text-gray-800 count-up" data-target="5">0</span>
+                                <span class="text-gray-800 font-semibold ml-1">人</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-sm text-gray-500 mb-4">以下是失败条目列表。我们已为您准备好一份包含具体原因的报告，下载修改后可重新导入。</p>
+                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                        <div class="max-h-60 overflow-y-auto custom-scrollbar">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-gray-50 text-gray-600 sticky top-0 z-10">
+                                    <tr><th class="py-3 px-4 font-semibold">Excel 行号</th><th class="py-3 px-4 font-semibold">姓名</th><th class="py-3 px-4 font-semibold">手机号</th><th class="py-3 px-4 font-semibold">失败原因</th></tr>
+                                </thead>
+                                <tbody id="error-list-body" class="text-gray-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end items-center p-4 bg-gray-50/70 border-t border-gray-200 rounded-b-xl">
+                    <button class="close-btn bg-white border border-gray-300 text-gray-800 font-semibold py-2 px-5 rounded-lg hover:bg-gray-100 transition-colors duration-200 mr-3">完成</button>
+                    <button id="downloadReportBtn" class="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span class="btn-text">下载失败项并修改</span>
+                    </button>
+                </div>
+            </div>
+            <div id="view-all-success" class="hidden text-center p-10">
+                <div class="flex justify-center mb-5"><svg class="w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">太棒了！</h2>
+                <p class="text-gray-600 mb-2">已成功导入全部 <span class="font-bold text-green-600 text-lg" id="all-success-count">157</span> 名成员。</p>
+                <button class="close-btn bg-blue-600 text-white font-semibold py-2 px-8 mt-6 rounded-lg hover:bg-blue-700 transition-colors duration-200">知道了</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast" class="fixed bottom-10 right-10 bg-gray-800 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-5"><p>✅  报告已开始下载！</p></div>
+
+    <script>
+        // --- DOM Elements ---
+        const startFullFlowBtn = document.getElementById('startFullFlowBtn');
+        const scenarioBtns = document.querySelectorAll('.scenario-btn');
+        const progressModal = document.getElementById('progressModal');
+        const resultModal = document.getElementById('importResultModal');
+        const resultModalContainer = document.getElementById('modalContainer');
+        const closeBtns = document.querySelectorAll('.close-btn');
+        const downloadReportBtn = document.getElementById('downloadReportBtn');
+        const toast = document.getElementById('toast');
+        
+        // --- Data ---
+        const errorData = [
+            { row: 4, name: '王五', phone: '13800001111', reason: '手机号码格式错误' },
+            { row: 5, name: '赵六', phone: '13900002222', reason: '该手机号已被使用' },
+            { row: 6, name: '', phone: '13700003333', reason: '姓名字段为必填项' },
+            { row: 12, name: '孙七', phone: '13500004444', reason: '所属部门不存在' },
+            { row: 18, name: '周八', phone: '13600005555', reason: '邮箱格式不正确' }
+        ];
+
+        // --- Utility Functions ---
+        const animateCountUp = (el) => {
+            const target = parseInt(el.dataset.target, 10);
+            let current = 0;
+            const interval = setInterval(() => {
+                current += Math.ceil(target / 100);
+                if (current >= target) {
+                    el.innerText = target;
+                    clearInterval(interval);
+                } else {
+                    el.innerText = current;
+                }
+            }, 15);
+        };
+
+        const showToast = () => {
+            toast.classList.remove('opacity-0', 'translate-y-5');
+            setTimeout(() => toast.classList.add('opacity-0', 'translate-y-5'), 3000);
+        };
+
+        // --- Progress Modal Logic ---
+        const openProgressModal = () => {
+            progressModal.classList.remove('opacity-0', 'pointer-events-none');
+            progressModal.querySelector('div').classList.remove('scale-95');
+        };
+
+        const closeProgressModal = () => {
+            progressModal.querySelector('div').classList.add('scale-95');
+            progressModal.classList.add('opacity-0');
+            setTimeout(() => progressModal.classList.add('pointer-events-none'), 300);
+        };
+        
+        const simulateProgress = () => {
+            const progressBar = document.getElementById('progressBar');
+            const progressPercentage = document.getElementById('progressPercentage');
+            
+            const updateProgress = (p) => {
+                progressBar.style.width = `${p}%`;
+                progressPercentage.innerText = `${p}%`;
+            }
+
+            updateProgress(0);
+            setTimeout(() => updateProgress(15), 500);
+            setTimeout(() => updateProgress(40), 1200);
+            setTimeout(() => updateProgress(75), 2000);
+            setTimeout(() => updateProgress(95), 2800);
+            setTimeout(() => {
+                updateProgress(100);
+                setTimeout(() => {
+                    closeProgressModal();
+                    openResultModal('partial-success');
+                }, 600);
+            }, 3500);
+        };
+
+        // --- Result Modal Logic ---
+        const populateErrorTable = (data) => {
+            const tbody = document.getElementById('error-list-body');
+            tbody.innerHTML = '';
+            data.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-t border-gray-200 fade-in-item';
+                tr.style.animationDelay = `${index * 50}ms`;
+                tr.innerHTML = `<td class="py-3 px-4">${item.row}</td><td class="py-3 px-4">${item.name}</td><td class="py-3 px-4">${item.phone}</td><td class="py-3 px-4 font-semibold text-red-500">${item.reason}</td>`;
+                tbody.appendChild(tr);
+            });
+        };
+        
+        const setupResultModal = (scenario) => {
+            const viewHasErrors = document.getElementById('view-has-errors');
+            const viewAllSuccess = document.getElementById('view-all-success');
+            const successSummary = document.getElementById('summary-success');
+            const failSummary = document.getElementById('summary-fail');
+            const successCountEl = successSummary.querySelector('.count-up');
+            const failCountEl = failSummary.querySelector('.count-up');
+            
+            viewHasErrors.classList.toggle('hidden', scenario === 'all-success');
+            viewAllSuccess.classList.toggle('hidden', scenario !== 'all-success');
+
+            if (scenario !== 'all-success') {
+                const isPartial = scenario === 'partial-success';
+                successSummary.classList.toggle('hidden', !isPartial);
+                successCountEl.dataset.target = isPartial ? 152 : 0;
+                failCountEl.dataset.target = isPartial ? 5 : 157;
+                populateErrorTable(isPartial ? errorData : errorData.concat(errorData));
+            }
+        };
+
+        const openResultModal = (scenario) => {
+            setupResultModal(scenario);
+            resultModal.classList.remove('opacity-0', 'pointer-events-none');
+            resultModalContainer.classList.remove('scale-95');
+            document.querySelectorAll('#view-has-errors .count-up').forEach(animateCountUp);
+        };
+
+        const closeResultModal = () => {
+            resultModalContainer.classList.add('scale-95');
+            resultModal.classList.add('opacity-0');
+            setTimeout(() => resultModal.classList.add('pointer-events-none'), 300);
+        };
+
+        // --- Event Listeners ---
+        startFullFlowBtn.addEventListener('click', () => {
+            openProgressModal();
+            simulateProgress();
+        });
+
+        scenarioBtns.forEach(btn => {
+            btn.addEventListener('click', () => openResultModal(btn.dataset.scenario));
+        });
+        
+        closeBtns.forEach(btn => btn.addEventListener('click', closeResultModal));
+        resultModal.addEventListener('click', (e) => (e.target === resultModal) && closeResultModal());
+        document.addEventListener('keydown', (e) => (e.key === 'Escape') && closeResultModal());
+
+        downloadReportBtn.addEventListener('click', () => {
+            const btnText = downloadReportBtn.querySelector('.btn-text');
+            btnText.innerText = '正在准备...';
+            downloadReportBtn.disabled = true;
+            setTimeout(() => {
+                showToast();
+                btnText.innerText = '下载失败项并修改';
+                downloadReportBtn.disabled = false;
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full bg-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>平台管理后台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 自定义滚动条样式，提升细节质感 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; /* slate-100 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8; /* slate-400 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* slate-500 */
+        }
+        /* 保证iframe无边框，完美融入布局 */
+        iframe {
+            border: none;
+        }
+    </style>
+</head>
+<body class="h-full antialiased">
+    <div class="flex h-full">
+        <!-- 固定侧边导航栏 -->
+        <div class="flex flex-col w-64 bg-slate-900 text-slate-300">
+            <!-- Logo 和 品牌 -->
+            <div class="flex items-center justify-center h-16 border-b border-slate-800">
+                <svg class="h-8 w-8 text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.97-2.122L7.5 15.25v-1.007a3 3 0 0 1 .97-2.122L9 11.25m0 6a3 3 0 0 0 .97-2.122L10.5 15.25v-1.007a3 3 0 0 0-.97-2.122L9 11.25m0 0a3 3 0 0 1-3-3m0 0a3 3 0 0 1 3-3m0 0a3 3 0 0 1 3 3m0 0a3 3 0 0 1-3 3m-3.97 6.122A3 3 0 0 1 2.25 15.25v-1.007a3 3 0 0 1 .97-2.122L4.5 11.25m15 0a3 3 0 0 1 .97 2.122L21.75 15.25v1.007a3 3 0 0 1-.97 2.122L19.5 18.25m0-6.993a3 3 0 0 0-.97-2.122L18 8.25m0-3a3 3 0 0 0-3-3m0 0a3 3 0 0 0-3 3m0 0a3 3 0 0 0 3 3m0 0a3 3 0 0 0 3-3m-3 9a3 3 0 0 0-3 3m0 0a3 3 0 0 0 3 3m0 0a3 3 0 0 0 3-3m0 0a3 3 0 0 0-3-3" />
+                </svg>
+                <span class="ml-3 text-xl font-bold text-white">平台中心</span>
+            </div>
+
+            <!-- 导航菜单 -->
+            <nav class="flex-1 px-2 py-4 space-y-1" id="main-nav">
+                <a href="./dashboard.html" class="nav-item group flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-slate-700 hover:text-white">
+                    <svg class="mr-3 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25A2.25 2.25 0 0 1 13.5 8.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                    </svg>
+                    仪表盘
+                </a>
+                <a href="./tenant-management.html" class="nav-item group active flex items-center px-2 py-2 text-sm font-medium rounded-md bg-slate-800 text-white">
+                    <svg class="mr-3 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 7.125A2.25 2.25 0 0 1 4.5 4.875h15A2.25 2.25 0 0 1 21.75 7.125v4.875A2.25 2.25 0 0 1 19.5 14.25h-15A2.25 2.25 0 0 1 2.25 12V7.125ZM12 14.25v5.25m0 0-3-3m3 3 3-3" />
+                    </svg>
+                    租户管理
+                </a>
+                <a href="./user-management.html" class="nav-item group flex items-center px-2 py-2 text-sm font-medium rounded-md hover:bg-slate-700 hover:text-white">
+                    <svg class="mr-3 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372m7.5-3.372a9.38 9.38 0 0 0-2.625-.372M15 19.128v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75M15 19.128v1.5a3.375 3.375 0 0 1-3.375 3.375H9.75m-6.375-3.375a3.375 3.375 0 0 1-3.375-3.375v-1.5a3.375 3.375 0 0 1 3.375-3.375H9.75m-6.375 3.375a3.375 3.375 0 0 0 3.375 3.375H9.75m6.375-3.375a3.375 3.375 0 0 0-3.375-3.375H9.75m6.375 3.375a3.375 3.375 0 0 1 3.375 3.375v1.5a3.375 3.375 0 0 1-3.375 3.375H9.75" />
+                    </svg>
+                    用户管理
+                </a>
+            </nav>
+
+            <div class="flex-shrink-0 p-4 border-t border-slate-800">
+                <a href="#" class="flex-shrink-0 w-full group block">
+                    <div class="flex items-center">
+                        <div>
+                            <img class="inline-block h-10 w-10 rounded-full" src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2.5&w=256&h=256&q=80" alt="Admin Avatar">
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-white">陈晓明</p>
+                            <p class="text-xs font-medium text-slate-400 group-hover:text-slate-300">平台管理员</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <main class="flex-1">
+            <iframe id="content-frame" name="content-frame" src="./tenant-management.html" class="w-full h-full"></iframe>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const nav = document.getElementById('main-nav');
+            const navItems = nav.querySelectorAll('.nav-item');
+            const iframe = document.getElementById('content-frame');
+
+            // 默认激活第一个有效链接（非仪表盘）
+            const defaultActive = nav.querySelector('[href="./tenant-management.html"]');
+            if(defaultActive){
+                defaultActive.classList.add('active', 'bg-slate-800', 'text-white');
+                defaultActive.classList.remove('hover:bg-slate-700', 'hover:text-white', 'text-slate-300');
+            }
+
+
+            nav.addEventListener('click', function (e) {
+                // 使用事件委托，找到被点击的A标签
+                const link = e.target.closest('a.nav-item');
+                if (!link) return;
+                
+                // 阻止默认的页面跳转行为
+                e.preventDefault();
+
+                // 获取目标 URL
+                const url = link.getAttribute('href');
+                if (!url || url === '#') return;
+
+                // 更新 iframe 的 src
+                iframe.src = url;
+
+                // 更新导航项的激活状态
+                navItems.forEach(item => {
+                    item.classList.remove('active', 'bg-slate-800', 'text-white');
+                    item.classList.add('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+                });
+                
+                link.classList.add('active', 'bg-slate-800', 'text-white');
+                link.classList.remove('text-slate-300', 'hover:bg-slate-700', 'hover:text-white');
+            });
+        });
+    </script>
+</body>
+</html> 

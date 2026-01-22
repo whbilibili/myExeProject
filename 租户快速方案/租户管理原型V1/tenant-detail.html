@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>租户详情 - 运营后台</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 飞书设计系统 -->
+  <link rel="stylesheet" href="./assets/css/feishu-design.css">
+  
+  <style>
+    /* 页面头部 */
+    .detail-header {
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border-2);
+      padding: var(--spacing-4) var(--spacing-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-4);
+    }
+    
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      color: var(--text-2);
+      cursor: pointer;
+      transition: color var(--duration-fast);
+      padding: var(--spacing-2);
+      border-radius: var(--radius-medium);
+    }
+    
+    .back-btn:hover {
+      color: var(--primary-color);
+      background: var(--primary-lightest);
+    }
+    
+    .header-title {
+      font-size: var(--font-size-20);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: var(--spacing-3);
+    }
+    
+    /* 租户信息卡片 */
+    .tenant-info-card {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      padding: var(--spacing-6);
+      margin-bottom: var(--spacing-4);
+      box-shadow: var(--shadow-1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .tenant-main-info {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-5);
+      flex: 1;
+    }
+    
+    .tenant-logo-large {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-xlarge);
+      object-fit: cover;
+      border: 2px solid var(--border-2);
+      background: var(--fill-1);
+    }
+    
+    .tenant-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+    
+    .tenant-name-row {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+    
+    .tenant-name-large {
+      font-size: var(--font-size-24);
+      font-weight: var(--font-weight-semibold);
+      color: var(--text-1);
+    }
+    
+    .tenant-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-4);
+      flex-wrap: wrap;
+    }
+    
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      font-size: var(--font-size-13);
+      color: var(--text-2);
+    }
+    
+    .meta-label {
+      color: var(--text-3);
+    }
+    
+    .meta-value {
+      color: var(--text-1);
+      font-weight: var(--font-weight-medium);
+    }
+    
+    .tenant-description {
+      font-size: var(--font-size-13);
+      color: var(--text-3);
+      max-width: 600px;
+    }
+    
+    /* 标签页 */
+    .tabs-container {
+      background: var(--bg-1);
+      border-radius: var(--radius-large);
+      box-shadow: var(--shadow-1);
+      overflow: hidden;
+    }
+    
+    .tabs-header {
+      border-bottom: 1px solid var(--border-2);
+      padding: 0 var(--spacing-6);
+    }
+    
+    .tabs-content {
+      min-height: 600px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .tabs-content iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      min-height: 600px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <div class="page-container">
+      <!-- 页面头部 -->
+      <div class="detail-header">
+        <div class="header-left">
+          <div class="back-btn" @click="goBack">
+            <el-icon size="18"><ArrowLeft /></el-icon>
+            <span>返回</span>
+          </div>
+          <span class="header-title">租户详情</span>
+        </div>
+        <div class="header-actions">
+          <el-button
+            v-if="tenant.status === '正常' || tenant.status === '套餐到期'"
+            type="warning"
+            @click="handleDisable"
+          >
+            <el-icon><Lock /></el-icon>
+            禁用
+          </el-button>
+          <el-button
+            v-else
+            type="success"
+            @click="handleEnable"
+          >
+            <el-icon><Unlock /></el-icon>
+            启用
+          </el-button>
+          <el-button
+            type="danger"
+            @click="handleDeactivate"
+          >
+            <el-icon><Delete /></el-icon>
+            注销
+          </el-button>
+        </div>
+      </div>
+      
+      <!-- 页面内容 -->
+      <div class="page-content">
+        <!-- 租户信息卡片 -->
+        <div class="tenant-info-card">
+          <div class="tenant-main-info">
+            <img :src="tenant.logo" :alt="tenant.name" class="tenant-logo-large" />
+            <div class="tenant-details">
+              <div class="tenant-name-row">
+                <span class="tenant-name-large">{{ tenant.name }}</span>
+                <el-tag :type="getStatusType(tenant.status)" size="large">{{ tenant.status }}</el-tag>
+                <el-tag :type="getVersionType(tenant.version)">{{ tenant.version }}</el-tag>
+              </div>
+              <div class="tenant-meta">
+                <div class="meta-item">
+                  <span class="meta-label">租户ID:</span>
+                  <span class="meta-value" style="font-family: var(--font-family-mono);">{{ tenant.id }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">所有者:</span>
+                  <div class="user-info">
+                    <img :src="tenant.ownerAvatar" :alt="tenant.owner" class="avatar avatar-small" />
+                    <span class="user-name">{{ tenant.owner }}</span>
+                  </div>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">成员数:</span>
+                  <span class="meta-value">{{ formatNumber(tenant.memberCount) }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">创建时间:</span>
+                  <span class="meta-value">{{ formatDateTime(tenant.createTime) }}</span>
+                </div>
+                <div class="meta-item" v-if="tenant.expireDate">
+                  <span class="meta-label">到期时间:</span>
+                  <span class="meta-value">{{ formatDate(tenant.expireDate) }}</span>
+                </div>
+              </div>
+              <div class="tenant-description" v-if="tenant.description">
+                {{ tenant.description }}
+              </div>
+            </div>
+          </div>
+          <el-button @click="showEditDrawer = true">
+            <el-icon><Edit /></el-icon>
+            编辑
+          </el-button>
+        </div>
+        
+        <!-- 标签页 -->
+        <div class="tabs-container">
+          <div class="tabs-header">
+            <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+              <el-tab-pane label="数据总览" name="dashboard" />
+              <el-tab-pane label="成员与部门" name="members" />
+              <el-tab-pane label="权限管理" name="permissions" />
+              <el-tab-pane label="订阅与配额" name="subscription" />
+              <el-tab-pane label="资源消耗账单" name="billing" />
+              <el-tab-pane label="租户付费记录" name="payment" />
+              <el-tab-pane label="资产明细" name="assets" />
+            </el-tabs>
+          </div>
+          <div class="tabs-content">
+            <iframe
+              :src="iframeSrc"
+              frameborder="0"
+              @load="handleIframeLoad"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 编辑租户抽屉 -->
+    <el-drawer
+      v-model="showEditDrawer"
+      title="编辑租户信息"
+      size="500px"
+      :close-on-click-modal="false"
+    >
+      <el-form :model="editForm" label-width="100px">
+        <el-form-item label="租户头像">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <img :src="editForm.logo" alt="租户Logo" style="width: 60px; height: 60px; border-radius: 8px; border: 1px solid var(--border-2);" />
+            <el-button size="small">更换头像</el-button>
+          </div>
+        </el-form-item>
+        
+        <el-form-item label="租户名称">
+          <el-input v-model="editForm.name" placeholder="请输入租户名称" />
+        </el-form-item>
+        
+        <el-form-item label="租户描述">
+          <el-input
+            v-model="editForm.description"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入租户描述"
+          />
+        </el-form-item>
+        
+        <el-form-item label="所有者">
+          <el-select v-model="editForm.owner" filterable placeholder="请选择所有者" style="width: 100%;">
+            <el-option
+              v-for="member in mockMembers"
+              :key="member.id"
+              :label="member.name"
+              :value="member.name"
+            >
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <img :src="member.avatar" :alt="member.name" style="width: 24px; height: 24px; border-radius: 50%;" />
+                <span>{{ member.name }}</span>
+              </div>
+            </el-option>
+          </el-select>
+          <div style="margin-top: 8px; font-size: 12px; color: var(--text-3);">
+            修改所有者后，原所有者将自动变为租户管理员
+          </div>
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <div style="display: flex; gap: 12px;">
+          <el-button @click="showEditDrawer = false">取消</el-button>
+          <el-button type="primary" @click="handleSaveEdit">保存</el-button>
+        </div>
+      </template>
+    </el-drawer>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.1.0/dist/index.iife.min.js"></script>
+  
+  <!-- Mock数据 -->
+  <script src="./assets/js/mock-data.js"></script>
+  <!-- 工具函数 -->
+  <script src="./assets/js/utils.js"></script>
+  
+  <script>
+    const { createApp, ref, computed, onMounted, watch } = Vue;
+    const { ElMessage, ElMessageBox } = ElementPlus;
+    
+    const app = createApp({
+      setup() {
+        // 获取租户ID
+        const tenantId = Utils.getUrlParam('id') || 'T000001';
+        const initialTab = Utils.getUrlParam('tab') || 'dashboard';
+        
+        // 数据
+        const tenant = ref(MockData.tenants.find(t => t.id === tenantId) || MockData.tenants[0]);
+        const activeTab = ref(initialTab);
+        const showEditDrawer = ref(false);
+        const mockMembers = ref(MockData.members.slice(0, 20));
+        
+        // 编辑表单
+        const editForm = ref({
+          logo: tenant.value.logo,
+          name: tenant.value.name,
+          description: tenant.value.description,
+          owner: tenant.value.owner,
+        });
+        
+        // iframe src
+        const iframeSrc = computed(() => {
+          return `./pages/${activeTab.value}.html?tenantId=${tenantId}`;
+        });
+        
+        // 方法
+        const formatNumber = (num) => Utils.formatNumber(num);
+        const formatDate = (date) => Utils.formatDate(date);
+        const formatDateTime = (date) => Utils.formatDateTime(date);
+        const getStatusType = (status) => Utils.getStatusType(status);
+        const getVersionType = (version) => Utils.getVersionType(version);
+        
+        const goBack = () => {
+          window.location.href = 'index.html';
+        };
+        
+        const handleTabChange = (tabName) => {
+          Utils.setUrlParam('tab', tabName);
+        };
+        
+        const handleIframeLoad = () => {
+          // iframe加载完成
+        };
+        
+        const handleDisable = async () => {
+          const confirmed = await Utils.confirmAction(
+            `确定要禁用租户"${tenant.value.name}"吗？禁用后该租户将无法使用平台功能。`,
+            '禁用租户'
+          );
+          
+          if (confirmed) {
+            tenant.value.status = '已禁用';
+            Utils.showSuccess('租户已禁用');
+          }
+        };
+        
+        const handleEnable = async () => {
+          const confirmed = await Utils.confirmAction(
+            `确定要启用租户"${tenant.value.name}"吗？`,
+            '启用租户'
+          );
+          
+          if (confirmed) {
+            if (tenant.value.version === '试用版' || (tenant.value.expireDate && new Date(tenant.value.expireDate) > new Date())) {
+              tenant.value.status = '正常';
+            } else {
+              tenant.value.status = '套餐到期';
+            }
+            Utils.showSuccess('租户已启用');
+          }
+        };
+        
+        const handleDeactivate = async () => {
+          const confirmed = await Utils.confirmWithInput(
+            `您即将注销租户"${tenant.value.name}"。<br>注销后，该租户的所有数据将被永久删除，此操作不可恢复！`,
+            '确认注销',
+            '危险操作'
+          );
+          
+          if (confirmed) {
+            Utils.showSuccess('租户已注销');
+            setTimeout(() => {
+              window.location.href = 'index.html';
+            }, 1500);
+          }
+        };
+        
+        const handleSaveEdit = async () => {
+          // 检查所有者是否修改
+          if (editForm.value.owner !== tenant.value.owner) {
+            const confirmed = await Utils.confirmAction(
+              `修改所有者后，原所有者"${tenant.value.owner}"将自动变为租户管理员。是否确认修改？`,
+              '确认修改所有者'
+            );
+            
+            if (!confirmed) {
+              return;
+            }
+          }
+          
+          // 保存修改
+          tenant.value.name = editForm.value.name;
+          tenant.value.description = editForm.value.description;
+          tenant.value.owner = editForm.value.owner;
+          tenant.value.logo = editForm.value.logo;
+          
+          showEditDrawer.value = false;
+          Utils.showSuccess('保存成功');
+        };
+        
+        // 监听编辑抽屉打开，重置表单
+        watch(showEditDrawer, (val) => {
+          if (val) {
+            editForm.value = {
+              logo: tenant.value.logo,
+              name: tenant.value.name,
+              description: tenant.value.description,
+              owner: tenant.value.owner,
+            };
+          }
+        });
+        
+        return {
+          tenant,
+          activeTab,
+          showEditDrawer,
+          editForm,
+          mockMembers,
+          iframeSrc,
+          formatNumber,
+          formatDate,
+          formatDateTime,
+          getStatusType,
+          getVersionType,
+          goBack,
+          handleTabChange,
+          handleIframeLoad,
+          handleDisable,
+          handleEnable,
+          handleDeactivate,
+          handleSaveEdit,
+        };
+      },
+    });
+    
+    // 注册图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    
+    app.use(ElementPlus);
+    app.mount('#app');
+  </script>
+</body>
+</html>
+

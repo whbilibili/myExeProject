@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据总览</title>
+  
+  <!-- Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus@2.4.4/dist/index.css">
+  
+  <!-- 自定义CSS -->
+  <link rel="stylesheet" href="../assets/css/feishu-design.css">
+  
+  <style>
+    body {
+      margin: 0;
+      padding: var(--space-6);
+    }
+
+    .page-header {
+      margin-bottom: var(--space-6);
+    }
+
+    .page-tip {
+      background: var(--bg-primary);
+      border-left: 3px solid var(--primary-color);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: var(--font-size-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+    }
+
+    .filter-bar-inline {
+      background: var(--bg-white);
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-base);
+      display: flex;
+      gap: var(--space-4);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: var(--font-size-sm);
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .section-title {
+      font-size: var(--font-size-xl);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .chart-full {
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 1400px) {
+      .metrics-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    /* 控件统一宽度 */
+    .filter-bar-inline .el-select { width: 240px; }
+    .filter-bar-inline .el-date-editor { width: 420px; }
+    .filter-bar-inline .el-input { width: 280px; }
+    .filter-bar-inline .el-radio-group { padding: 4px; background: var(--bg-gray-1); border-radius: var(--radius-md); }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 页面头部 -->
+    <div class="page-header">
+      <div class="page-tip">
+        <el-icon color="var(--primary-color)"><el-icon-info-filled /></el-icon>
+        <span>本页所有数据均受"时间范围"和"租户"筛选器影响。用于快速了解用户在选定条件下的核心价值、消费模式和创造能力。</span>
+      </div>
+
+      <div class="filter-bar-inline">
+        <span class="filter-label">时间范围：</span>
+        <el-radio-group v-model="filters.timeRange" size="small" @change="handleFilterChange">
+          <el-radio-button value="7days">最近7天</el-radio-button>
+          <el-radio-button value="30days">最近30天</el-radio-button>
+          <el-radio-button value="90days">最近90天</el-radio-button>
+          <el-radio-button value="custom">自定义</el-radio-button>
+        </el-radio-group>
+
+        <el-date-picker
+          v-if="filters.timeRange === 'custom'"
+          v-model="filters.customRange"
+          type="daterange"
+          size="small"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          @change="handleFilterChange"
+        />
+
+        <span class="filter-label" style="margin-left: var(--space-4);">租户：</span>
+        <el-select
+          v-model="filters.tenants"
+          multiple
+          filterable
+          collapse-tags
+          collapse-tags-tooltip
+          placeholder="全部租户"
+          size="small"
+          style="min-width: 200px;"
+          @change="handleFilterChange"
+        >
+          <el-option
+            v-for="tenant in allTenants"
+            :key="tenant.value"
+            :label="tenant.label"
+            :value="tenant.value"
+          />
+        </el-select>
+      </div>
+    </div>
+
+    <!-- 模块一：资产与使用总览 -->
+    <div class="mb-6">
+      <h2 class="section-title">
+        <el-icon color="var(--primary-color)"><el-icon-box /></el-icon>
+        资产与使用总览
+        <el-tooltip content="指在选定时间范围内，该用户创建的各类资产的数量和使用情况。">
+          <span class="tooltip-icon">i</span>
+        </el-tooltip>
+      </h2>
+
+      <div class="metrics-grid">
+        <!-- 资产创建总数 -->
+        <div class="metric-card">
+          <div class="metric-label">
+            智能体总数
+          </div>
+          <div class="metric-value">
+            {{ assetStats.agentCount }}<span class="metric-unit">个</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">
+            工作流总数
+          </div>
+          <div class="metric-value">
+            {{ assetStats.workflowCount }}<span class="metric-unit">个</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">
+            工具总数
+          </div>
+          <div class="metric-value">
+            {{ assetStats.toolCount }}<span class="metric-unit">个</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">
+            工具库总数
+          </div>
+          <div class="metric-value">
+            {{ assetStats.toolLibCount }}<span class="metric-unit">个</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">
+            知识库总数
+          </div>
+          <div class="metric-value">
+            {{ assetStats.knowledgeBaseCount }}<span class="metric-unit">个</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">
+            空间总数
+          </div>
+          <div class="metric-value">
+            {{ assetStats.spaceCount }}<span class="metric-unit">个</span>
+          </div>
+        </div>
+
+        <!-- 核心资产活跃度 -->
+        <div class="metric-card">
+          <div class="metric-label">
+            智能体总运行次数
+            <el-tooltip content="指在选定时间范围内，该用户创建的智能体被成功运行的总次数。">
+              <span class="tooltip-icon">i</span>
+            </el-tooltip>
+          </div>
+          <div class="metric-value">
+            {{ Utils.formatNumber(activityStats.agentRunCount) }}<span class="metric-unit">次</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">
+            智能体累积对话数
+            <el-tooltip content="累计产生的对话消息数（包含所有轮次）。">
+              <span class="tooltip-icon">i</span>
+            </el-tooltip>
+          </div>
+          <div class="metric-value">
+            {{ Utils.formatNumber(activityStats.agentConversationCount) }}<span class="metric-unit">条</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">
+            工作流总运行次数
+          </div>
+          <div class="metric-value">
+            {{ Utils.formatNumber(activityStats.workflowRunCount) }}<span class="metric-unit">次</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">
+            工作流运行成功率
+          </div>
+          <div class="metric-value" style="color: var(--success-color);">
+            {{ activityStats.workflowSuccessRate }}<span class="metric-unit">%</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">
+            工具总引用数
+            <el-tooltip content="指工具被其他资源（如智能体、工作流）调用的总次数。">
+              <span class="tooltip-icon">i</span>
+            </el-tooltip>
+          </div>
+          <div class="metric-value">
+            {{ Utils.formatNumber(activityStats.toolRefCount) }}<span class="metric-unit">次</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-label">
+            知识库总引用数
+          </div>
+          <div class="metric-value">
+            {{ Utils.formatNumber(activityStats.knowledgeBaseRefCount) }}<span class="metric-unit">次</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 模块二：积分总览 -->
+    <div class="mb-6">
+      <h2 class="section-title">
+        <el-icon color="var(--warning-color)"><el-icon-coin /></el-icon>
+        积分总览
+        <el-tooltip content="评估用户的总体成本和消费模式">
+          <span class="tooltip-icon">i</span>
+        </el-tooltip>
+      </h2>
+
+      <!-- 核心指标卡 -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">
+              积分总消耗
+              <el-tooltip content="指在选定时间范围和租户下，用户所有消耗行为产生的积分总和。">
+                <span class="tooltip-icon">i</span>
+              </el-tooltip>
+            </div>
+            <div class="stat-card-icon warning">
+              <el-icon><el-icon-coin /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ Utils.formatNumber(pointsStats.totalPoints) }}</div>
+          <div class="stat-card-trend">
+            Token + 设备 + 其他消耗
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">
+              Token消耗积分
+              <el-tooltip content="指在选定时间范围和租户下，仅因模型Token消耗所产生的积分部分。">
+                <span class="tooltip-icon">i</span>
+              </el-tooltip>
+            </div>
+            <div class="stat-card-icon primary">
+              <el-icon><el-icon-cpu /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ Utils.formatNumber(pointsStats.tokenPoints) }}</div>
+          <div class="stat-card-trend">
+            调用大语言模型产生
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-card-label">
+              设备抵扣积分
+              <el-tooltip content="指在选定时间范围和租户下，仅因设备时长抵扣所产生的积分部分。">
+                <span class="tooltip-icon">i</span>
+              </el-tooltip>
+            </div>
+            <div class="stat-card-icon success">
+              <el-icon><el-icon-monitor /></el-icon>
+            </div>
+          </div>
+          <div class="stat-card-value">{{ Utils.formatNumber(pointsStats.devicePoints) }}</div>
+          <div class="stat-card-trend">
+            云电脑 + 云手机抵扣
+          </div>
+        </div>
+      </div>
+
+      <!-- 图表组 -->
+      <div class="charts-grid">
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <div class="chart-title">
+              积分消耗趋势（Token积分 vs 设备积分）
+              <el-tooltip content="对比Token与设备产生的积分消耗趋势。">
+                <span class="tooltip-icon">i</span>
+              </el-tooltip>
+            </div>
+          </div>
+          <div id="chart-points-breakdown" class="chart-container"></div>
+        </div>
+
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <div class="chart-title">
+              积分消耗构成
+              <el-tooltip content="展示各类消费（Token、设备等）在总积分消耗中的占比。">
+                <span class="tooltip-icon">i</span>
+              </el-tooltip>
+            </div>
+          </div>
+          <div id="chart-points-composition" class="chart-container"></div>
+        </div>
+
+        <div class="chart-wrapper chart-full">
+          <div class="chart-header">
+            <div class="chart-title">
+              按模型积分消耗排行 (Top 20)
+              <el-tooltip content="展示消耗积分最多的前20个语言模型，用于定位主要成本来源。">
+                <span class="tooltip-icon">i</span>
+              </el-tooltip>
+            </div>
+          </div>
+          <div id="chart-model-ranking" class="chart-container"></div>
+        </div>
+
+        <div class="chart-wrapper">
+          <div class="chart-header">
+            <div class="chart-title">
+              按设备积分消耗分布
+              <el-tooltip content="对比云电脑和云手机分别产生的积分消耗。">
+                <span class="tooltip-icon">i</span>
+              </el-tooltip>
+            </div>
+          </div>
+          <div id="chart-device-distribution" class="chart-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 模块三：核心资源消耗分析 -->
+    <div class="mb-6">
+      <h2 class="section-title">
+        <el-icon color="var(--danger-color)"><el-icon-data-analysis /></el-icon>
+        核心资源消耗分析
+        <el-tooltip content="评估用户的成本结构">
+          <span class="tooltip-icon">i</span>
+        </el-tooltip>
+      </h2>
+
+      <!-- 子区域 A: Token 消耗分析 -->
+      <div class="mb-6">
+        <h3 style="font-size: var(--font-size-lg); font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-4);">
+          Token 消耗分析
+        </h3>
+
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div class="metric-card">
+            <div class="metric-label">
+              Token总消耗数
+              <el-tooltip content="在选定条件下，模型消耗的Token总数。">
+                <span class="tooltip-icon">i</span>
+              </el-tooltip>
+            </div>
+            <div class="metric-value">
+              {{ Utils.formatNumber(tokenStats.totalTokens) }}<span class="metric-unit"></span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-label">
+              总输入Token
+            </div>
+            <div class="metric-value">
+              {{ Utils.formatNumber(tokenStats.inputTokens) }}<span class="metric-unit"></span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-label">
+              总输出Token
+            </div>
+            <div class="metric-value">
+              {{ Utils.formatNumber(tokenStats.outputTokens) }}<span class="metric-unit"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <div class="chart-title">
+                Token消耗趋势（输入Token vs 输出Token）
+                <el-tooltip content="对比输入Token与输出Token的消耗趋势。">
+                  <span class="tooltip-icon">i</span>
+                </el-tooltip>
+              </div>
+            </div>
+            <div id="chart-token-io-trend" class="chart-container"></div>
+          </div>
+
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <div class="chart-title">
+                输入/输出Token构成
+                <el-tooltip content="展示输入Token和输出Token在总Token消耗量中的占比。">
+                  <span class="tooltip-icon">i</span>
+                </el-tooltip>
+              </div>
+            </div>
+            <div id="chart-token-composition" class="chart-container"></div>
+          </div>
+
+          <div class="chart-wrapper chart-full">
+            <div class="chart-header">
+              <div class="chart-title">
+                模型Token消耗分析
+                <el-tooltip content="展示Token用量最多的语言模型排行。">
+                  <span class="tooltip-icon">i</span>
+                </el-tooltip>
+              </div>
+            </div>
+            <div id="chart-model-token-analysis" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 子区域 B: 设备时长分析 -->
+      <div class="mb-6">
+        <h3 style="font-size: var(--font-size-lg); font-weight: 600; color: var(--text-primary); margin-bottom: var(--space-4);">
+          设备时长分析
+        </h3>
+
+        <div class="grid grid-cols-3 gap-4 mb-4">
+          <div class="metric-card">
+            <div class="metric-label">
+              总设备使用时长
+              <el-tooltip content="在选定条件下，用户使用云设备（云电脑+云手机）的总分钟数。">
+                <span class="tooltip-icon">i</span>
+              </el-tooltip>
+            </div>
+            <div class="metric-value">
+              {{ Utils.formatNumber(deviceStats.totalMinutes) }}<span class="metric-unit">分钟</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-label">
+              云电脑使用时长
+            </div>
+            <div class="metric-value">
+              {{ Utils.formatNumber(deviceStats.cloudPCMinutes) }}<span class="metric-unit">分钟</span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-label">
+              云手机使用时长
+            </div>
+            <div class="metric-value">
+              {{ Utils.formatNumber(deviceStats.cloudPhoneMinutes) }}<span class="metric-unit">分钟</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <div class="chart-title">
+                设备使用时长趋势
+                <el-tooltip content="对比每日/每周/每月云电脑和云手机的使用时长变化。">
+                  <span class="tooltip-icon">i</span>
+                </el-tooltip>
+              </div>
+            </div>
+            <div id="chart-device-time-trend" class="chart-container"></div>
+          </div>
+
+          <div class="chart-wrapper">
+            <div class="chart-header">
+              <div class="chart-title">
+                使用与抵扣趋势
+                <el-tooltip content="分析总使用时长与实际产生积分消耗的抵扣时长之间的关系，用于评估用户的付费转化情况。">
+                  <span class="tooltip-icon">i</span>
+                </el-tooltip>
+              </div>
+            </div>
+            <div id="chart-usage-deduction-trend" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3.3.11/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <script src="https://unpkg.com/element-plus@2.4.4/dist/index.full.js"></script>
+  <!-- Element Plus Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+  <!-- ECharts -->
+  <script src="https://unpkg.com/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <!-- 工具函数 -->
+  <script src="../assets/js/utils.js"></script>
+  <!-- Mock数据 -->
+  <script src="../assets/js/mock-data.js"></script>
+  <!-- 图表配置 -->
+  <script src="../assets/js/charts.js"></script>
+
+  <script>
+    const { createApp, ref, computed, onMounted } = Vue;
+
+    const app = createApp({
+      setup() {
+        const userId = ref('');
+        const allTenants = ref([]);
+        
+        const filters = ref({
+          timeRange: '30days',
+          customRange: null,
+          tenants: []
+        });
+
+        // 模拟数据
+        const assetStats = ref({
+          agentCount: 15,
+          workflowCount: 8,
+          toolCount: 32,
+          toolLibCount: 3,
+          knowledgeBaseCount: 10,
+          spaceCount: 2
+        });
+
+        const activityStats = ref({
+          agentRunCount: 25830,
+          agentConversationCount: 125678,
+          workflowRunCount: 1204,
+          workflowSuccessRate: 98.5,
+          toolRefCount: 512,
+          knowledgeBaseRefCount: 897
+        });
+
+        const pointsStats = ref({
+          totalPoints: 50000,
+          tokenPoints: 35000,
+          devicePoints: 15000
+        });
+
+        const tokenStats = ref({
+          totalTokens: 2345678,
+          inputTokens: 1500100,
+          outputTokens: 845578
+        });
+
+        const deviceStats = ref({
+          totalMinutes: 3000,
+          cloudPCMinutes: 2000,
+          cloudPhoneMinutes: 1000
+        });
+
+        const chartOptions = ref({
+          pointsTrend: {
+            timeUnit: 'day'
+          }
+        });
+
+        // 图表实例
+        let charts = {};
+
+        // 获取用户ID
+        const getUserId = () => {
+          const params = Utils.parseUrlParams();
+          return params.userId || '';
+        };
+
+        // 处理筛选变化
+        const handleFilterChange = () => {
+          console.log('筛选条件变化:', filters.value);
+          // 这里应该重新加载数据和更新图表
+          loadData();
+        };
+
+        // 加载数据
+        const loadData = () => {
+          userId.value = getUserId();
+          
+          // 加载租户列表
+          allTenants.value = MockData.getAllTenants();
+          
+          // 这里应该根据筛选条件加载实际数据
+          // 当前使用模拟数据
+        };
+
+        // 初始化图表
+        const initCharts = () => {
+          // 积分消耗趋势
+          charts.pointsBreakdown = ChartConfig.initChart(
+            'chart-points-breakdown',
+            ChartConfig.getPointsBreakdownTrendChart(MockData.chartData.pointsTrendBreakdown)
+          );
+
+          // 积分消耗构成
+          charts.pointsComposition = ChartConfig.initChart(
+            'chart-points-composition',
+            ChartConfig.getPointsCompositionChart(MockData.chartData.pointsComposition)
+          );
+
+          // 按模型积分消耗排行
+          charts.modelRanking = ChartConfig.initChart(
+            'chart-model-ranking',
+            ChartConfig.getModelRankingChart(MockData.chartData.modelRanking)
+          );
+
+          // 按设备积分消耗分布
+          charts.deviceDistribution = ChartConfig.initChart(
+            'chart-device-distribution',
+            ChartConfig.getDeviceDistributionChart(MockData.chartData.deviceDistribution)
+          );
+
+          // Token消耗趋势
+          charts.tokenIOTrend = ChartConfig.initChart(
+            'chart-token-io-trend',
+            ChartConfig.getTokenIOTrendChart(MockData.chartData.tokenIOTrend)
+          );
+
+          // 输入/输出Token构成
+          charts.tokenComposition = ChartConfig.initChart(
+            'chart-token-composition',
+            ChartConfig.getTokenCompositionChart(MockData.chartData.tokenComposition)
+          );
+
+          // 模型Token消耗分析
+          charts.modelTokenAnalysis = ChartConfig.initChart(
+            'chart-model-token-analysis',
+            ChartConfig.getModelTokenAnalysisChart(MockData.chartData.modelTokenAnalysis)
+          );
+
+          // 设备使用时长趋势
+          charts.deviceTimeTrend = ChartConfig.initChart(
+            'chart-device-time-trend',
+            ChartConfig.getDeviceTimeTrendChart(MockData.chartData.deviceTimeTrend)
+          );
+
+          // 使用与抵扣趋势
+          charts.usageDeductionTrend = ChartConfig.initChart(
+            'chart-usage-deduction-trend',
+            ChartConfig.getUsageDeductionTrendChart(MockData.chartData.usageDeductionTrend)
+          );
+        };
+
+        // 更新积分趋势图表
+        const updatePointsTrendChart = () => {
+          // 这里应该根据时间单位重新聚合数据
+          // 当前保持原数据
+        };
+
+        // 初始化
+        onMounted(() => {
+          loadData();
+          
+          // 延迟初始化图表，确保DOM已渲染
+          setTimeout(() => {
+            initCharts();
+          }, 100);
+        });
+
+        return {
+          filters,
+          allTenants,
+          assetStats,
+          activityStats,
+          pointsStats,
+          tokenStats,
+          deviceStats,
+          chartOptions,
+          handleFilterChange,
+          updatePointsTrendChart,
+          Utils
+        };
+      }
+    });
+    
+    // 注册Element Plus图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(`ElIcon${key}`, component);
+    }
+    
+    app.use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
+

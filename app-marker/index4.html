@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bots 应用市场</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for webkit browsers */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f8fafc; /* slate-50 */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* slate-300 */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* slate-400 */
+        }
+        [x-cloak] { display: none !important; }
+        
+        .focus-ring:focus-visible {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); /* blue-500 with opacity */
+        }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+    </style>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 custom-scrollbar font-sans antialiased" x-data="appMarketSpace()">
+
+    <!-- Main Content Area -->
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+
+        <!-- Page Header (Static) -->
+        <div class="mb-8" x-show="!viewingAppPackages">
+            <h1 class="text-3xl font-bold text-slate-800">应用市场</h1>
+            <p class="text-sm text-slate-600 mt-1">发现、管理并为司内应用贡献应用包。</p>
+        </div>
+        
+        <!-- Tabs Navigation and Search (Hidden when viewing app packages) -->
+        <div x-show="!viewingAppPackages">
+            <div class="border-b border-slate-200">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <template x-for="tabDefinition in tabDefinitions" :key="tabDefinition.id">
+                        <button @click="currentTab = tabDefinition.id"
+                                :class="currentTab === tabDefinition.id ? 'border-blue-600 text-blue-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'"
+                                class="whitespace-nowrap py-4 px-1 border-b-2 text-sm transition-all duration-150 ease-in-out focus-ring rounded-t-md">
+                            <span x-text="tabDefinition.name"></span>
+                            <span x-if="tabDefinition.id === 'myUploads' && myUploadedPackagesCount > 0"
+                                  x-text="'(' + myUploadedPackagesCount + ')'"
+                                  class="ml-1.5 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full"></span>
+                        </button>
+                    </template>
+                </nav>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="mt-6 mb-8">
+                <div class="relative">
+                    <input type="search" x-model="searchTerm" @input.debounce.300ms="filterCurrentView"
+                           class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm placeholder-slate-500 bg-white"
+                           :placeholder="currentSearchPlaceholder">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area based on Tab or App Details View -->
+        <div x-show="!isLoading">
+            <!--司内市场 (Internal Market) App Cards -->
+            <div x-show="currentTab === 'internalMarket' && !viewingAppPackages">
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <template x-for="app in displayedInternalApps" :key="app.id">
+                        <div @click="viewPackagesForApp(app.id)" class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col overflow-hidden border border-slate-200 cursor-pointer">
+                            <div class="p-6 flex-grow">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center space-x-4 flex-1 min-w-0">
+                                        <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl flex-shrink-0 border border-slate-200"
+                                             :class="getAppIconBgColor(app.baseName)"
+                                             x-text="app.baseName.charAt(0).toUpperCase()">
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <h3 class="text-md font-semibold text-slate-800 truncate" x-text="app.name" :title="app.name"></h3>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1"
+                                                  :class="getPlatformChipClass(app.platform)"
+                                                  x-text="app.platform"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-3 line-clamp-2 leading-relaxed" :title="app.description" x-text="truncateText(app.description, 80)"></p>
+                                <div class="text-xs text-slate-500 space-y-1">
+                                    <p><strong>最新版本:</strong> <span class="font-medium text-slate-700" x-text="getAppLatestVersion(app.id) || 'N/A'"></span></p>
+                                    <p><strong>最近更新:</strong> <span class="font-medium text-slate-700" x-text="getAppLastUpdateTime(app.id) || 'N/A'"></span></p>
+                                    <p><strong>创建者:</strong> <span class="font-medium text-slate-700" x-text="app.creator"></span></p>
+                                </div>
+                            </div>
+                            <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 text-right">
+                                <button class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                                    查看版本列表 &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                    <div x-show="displayedInternalApps.length === 0" class="col-span-full text-center py-16 text-slate-500">
+                        <svg class="mx-auto h-16 w-16 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" /></svg>
+                        <h3 class="text-lg font-medium text-slate-700">司内市场暂无应用</h3>
+                        <p class="text-sm">请等待管理员添加应用。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 司外市场 (External Market) App Cards -->
+            <div x-show="currentTab === 'externalMarket' && !viewingAppPackages">
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <template x-for="app in displayedExternalApps" :key="app.id">
+                        <div @click="viewPackagesForApp(app.id)" class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col overflow-hidden border border-slate-200 cursor-pointer">
+                            <div class="p-6 flex-grow">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center space-x-4 flex-1 min-w-0">
+                                         <div class="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl flex-shrink-0 border border-slate-200"
+                                             :class="getAppIconBgColor(app.baseName)"
+                                             x-text="app.baseName.charAt(0).toUpperCase()">
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <h3 class="text-md font-semibold text-slate-800 truncate" x-text="app.name" :title="app.name"></h3>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1"
+                                                  :class="getPlatformChipClass(app.platform)"
+                                                  x-text="app.platform"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-slate-600 mb-3 line-clamp-2 leading-relaxed" :title="app.description" x-text="truncateText(app.description, 80)"></p>
+                                <div class="text-xs text-slate-500 space-y-1">
+                                    <p><strong>最新版本:</strong> <span class="font-medium text-slate-700" x-text="getAppLatestVersion(app.id) || 'N/A'"></span></p>
+                                     <p><strong>来源:</strong> <span class="font-medium text-slate-700" x-text="app.creator"></span></p>
+                                </div>
+                            </div>
+                           <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 text-right">
+                                <button class="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                                    查看版本列表 &rarr;
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                    <div x-show="displayedExternalApps.length === 0" class="col-span-full text-center py-16 text-slate-500">
+                        <svg class="mx-auto h-16 w-16 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+                        <h3 class="text-lg font-medium text-slate-700">司外市场暂无应用</h3>
+                        <p class="text-sm">由官方引入的外部应用会在这里显示。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 我上传的包 (My Uploaded Packages) List -->
+            <div x-show="currentTab === 'myUploads' && !viewingAppPackages">
+                <div class="flex justify-end mb-6">
+                    <button @click="openUploadPackageModal(null)" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-colors duration-200 flex items-center text-sm focus-ring">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        上传新包
+                    </button>
+                </div>
+                <div class="bg-white shadow-lg rounded-xl border border-slate-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">归属应用</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">版本号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider max-w-xs">版本描述</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">PackageID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider max-w-sm">PackageURL</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">上传时间</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">状态</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            <template x-for="pkg in displayedMyUploadedPackages" :key="pkg.id">
+                                <tr class="hover:bg-slate-50 transition-colors duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <button @click="viewPackagesForApp(pkg.appId)" class="font-medium text-blue-600 hover:text-blue-700 hover:underline" x-text="getAppNameById(pkg.appId)"></button>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800" x-text="pkg.version"></td>
+                                    <td class="px-6 py-4 text-sm text-slate-600 max-w-xs"><div class="truncate" :title="pkg.description" x-text="truncateText(pkg.description, 60)"></div></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <div class="flex items-center space-x-1.5">
+                                            <span class="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded" x-text="truncateText(pkg.packageId, 20)" :title="pkg.packageId"></span>
+                                            <button @click="copyToClipboard(pkg.packageId)" title="复制PackageID" class="text-slate-400 hover:text-blue-500 transition-colors focus-ring rounded"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm max-w-sm">
+                                        <div class="flex items-center space-x-1.5">
+                                            <span class="font-mono text-xs text-slate-600 truncate" x-text="truncateText(pkg.packageUrl, 30)" :title="pkg.packageUrl"></span>
+                                            <button @click="copyToClipboard(pkg.packageUrl)" title="复制PackageURL" class="text-slate-400 hover:text-blue-500 transition-colors focus-ring rounded flex-shrink-0"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" x-text="formatDate(pkg.uploadTime)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                                              :class="pkg.isShared ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+                                              x-text="pkg.isShared ? '共享中' : '私有'">
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex items-center space-x-3">
+                                            <button @click="downloadPackage(pkg.packageUrl)" class="text-blue-600 hover:text-blue-700 focus-ring rounded p-0.5" title="下载"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+                                            <button @click="copyToClipboard(pkg.packageUrl)" class="text-blue-600 hover:text-blue-700 focus-ring rounded p-0.5" title="复制链接"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M8 4a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1zM2 8a1 1 0 011-1h8a1 1 0 110 2H3a1 1 0 01-1-1zm0 4a1 1 0 011-1h8a1 1 0 110 2H3a1 1 0 01-1-1zm6 4a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path fill-rule="evenodd" d="M12 2.25A2.25 2.25 0 009.75 0h-7.5A2.25 2.25 0 000 2.25v15A2.25 2.25 0 002.25 20h7.5A2.25 2.25 0 0012 17.75V16h5.25A2.25 2.25 0 0019.5 13.75v-7.5A2.25 2.25 0 0017.25 4H12V2.25zM11.5 17.75a.75.75 0 00.75-.75V4.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h7.5zM18 13.75a.75.75 0 00-.75-.75H12v1.25c0 .414.336.75.75.75h5.25V16a.75.75 0 00.75-.75v-1.5z" clip-rule="evenodd" /></svg></button>
+                                            <button @click="openEditPackageModal(pkg.id)" class="text-amber-600 hover:text-amber-700 focus-ring rounded p-0.5" title="编辑"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                                            <button @click="pkg.isShared ? confirmTogglePackageShare(pkg.id, false) : confirmTogglePackageShare(pkg.id, true)" 
+                                                    :class="pkg.isShared ? 'text-orange-600 hover:text-orange-700' : 'text-emerald-600 hover:text-emerald-700'"
+                                                    class="focus-ring rounded p-0.5" :title="pkg.isShared ? '设为私有' : '共享到司内'">
+                                                <svg x-show="pkg.isShared" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C1.056 5.519 0 6.474 0 7.5C0 9.433 1.791 11 4 11C6.209 11 8 9.433 8 7.5C8 6.474 7.027 5.527 5.939 5.002A11.972 11.972 0 0110 1.944zM10 3.056A9.959 9.959 0 004.061 5.002C4.973 5.527 6 6.474 6 7.5C6 8.328 5.328 9 4.5 9H4C2.895 9 2 8.105 2 7c0-1.563.372-2.949 1-4.09A9.953 9.953 0 0010 3.056zM15 9.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" clip-rule="evenodd" /><path d="M20 7.5C20 6.474 18.944 5.519 17.834 5A11.954 11.954 0 0010 1.944A11.972 11.972 0 004.061 5.002C2.973 5.527 2 6.474 2 7.5C2 9.433 3.791 11 6 11C7.105 11 8 10.105 8 9V8.5A1.5 1.5 0 006.5 7H6V6.5A1.5 1.5 0 004.5 5H4c-.552 0-1 .448-1 1C3 7.209 3.791 8 5 8h.5A1.5 1.5 0 007 9.5V10c0 .391.108.758.293 1.073A8.002 8.002 0 0110 18c3.39 0 6.361-2.087 7.516-5.04A4.001 4.001 0 0020 7.5z" /></svg>
+                                                <svg x-show="!pkg.isShared" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                                            </button>
+                                            <button @click="confirmDeletePackage(pkg.id, pkg.appId)" class="text-red-600 hover:text-red-700 focus-ring rounded p-0.5" title="删除"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr x-show="displayedMyUploadedPackages.length === 0">
+                                <td colspan="8" class="px-6 py-16 text-center text-slate-500">
+                                    <svg class="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75h6.5m-6.5 3h6.5m-6.5 3h6.5m3-12.75l-3.75-3.75M17.25 3L21 6.75M17.25 3v3.75H13.5M6 20.25h12A2.25 2.25 0 0020.25 18V7.5A2.25 2.25 0 0018 5.25H6A2.25 2.25 0 003.75 7.5v10.5A2.25 2.25 0 006 20.25z" /></svg>
+                                    <p class="text-lg font-medium text-slate-700">您还没有上传任何包</p>
+                                    <p class="text-sm mt-1">点击右上角的 "上传新包" 开始贡献吧！</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- App Packages Detail View (for司内/司外 market apps) -->
+            <div x-show="viewingAppPackages" x-cloak>
+                <div class="mb-6">
+                    <button @click="viewingAppPackages = null; packageSearchTerm = ''; searchTerm = '';" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200 focus-ring rounded">
+                        <svg class="h-4 w-4 mr-1.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                        返回 <span x-text="viewingAppPackages && viewingAppPackages.type === 'internal' ? '司内市场' : (viewingAppPackages && viewingAppPackages.type === 'external' ? '司外市场' : '应用列表')"></span>
+                    </button>
+                </div>
+
+                <div class="bg-white shadow-lg rounded-xl border border-slate-200 p-6 mb-8">
+                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800" x-text="viewingAppPackages ? viewingAppPackages.name : ''"></h2>
+                            <p class="text-sm text-slate-600 mt-1" x-text="viewingAppPackages ? viewingAppPackages.description : ''"></p>
+                        </div>
+                        <div class="flex items-center gap-4 w-full sm:w-auto">
+                             <div class="relative flex-grow sm:flex-grow-0 sm:w-72">
+                                <input type="search" x-model="packageSearchTerm" @input.debounce.300ms="filterCurrentView"
+                                       class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm placeholder-slate-500 bg-white"
+                                       placeholder="搜索包版本、描述、PackageID、PackageURL...">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                                </div>
+                            </div>
+                            <div x-if="viewingAppPackages && viewingAppPackages.type === 'internal'">
+                                <button @click="openUploadPackageModal(viewingAppPackages.id)" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-colors duration-200 flex items-center text-sm focus-ring whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                                    为此应用上传包
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white shadow-lg rounded-xl border border-slate-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">版本号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider max-w-sm">包描述</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">PackageID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider max-w-sm">PackageURL</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">上传者</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">上传时间</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            <template x-for="pkg in displayedAppPackages" :key="pkg.id">
+                                <tr class="hover:bg-slate-50 transition-colors duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-800" x-text="pkg.version"></td>
+                                    <td class="px-6 py-4 text-sm text-slate-600 max-w-sm"><div class="truncate" :title="pkg.description" x-text="truncateText(pkg.description, 80)"></div></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <div class="flex items-center space-x-1.5">
+                                            <span class="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded" x-text="truncateText(pkg.packageId, 20)" :title="pkg.packageId"></span>
+                                            <button @click="copyToClipboard(pkg.packageId)" title="复制PackageID" class="text-slate-400 hover:text-blue-500 transition-colors focus-ring rounded"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm max-w-sm">
+                                        <div class="flex items-center space-x-1.5">
+                                            <span class="font-mono text-xs text-slate-600 truncate" x-text="truncateText(pkg.packageUrl, 30)" :title="pkg.packageUrl"></span>
+                                            <button @click="copyToClipboard(pkg.packageUrl)" title="复制PackageURL" class="text-slate-400 hover:text-blue-500 transition-colors focus-ring rounded flex-shrink-0"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600" x-text="pkg.uploaderDisplayName"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500" x-text="formatDate(pkg.uploadTime)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div class="flex items-center space-x-3">
+                                            <button @click="downloadPackage(pkg.packageUrl)" class="text-blue-600 hover:text-blue-700 focus-ring rounded p-0.5" title="下载"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+                                            <button @click="copyToClipboard(pkg.packageUrl)" class="text-blue-600 hover:text-blue-700 focus-ring rounded p-0.5" title="复制链接"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M8 4a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1zM2 8a1 1 0 011-1h8a1 1 0 110 2H3a1 1 0 01-1-1zm0 4a1 1 0 011-1h8a1 1 0 110 2H3a1 1 0 01-1-1zm6 4a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path fill-rule="evenodd" d="M12 2.25A2.25 2.25 0 009.75 0h-7.5A2.25 2.25 0 000 2.25v15A2.25 2.25 0 002.25 20h7.5A2.25 2.25 0 0012 17.75V16h5.25A2.25 2.25 0 0019.5 13.75v-7.5A2.25 2.25 0 0017.25 4H12V2.25zM11.5 17.75a.75.75 0 00.75-.75V4.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h7.5zM18 13.75a.75.75 0 00-.75-.75H12v1.25c0 .414.336.75.75.75h5.25V16a.75.75 0 00.75-.75v-1.5z" clip-rule="evenodd" /></svg></button>
+                                            <template x-if="viewingAppPackages && viewingAppPackages.type === 'internal' && (pkg.uploader === 'currentUser' || pkg.uploader === 'admin')"> <!-- Assuming 'admin' role for broader edits -->
+                                                <div class="flex items-center space-x-3">
+                                                    <button @click="openEditPackageModal(pkg.id)" class="text-amber-600 hover:text-amber-700 focus-ring rounded p-0.5" title="编辑"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button>
+                                                    <button @click="pkg.isShared ? confirmTogglePackageShare(pkg.id, false) : confirmTogglePackageShare(pkg.id, true)" 
+                                                            :class="pkg.isShared ? 'text-orange-600 hover:text-orange-700' : 'text-emerald-600 hover:text-emerald-700'"
+                                                            class="focus-ring rounded p-0.5" :title="pkg.isShared ? '设为私有' : '共享'">
+                                                        <svg x-show="pkg.isShared" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C1.056 5.519 0 6.474 0 7.5C0 9.433 1.791 11 4 11C6.209 11 8 9.433 8 7.5C8 6.474 7.027 5.527 5.939 5.002A11.972 11.972 0 0110 1.944zM10 3.056A9.959 9.959 0 004.061 5.002C4.973 5.527 6 6.474 6 7.5C6 8.328 5.328 9 4.5 9H4C2.895 9 2 8.105 2 7c0-1.563.372-2.949 1-4.09A9.953 9.953 0 0010 3.056zM15 9.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" clip-rule="evenodd" /><path d="M20 7.5C20 6.474 18.944 5.519 17.834 5A11.954 11.954 0 0010 1.944A11.972 11.972 0 004.061 5.002C2.973 5.527 2 6.474 2 7.5C2 9.433 3.791 11 6 11C7.105 11 8 10.105 8 9V8.5A1.5 1.5 0 006.5 7H6V6.5A1.5 1.5 0 004.5 5H4c-.552 0-1 .448-1 1C3 7.209 3.791 8 5 8h.5A1.5 1.5 0 007 9.5V10c0 .391.108.758.293 1.073A8.002 8.002 0 0110 18c3.39 0 6.361-2.087 7.516-5.04A4.001 4.001 0 0020 7.5z" /></svg>
+                                                        <svg x-show="!pkg.isShared" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                                                    </button>
+                                                    <button @click="confirmDeletePackage(pkg.id, pkg.appId)" class="text-red-600 hover:text-red-700 focus-ring rounded p-0.5" title="删除"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                            <tr x-show="displayedAppPackages.length === 0">
+                                <td :colspan="viewingAppPackages && viewingAppPackages.type === 'internal' ? 7 : 6" class="px-6 py-16 text-center text-slate-500"> <!-- Adjusted colspan -->
+                                   <svg class="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                    <p class="text-lg font-medium text-slate-700">此应用下暂无包</p>
+                                    <p class="text-sm mt-1" x-show="viewingAppPackages && viewingAppPackages.type === 'internal'">您可以为此应用上传第一个包。</p>
+                                    <p class="text-sm mt-1" x-show="viewingAppPackages && viewingAppPackages.type === 'external'">官方暂未提供包。</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading State -->
+        <div x-show="isLoading" class="py-16 text-center">
+            <div class="inline-flex items-center text-slate-500">
+                <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                正在加载应用市场数据...
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Upload New Package Modal -->
+    <div x-show="isUploadPackageModalOpen" x-cloak class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" @click.self="closeUploadPackageModal()" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar modal-content" @click.stop x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+            <div class="px-6 py-4 border-b border-slate-200 sticky top-0 bg-white z-10">
+                <h3 class="text-lg font-semibold text-slate-800">上传新包</h3>
+                <p class="text-sm text-slate-600 mt-0.5" x-show="newPackage.uploadContextAppId" x-text="'为应用: ' + getAppNameById(newPackage.uploadContextAppId)"></p>
+            </div>
+            <form @submit.prevent="handleUploadNewPackage" class="p-6">
+                <div class="space-y-5">
+                    <div x-show="!newPackage.uploadContextAppId">
+                        <label for="belongingApp" class="block text-sm font-medium text-slate-700 mb-1">归属应用 <span class="text-red-500">*</span></label>
+                        <select x-model="newPackage.appId" id="belongingApp" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm bg-white">
+                            <option value="">-- 请选择一个司内应用 --</option>
+                            <template x-for="app in allApps.filter(a => a.type === 'internal')" :key="app.id">
+                                <option :value="app.id" x-text="app.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="newPackageFile" class="block text-sm font-medium text-slate-700 mb-1">应用包文件 <span class="text-red-500">*</span></label>
+                        <input type="file" id="newPackageFile" @change="newPackage.file = $event.target.files[0]" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer focus-ring">
+                         <p x-show="newPackage.file" class="mt-1 text-xs text-slate-500" x-text="'已选择: ' + (newPackage.file ? newPackage.file.name : '')"></p>
+                    </div>
+                    <div>
+                        <label for="newPackageVersion" class="block text-sm font-medium text-slate-700 mb-1">版本号 <span class="text-red-500">*</span></label>
+                        <input type="text" x-model.trim="newPackage.version" id="newPackageVersion" placeholder="例如: 1.0.0 或 24.3.12" required class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm">
+                    </div>
+                    <div>
+                        <label for="newPackageDescription" class="block text-sm font-medium text-slate-700 mb-1">包描述</label>
+                        <textarea x-model="newPackage.description" id="newPackageDescription" rows="3" placeholder="简要说明此版本的更新内容或特性..." class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm resize-y"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">初始共享状态</label>
+                        <div class="flex space-x-6">
+                            <label class="flex items-center">
+                                <input type="radio" x-model="newPackage.isShared" :value="true" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">共享 (司内市场可见)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" x-model="newPackage.isShared" :value="false" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">私有 (仅自己可见)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                    <button type="button" @click="closeUploadPackageModal()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200 focus-ring">取消</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors duration-200 focus-ring">确认上传</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Package Modal -->
+    <div x-show="isEditPackageModalOpen" x-cloak class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" @click.self="isEditPackageModalOpen = false" x-transition...>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto custom-scrollbar modal-content" @click.stop x-transition...>
+            <div class="px-6 py-4 border-b border-slate-200 sticky top-0 bg-white z-10">
+                <h3 class="text-lg font-semibold text-slate-800">编辑包信息</h3>
+                <p class="text-sm text-slate-600 mt-0.5" x-show="editingPackage" x-text="'应用: ' + getAppNameById(editingPackage.appId) + ' - 版本: ' + editingPackage.version"></p>
+            </div>
+            <form @submit.prevent="handleUpdatePackageInfo" x-if="editingPackage" class="p-6">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">版本号</label>
+                        <input type="text" :value="editingPackage.version" disabled class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm bg-slate-100 text-slate-500 text-sm">
+                    </div>
+                    <div>
+                        <label for="editPackageDescription" class="block text-sm font-medium text-slate-700 mb-1">包描述</label>
+                        <textarea x-model="editingPackage.description" id="editPackageDescription" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus-ring text-sm resize-y"></textarea>
+                    </div>
+                    <div x-show="editingPackage.uploader === 'currentUser'"> 
+                        <label class="block text-sm font-medium text-slate-700 mb-2">共享状态</label>
+                        <div class="flex space-x-6">
+                            <label class="flex items-center">
+                                <input type="radio" x-model="editingPackage.isShared" :value="true" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">共享 (司内市场可见)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" x-model="editingPackage.isShared" :value="false" class="h-4 w-4 text-blue-600 border-slate-300 focus-ring">
+                                <span class="ml-2 text-sm text-slate-700">私有 (仅自己可见)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                    <button type="button" @click="isEditPackageModalOpen = false" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200 focus-ring">取消</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 transition-colors duration-200 focus-ring">保存更改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Generic Confirmation Modal -->
+    <div x-show="isConfirmModalOpen" x-cloak class="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4" @click.self="isConfirmModalOpen = false" x-transition...>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md modal-content" @click.stop x-transition...>
+            <div class="p-6 text-center">
+                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full" :class="confirmModalContent.iconBgClass || 'bg-red-100'">
+                    <svg :class="confirmModalContent.iconColorClass || 'text-red-600'" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" x-html="confirmModalContent.iconPath || '<path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z\' />'"></svg>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-800 mt-5" x-text="confirmModalContent.title"></h3>
+                <p class="text-sm text-slate-600 mt-2 mb-6" x-text="confirmModalContent.message"></p>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 rounded-b-xl">
+                <button type="button" @click="isConfirmModalOpen = false; if(confirmModalContent.onCancel) confirmModalContent.onCancel();" class="w-full sm:w-auto mt-2 sm:mt-0 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors duration-200 focus-ring">取消</button>
+                <button type="button" @click="confirmModalContent.onConfirm(); isConfirmModalOpen = false;"
+                        :class="confirmModalContent.confirmButtonClass || 'bg-red-600 hover:bg-red-700'"
+                        class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white border border-transparent rounded-lg transition-colors duration-200 focus-ring"
+                        x-text="confirmModalContent.confirmButtonText || '确认'"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div x-show="toast.show" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 transform translate-y-0 sm:scale-100" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 transform translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 transform translate-y-4 sm:translate-y-0 sm:scale-95" 
+        class="fixed bottom-5 right-5 bg-slate-800 text-white py-3 px-5 rounded-lg shadow-xl z-50 flex items-center space-x-3 max-w-xs sm:max-w-sm" role="alert">
+       <div x-show="toast.type === 'success'" class="text-green-400"><svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg></div>
+       <div x-show="toast.type === 'error'" class="text-red-400"><svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg></div>
+       <p class="text-sm font-medium" x-text="toast.message"></p>
+       <button @click="toast.show = false" class="text-slate-400 hover:text-slate-200 transition-colors -mr-1 p-1 rounded-full focus-ring"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+   </div>
+
+   <script>
+    function appMarketSpace() {
+        return {
+            // State
+            currentTab: 'internalMarket', // 'internalMarket', 'externalMarket', 'myUploads'
+            searchTerm: '',
+            packageSearchTerm: '', // Used when viewingAppPackages
+            isLoading: true,
+            allApps: [],        // All app containers (type: 'internal' or 'external')
+            allPackages: [],    // All packages for all apps
+
+            viewingAppPackages: null, // Stores the app object whose packages are being viewed
+
+            isUploadPackageModalOpen: false,
+            newPackage: { appId: '', uploadContextAppId: null, file: null, version: '', description: '', packageUrl: '', isShared: true },
+
+            isEditPackageModalOpen: false,
+            editingPackage: null, // Stores a copy of the package being edited
+
+            isConfirmModalOpen: false,
+            confirmModalContent: { title: '', message: '', onConfirm: () => {}, onCancel: () => {}, confirmButtonText: '确认', confirmButtonClass: 'bg-red-600 hover:bg-red-700', iconPath: '', iconBgClass: '', iconColorClass: '' },
+            
+            toast: { show: false, message: '', type: 'success' }, // type: 'success' or 'error'
+
+            // Initial Data & Setup
+            init() {
+                this.isLoading = true;
+                // Simulate API call
+                setTimeout(() => {
+                    this.allApps = [
+                        { id: 'app-im-1', baseName: '内部CRM', name: '内部CRM (Android)', platform: 'Android', type: 'internal', description: '公司内部客户关系管理系统，安卓专用版。', iconUrl: null, creator: 'Bots官方' },
+                        { id: 'app-im-2', baseName: 'HR助手', name: 'HR助手 (iOS)', platform: 'iOS', type: 'internal', description: '人力资源管理辅助工具，iOS平台。', iconUrl: null, creator: 'Bots官方' },
+                        { id: 'app-im-3', baseName: '项目看板', name: '项目看板 (HarmonyOS)', platform: 'HarmonyOS', type: 'internal', description: '项目进度跟踪与协作看板，鸿蒙OS版本。', iconUrl: null, creator: 'Bots官方' },
+                        { id: 'app-em-1', baseName: '飞书', name: '飞书 (Android)', platform: 'Android', type: 'external', description: '先进企业协作与管理平台，官方引入。', iconUrl: null, creator: 'Bots官方' },
+                        { id: 'app-em-2', baseName: 'Teams', name: 'Teams (iOS)', platform: 'iOS', type: 'external', description: '微软团队协作工具，iOS版本，官方引入。', iconUrl: null, creator: 'Bots官方' },
+                    ];
+                    this.allPackages = [
+                        // Packages for 内部CRM (Android)
+                        { id: 'pkg-crm-1', appId: 'app-im-1', version: '1.2.0', description: '修复登录bug，优化性能。', packageId: 'com.internal.crm.android.v120', packageUrl: 'https://example.com/pkg-crm-1.apk', uploader: 'official', uploaderDisplayName: 'Bots官方', uploadTime: '2023-10-15', isShared: true },
+                        { id: 'pkg-crm-2', appId: 'app-im-1', version: '1.1.5', description: '新增报表导出功能。', packageId: 'com.internal.crm.android.v115', packageUrl: 'https://s3plus.sankuai.com/rpa-bucket/20250220161350/%E7%BE%8E%E5%9B%A2_com.sankuai.meituan_12.29.204.apk', uploader: 'currentUser', uploaderDisplayName: '我', uploadTime: '2023-09-20', isShared: true },
+                        { id: 'pkg-crm-3', appId: 'app-im-1', version: '1.0.0', description: '测试专用，请勿在生产环境使用。', packageId: 'com.internal.crm.android.v100-test', packageUrl: 'https://example.com/pkg-crm-3-test.apk', uploader: 'currentUser', uploaderDisplayName: '我', uploadTime: '2023-08-01', isShared: false }, // Private package
+                        // Packages for HR助手 (iOS)
+                        { id: 'pkg-hr-1', appId: 'app-im-2', version: '2.0.1', description: 'UI界面全新改版。', packageId: 'com.internal.hr.ios.v201', packageUrl: 'https://example.com/pkg-hr-1.ipa', uploader: 'user123', uploaderDisplayName: '李四', uploadTime: '2023-11-01', isShared: true },
+                        // Packages for 飞书 (Android) - External
+                        { id: 'pkg-feishu-1', appId: 'app-em-1', version: '6.5.3', description: '官方最新稳定版。', packageId: 'com.larksuite.android.v653', packageUrl: 'https://example.com/pkg-feishu-1.apk', uploader: 'official', uploaderDisplayName: 'Bots官方', uploadTime: '2023-11-10', isShared: true },
+                         // Packages for 项目看板 (HarmonyOS)
+                        { id: 'pkg-kanban-1', appId: 'app-im-3', version: '1.0.0', description: '鸿蒙版首次发布。', packageId: 'com.internal.kanban.harmony.v100', packageUrl: 'https://example.com/pkg-kanban-1.hap', uploader: 'official', uploaderDisplayName: 'Bots官方', uploadTime: '2023-11-20', isShared: true },
+                    ];
+                    this.isLoading = false;
+                }, 800);
+            },
+
+            tabDefinitions: [
+                { id: 'internalMarket', name: '司内市场' },
+                { id: 'externalMarket', name: '司外市场' },
+                { id: 'myUploads', name: '我上传的包' },
+            ],
+            
+            get currentSearchPlaceholder() {
+                if (this.currentTab === 'myUploads') return '搜索包版本、描述、PackageID、PackageURL、归属应用...';
+                if (this.viewingAppPackages) return '搜索包版本、描述、PackageID、PackageURL...';
+                return '搜索应用名称、描述...';
+            },
+
+            // Computed Properties for display
+            get displayedInternalApps() {
+                const apps = this.allApps.filter(app => app.type === 'internal');
+                if (this.searchTerm.trim() === '') return apps;
+                const lowerSearch = this.searchTerm.toLowerCase();
+                return apps.filter(app => app.name.toLowerCase().includes(lowerSearch) || app.description.toLowerCase().includes(lowerSearch));
+            },
+            get displayedExternalApps() {
+                const apps = this.allApps.filter(app => app.type === 'external');
+                 if (this.searchTerm.trim() === '') return apps;
+                const lowerSearch = this.searchTerm.toLowerCase();
+                return apps.filter(app => app.name.toLowerCase().includes(lowerSearch) || app.description.toLowerCase().includes(lowerSearch));
+            },
+            get displayedMyUploadedPackages() {
+                const packages = this.allPackages.filter(pkg => pkg.uploader === 'currentUser');
+                if (this.searchTerm.trim() === '') return packages.sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+                const lowerSearch = this.searchTerm.toLowerCase();
+                return packages.filter(pkg => {
+                    const appName = this.getAppNameById(pkg.appId)?.toLowerCase() || '';
+                    return pkg.version.toLowerCase().includes(lowerSearch) ||
+                           pkg.description.toLowerCase().includes(lowerSearch) ||
+                           pkg.packageId.toLowerCase().includes(lowerSearch) ||
+                           (pkg.packageUrl && pkg.packageUrl.toLowerCase().includes(lowerSearch)) ||
+                           appName.includes(lowerSearch);
+                }).sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+            },
+            get myUploadedPackagesCount() {
+                 if (this.isLoading) return 0;
+                 return this.allPackages.filter(pkg => pkg.uploader === 'currentUser').length;
+            },
+             get displayedAppPackages() { 
+                if (!this.viewingAppPackages) return [];
+                let packages = this.allPackages.filter(pkg => pkg.appId === this.viewingAppPackages.id);
+                
+                if (this.viewingAppPackages.type === 'internal') {
+                    packages = packages.filter(pkg => pkg.isShared || pkg.uploader === 'currentUser' || pkg.uploader === 'official');
+                }
+
+                if (this.packageSearchTerm.trim() === '') return packages.sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime)); 
+                
+                const lowerSearch = this.packageSearchTerm.toLowerCase();
+                return packages.filter(pkg => 
+                    pkg.version.toLowerCase().includes(lowerSearch) ||
+                    pkg.description.toLowerCase().includes(lowerSearch) ||
+                    pkg.packageId.toLowerCase().includes(lowerSearch) ||
+                    (pkg.packageUrl && pkg.packageUrl.toLowerCase().includes(lowerSearch))
+                ).sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+            },
+
+            // Methods for App/Package data
+            getAppById(appId) {
+                return this.allApps.find(app => app.id === appId);
+            },
+            getAppNameById(appId) {
+                return this.getAppById(appId)?.name || '未知应用';
+            },
+            getPackagesForApp(appId) {
+                return this.allPackages.filter(pkg => pkg.appId === appId).sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
+            },
+            getAppLatestVersion(appId) {
+                const packages = this.getPackagesForApp(appId);
+                return packages.length > 0 ? packages[0].version : 'N/A'; 
+            },
+            getAppLastUpdateTime(appId) {
+                const packages = this.getPackagesForApp(appId);
+                return packages.length > 0 ? this.formatDate(packages[0].uploadTime) : 'N/A';
+            },
+
+            // UI Actions
+            filterCurrentView() { /* This will trigger reactivity of computed properties */ },
+            
+            viewPackagesForApp(appId) {
+                const app = this.getAppById(appId);
+                if (app) {
+                    this.viewingAppPackages = { ...app }; 
+                    this.packageSearchTerm = ''; 
+                }
+            },
+
+            // Modal: Upload New Package
+            openUploadPackageModal(contextAppId = null) { 
+                this.newPackage = { 
+                    appId: contextAppId || '', 
+                    uploadContextAppId: contextAppId,
+                    file: null, 
+                    version: '', 
+                    description: '', 
+                    packageUrl: '',
+                    isShared: true 
+                };
+                this.isUploadPackageModalOpen = true;
+            },
+            closeUploadPackageModal() {
+                this.isUploadPackageModalOpen = false;
+            },
+            handleUploadNewPackage() {
+                const targetAppId = this.newPackage.uploadContextAppId || this.newPackage.appId;
+                if (!targetAppId) { this.showToast('请选择一个归属应用。', 'error'); return; }
+                if (!this.newPackage.file) { this.showToast('请选择一个应用包文件。', 'error'); return; }
+                if (this.newPackage.version.trim() === '') { this.showToast('请输入版本号。', 'error'); return; }
+                if (this.newPackage.packageUrl.trim() === '') { this.showToast('请输入PackageURL。', 'error'); return;}
+                
+                try { new URL(this.newPackage.packageUrl.trim()); } catch (_) { this.showToast('请输入有效的PackageURL。', 'error'); return; }
+
+
+                const newPkg = {
+                    id: 'pkg-' + Date.now().toString(36) + Math.random().toString(36).substring(2),
+                    appId: targetAppId,
+                    version: this.newPackage.version.trim(),
+                    description: this.newPackage.description.trim(),
+                    packageId: `com.example.${this.getAppById(targetAppId).baseName.toLowerCase().replace(/\s+/g, '')}.${this.getAppById(targetAppId).platform.toLowerCase()}.v${this.newPackage.version.trim().replace(/\./g, '')}.${Date.now().toString(36).slice(-4)}`,
+                    packageUrl: `https://example.com/generated/${this.newPackage.file ? this.newPackage.file.name : 'package.file'}`, // Simulated auto-generated URL
+                    uploader: 'currentUser',
+                    uploaderDisplayName: '我',
+                    uploadTime: new Date().toISOString().split('T')[0],
+                    isShared: this.newPackage.isShared,
+                };
+                this.allPackages.unshift(newPkg); 
+                this.showToast(`包 "${newPkg.version}" 已成功上传至应用 "${this.getAppNameById(targetAppId)}"！`);
+                this.closeUploadPackageModal();
+                 if (this.viewingAppPackages && this.viewingAppPackages.id === targetAppId) { 
+                    this.viewPackagesForApp(targetAppId); 
+                }
+            },
+
+            // Modal: Edit Package
+            openEditPackageModal(packageId) {
+                const pkg = this.allPackages.find(p => p.id === packageId);
+                if (pkg && pkg.uploader === 'currentUser') { 
+                    this.editingPackage = JSON.parse(JSON.stringify(pkg)); 
+                    if (!this.editingPackage.packageUrl) this.editingPackage.packageUrl = ''; // Ensure field exists
+                    this.isEditPackageModalOpen = true;
+                } else if (pkg && this.viewingAppPackages && this.viewingAppPackages.type === 'internal' && pkg.uploader !== 'official' && pkg.uploader !== 'currentUser') {
+                     // Allow editing of non-official, non-currentUser packages in internal market IF the current user is considered an admin (not implemented here, but logic would go here)
+                     // For now, let's assume only uploader can edit for simplicity in this demo.
+                     // If extended admin rights are needed, the condition pkg.uploader === 'currentUser' would need to be expanded.
+                    this.showToast('您只能编辑自己上传的包。', 'error');
+                } else {
+                    this.showToast('无法编辑此包。', 'error');
+                }
+            },
+            handleUpdatePackageInfo() {
+                if (!this.editingPackage) return;
+                if (this.editingPackage.packageUrl.trim() === '') { this.showToast('请输入PackageURL。', 'error'); return; }
+                try { new URL(this.editingPackage.packageUrl.trim()); } catch (_) { this.showToast('请输入有效的PackageURL。', 'error'); return; }
+
+                const index = this.allPackages.findIndex(p => p.id === this.editingPackage.id);
+
+                // Check if user has permission to edit this package
+                const canEdit = (this.allPackages[index] && this.allPackages[index].uploader === 'currentUser') || 
+                                (this.viewingAppPackages && this.viewingAppPackages.type === 'internal'); // Simplified: allows editing if in internal market context
+
+                if (index !== -1 && canEdit) {
+                    this.allPackages[index].description = this.editingPackage.description.trim();
+                    this.allPackages[index].packageUrl = this.editingPackage.packageUrl.trim();
+                    // Only allow changing share status if the user is the original uploader of the package
+                    if (this.allPackages[index].uploader === 'currentUser') {
+                        this.allPackages[index].isShared = this.editingPackage.isShared;
+                    }
+                    this.showToast(`包 "${this.editingPackage.version}" 信息已更新。`);
+                    this.isEditPackageModalOpen = false;
+                    if (this.viewingAppPackages && this.viewingAppPackages.id === this.allPackages[index].appId) {
+                         this.viewPackagesForApp(this.allPackages[index].appId); 
+                    }
+                } else {
+                    this.showToast('更新失败或无权限。', 'error');
+                }
+                this.editingPackage = null;
+            },
+
+            // Modal: Confirm Actions (Delete, Share/Unshare)
+            confirmDeletePackage(packageId, appIdContext) {
+                const pkg = this.allPackages.find(p => p.id === packageId);
+                const canDelete = (pkg && pkg.uploader === 'currentUser') || 
+                                  (this.viewingAppPackages && this.viewingAppPackages.type === 'internal' && pkg && pkg.uploader !== 'official'); // Simplified: allows deleting non-official if in internal market context
+
+                if (!canDelete) {
+                    this.showToast('无权限删除此包。', 'error'); return;
+                }
+                this.confirmModalContent = {
+                    title: '删除包确认',
+                    message: `您确定要删除版本为 "${pkg.version}" 的包吗？此操作不可恢复。`,
+                    onConfirm: () => {
+                        this.allPackages = this.allPackages.filter(p => p.id !== packageId);
+                        this.showToast(`包 "${pkg.version}" 已删除。`);
+                        if (this.viewingAppPackages && this.viewingAppPackages.id === appIdContext) {
+                            this.viewPackagesForApp(appIdContext); 
+                        }
+                        if (this.currentTab === 'myUploads') {
+                            this.filterCurrentView(); 
+                        }
+                    },
+                    confirmButtonText: '确认删除',
+                    confirmButtonClass: 'bg-red-600 hover:bg-red-700 text-white',
+                    iconPath: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />',
+                    iconBgClass: 'bg-red-100',
+                    iconColorClass: 'text-red-600'
+                };
+                this.isConfirmModalOpen = true;
+            },
+            confirmTogglePackageShare(packageId, targetShareState) { 
+                 const pkg = this.allPackages.find(p => p.id === packageId);
+                 const canToggleShare = (pkg && pkg.uploader === 'currentUser') ||
+                                       (this.viewingAppPackages && this.viewingAppPackages.type === 'internal' && pkg && pkg.uploader !== 'official');
+
+                if (!canToggleShare) {
+                    this.showToast('无权限更改此包的共享状态。', 'error'); return;
+                }
+                this.confirmModalContent = {
+                    title: targetShareState ? '共享包确认' : '设为私有确认',
+                    message: `您确定要将此包 (${pkg.version}) ${targetShareState ? '共享到司内市场吗？其他用户将可见。' : '设为私有吗？其他用户将不可见。'}`,
+                    onConfirm: () => {
+                        const index = this.allPackages.findIndex(p => p.id === packageId);
+                        if (index !== -1) this.allPackages[index].isShared = targetShareState;
+                        this.showToast(`包 "${pkg.version}" 已${targetShareState ? '共享' : '设为私有'}。`);
+                         if (this.viewingAppPackages && this.viewingAppPackages.id === pkg.appId) {
+                            this.viewPackagesForApp(pkg.appId); 
+                        }
+                        if (this.currentTab === 'myUploads') {
+                            this.filterCurrentView(); 
+                        }
+                    },
+                    confirmButtonText: targetShareState ? '确认共享' : '设为私有',
+                    confirmButtonClass: targetShareState ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white',
+                    iconPath: targetShareState ? '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />' : '<path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />',
+                    iconBgClass: targetShareState ? 'bg-emerald-100' : 'bg-amber-100',
+                    iconColorClass: targetShareState ? 'text-emerald-600' : 'text-amber-600'
+                };
+                this.isConfirmModalOpen = true;
+            },
+
+            // Utility Methods
+            truncateText(text, maxLength) {
+                if (!text) return '';
+                if (text.length <= maxLength) return text;
+                return text.substring(0, maxLength) + '...';
+            },
+            formatDate(dateString) {
+                if (!dateString) return 'N/A';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '-');
+            },
+            copyToClipboard(text) {
+                if (!text) { this.showToast('内容为空，无法复制。', 'error'); return; }
+                navigator.clipboard.writeText(text).then(() => {
+                    this.showToast('已复制到剪贴板!', 'success');
+                }).catch(err => {
+                    this.showToast('复制失败: ' + err, 'error');
+                });
+            },
+            downloadPackage(url){
+                if(url && url.startsWith('http')) {
+                    this.showToast('开始下载包 (模拟)...', 'success');
+                    // In a real app: window.open(url, '_blank'); 
+                } else {
+                    this.showToast('无效的下载链接。', 'error');
+                }
+            },
+            showToast(message, type = 'success') {
+                this.toast.message = message;
+                this.toast.type = type;
+                this.toast.show = true;
+                setTimeout(() => {
+                    this.toast.show = false;
+                }, 3500);
+            },
+            getPlatformChipClass(platform) {
+                const map = {
+                    'Android': 'bg-green-100 text-green-700 border border-green-200',
+                    'iOS': 'bg-sky-100 text-sky-700 border border-sky-200', 
+                    'HarmonyOS': 'bg-purple-100 text-purple-700 border border-purple-200'
+                };
+                return map[platform] || 'bg-gray-100 text-gray-700 border border-gray-200';
+            },
+            getAppIconBgColor(appNameBase = '') { 
+                let hash = 0;
+                for (let i = 0; i < appNameBase.length; i++) {
+                    hash = appNameBase.charCodeAt(i) + ((hash << 5) - hash);
+                    hash = hash & hash; 
+                }
+                const colors = ['bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500', 'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-sky-500', 'bg-blue-500', 'bg-indigo-500', 'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500', 'bg-rose-500'];
+                return colors[Math.abs(hash) % colors.length];
+            }
+        }
+    }
+   </script>
+</body>
+</html>

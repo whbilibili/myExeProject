@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动态图表演示页面</title>
+    <!-- 引入Tailwind CSS以进行快速美化 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Apache ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <style>
+        /* 自定义一些基础样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        }
+        .chart-container {
+            width: 100%;
+            height: 400px;
+        }
+        .unit-switcher button.active {
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-8">
+        
+        <!-- 模块标题 -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">核心资源消耗分析</h1>
+            <p class="text-gray-500 mt-2">此页面动态演示了数据总览中的核心图表，特别是模型消耗分析的单位切换功能。</p>
+        </div>
+
+        <!-- 子区域标题 -->
+        <h2 class="text-2xl font-semibold text-gray-700 border-b-2 border-gray-200 pb-2 mb-6">Token 消耗分析</h2>
+        
+        <!-- 图表网格布局 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- 图表1: Token消耗趋势图 -->
+            <div class="bg-gray-50 p-6 rounded-xl shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Token 消耗趋势</h3>
+                <div id="trendChart" class="chart-container"></div>
+            </div>
+            
+            <!-- 图表2: 输入/输出Token构成 -->
+            <div class="bg-gray-50 p-6 rounded-xl shadow-sm">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">输入/输出Token构成</h3>
+                <div id="compositionChart" class="chart-container"></div>
+            </div>
+        </div>
+
+        <!-- 图表3: 模型消耗分析 (关键演示) -->
+        <div class="bg-gray-50 p-6 rounded-xl shadow-sm">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2 sm:mb-0">模型消耗分析</h3>
+                <!-- 单位切换控件 -->
+                <div class="unit-switcher flex items-center bg-gray-200 rounded-lg p-1 text-sm font-medium">
+                    <button id="unit-g" data-unit="g" class="px-3 py-1 rounded-md transition-all">个</button>
+                    <button id="unit-k" data-unit="k" class="px-3 py-1 rounded-md transition-all">千</button>
+                    <button id="unit-m" data-unit="m" class="px-3 py-1 rounded-md transition-all">百万</button>
+                </div>
+            </div>
+            <div id="modelConsumptionChart" class="chart-container"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 模拟数据 ---
+        const rawModelData = [
+            { name: 'GPT-4o', value: 18854321 },
+            { name: 'Claude 3 Sonnet', value: 12345678 },
+            { name: 'Llama3-70B', value: 8765432 },
+            { name: 'Gemini Pro', value: 4567890 },
+            { name: 'ERNIE Bot 4.0', value: 2345678 },
+            { name: 'GLM-4', value: 987654 },
+            { name: 'Kimi Chat', value: 765432 },
+            { name: 'Other Models', value: 456789 },
+        ];
+
+        // --- 1. 初始化Token消耗趋势图 (折线图) ---
+        const trendChart = echarts.init(document.getElementById('trendChart'));
+        trendChart.setOption({
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['输入Token', '输出Token'], top: 'bottom' },
+            grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+            },
+            yAxis: { type: 'value', name: 'Token数量' },
+            series: [
+                { name: '输入Token', type: 'line', smooth: true, data: [120000, 132000, 101000, 134000, 90000, 230000, 210000] },
+                { name: '输出Token', type: 'line', smooth: true, data: [80000, 92000, 71000, 94000, 60000, 150000, 140000] }
+            ]
+        });
+
+        // --- 2. 初始化输入/输出Token构成图 (饼图) ---
+        const totalInput = 1500100;
+        const totalOutput = 845578;
+        const compositionChart = echarts.init(document.getElementById('compositionChart'));
+        compositionChart.setOption({
+            tooltip: {
+                trigger: 'item',
+                // 优化：使用函数格式化，为数字添加千位分隔符，更易读
+                formatter: function(params) {
+                    // formatNumber是下面已有的一个函数
+                    return `${params.seriesName}<br/>${params.name}: ${formatNumber(params.value)} (${params.percent}%)`;
+                }
+            },
+            legend: { top: 'bottom' },
+            series: [{
+                name: 'Token构成',
+                type: 'pie',
+                radius: ['40%', '70%'],
+                avoidLabelOverlap: false,
+                label: { show: false, position: 'center' },
+                emphasis: { label: { show: true, fontSize: '20', fontWeight: 'bold' } },
+                labelLine: { show: false },
+                data: [
+                    { value: totalInput, name: '输入Token' },
+                    { value: totalOutput, name: '输出Token' }
+                ]
+            }]
+        });
+
+        // --- 3. 模型消耗分析图 (水平条形图) ---
+        const modelConsumptionChart = echarts.init(document.getElementById('modelConsumptionChart'));
+        const unitButtons = document.querySelectorAll('.unit-switcher button');
+        let currentUnit = 'g'; // 默认单位
+
+        // 数字格式化函数，添加千位分隔符
+        function formatNumber(num) {
+            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+        }
+
+        // 更新图表的函数
+        function updateModelChart(unit) {
+            currentUnit = unit;
+            
+            // 更新按钮激活状态
+            unitButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.unit === unit);
+            });
+            
+            let divisor = 1;
+            let unitName = '个';
+            let suffix = ' tokens';
+
+            if (unit === 'k') {
+                divisor = 1000;
+                unitName = '千';
+                suffix = ' k tokens';
+            } else if (unit === 'm') {
+                divisor = 1000000;
+                unitName = '百万';
+                suffix = ' M tokens';
+            }
+
+            const transformedData = rawModelData.map(item => ({
+                ...item,
+                displayValue: parseFloat((item.value / divisor).toFixed(2)) // 保留两位小数
+            }));
+
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    // 核心：自定义Tooltip格式
+                    formatter: function (params) {
+                        const data = params[0].data;
+                        let tooltipText = `${data.name}<br/>`;
+                        // 修复：之前这里错误地引用了不存在的 displayValue 字段。应使用 data.value 获取转换后的值。
+                        tooltipText += `<b>Token用量:</b> ${formatNumber(data.value)}${suffix}<br/>`;
+                        // 当单位不是'个'时，显示原始值
+                        if (unit !== 'g') {
+                            // 修复：之前这里错误地引用了 data.value。应使用 data.originalValue 获取原始值。
+                            tooltipText += `(原始值: ${formatNumber(data.originalValue)} tokens)`;
+                        }
+                        return tooltipText;
+                    }
+                },
+                grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+                xAxis: {
+                    type: 'value',
+                    // 核心：动态更新X轴标题
+                    name: `Token用量 (${unitName} token)`,
+                    nameLocation: 'middle',
+                    nameGap: 25,
+                    axisLabel: {
+                        formatter: `{value}${unit === 'k' ? 'k' : unit === 'm' ? 'M' : ''}`
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: transformedData.map(item => item.name).reverse() // ECharts条形图数据是反的
+                },
+                series: [{
+                    type: 'bar',
+                    // 核心：绑定转换后的数据
+                    data: transformedData.map(item => ({
+                        value: item.displayValue,
+                        name: item.name,
+                        // 把原始数据也绑定进去，方便tooltip使用
+                        originalValue: item.value 
+                    })).reverse(),
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: (params) => {
+                             return `${params.value}${unit === 'k' ? 'k' : unit === 'm' ? 'M' : ''}`;
+                        }
+                    },
+                     itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: '#83bff6' },
+                            { offset: 0.5, color: '#188df0' },
+                            { offset: 1, color: '#188df0' }
+                        ])
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                { offset: 0, color: '#2378f7' },
+                                { offset: 0.7, color: '#2378f7' },
+                                { offset: 1, color: '#83bff6' }
+                            ])
+                        }
+                    },
+                }]
+            };
+            
+            // 应用新的配置到图表
+            modelConsumptionChart.setOption(option);
+        }
+
+        // 添加按钮点击事件监听
+        unitButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                updateModelChart(button.dataset.unit);
+            });
+        });
+
+        // 智能选择默认单位并初次渲染
+        function initializeChart() {
+            const maxValue = Math.max(...rawModelData.map(d => d.value));
+            let defaultUnit = 'g';
+            if (maxValue >= 1000000) {
+                defaultUnit = 'm';
+            } else if (maxValue >= 1000) {
+                defaultUnit = 'k';
+            }
+            updateModelChart(defaultUnit);
+        }
+
+        initializeChart();
+
+
+        // 监听窗口大小变化，使图表自适应
+        window.addEventListener('resize', () => {
+            trendChart.resize();
+            compositionChart.resize();
+            modelConsumptionChart.resize();
+        });
+
+    </script>
+
+</body>
+</html>
+

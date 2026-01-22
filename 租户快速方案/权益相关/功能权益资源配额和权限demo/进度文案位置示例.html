@@ -1,0 +1,102 @@
+<!--
+ * @Author: wanghong52 wanghong52@meituan.com
+ * @Date: 2025-07-30 11:08:36
+ * @LastEditors: wanghong52 wanghong52@meituan.com
+ * @LastEditTime: 2025-07-30 11:14:05
+ * @FilePath: /租户快速方案/进度文案位置示例.html
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>进度百分比文案位置示例</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 细描边 + 轻阴影 */
+    .card {background:#fff;border:1px solid rgba(0,0,0,.06);
+           box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 8px rgba(0,0,0,.04);}
+    /* 进度条容器，方便做 relative 布局 */
+    .progress-wrap {position:relative;height:12px;border-radius:6px;
+                    background:#E5E7EB;overflow:hidden;}
+    .progress-inner {height:100%;background:#22C55E;width:30%;}
+    /* 内嵌文字 */
+    .progress-label-inside {position:absolute;right:4px;top:50%;
+                            transform:translateY(-50%);font-size:10px;
+                            color:#fff;font-weight:500;}
+    /* 上方文字 */
+    .progress-label-above {font-size:12px;color:#6B7280;}
+  </style>
+</head>
+
+<body class="bg-white text-gray-800">
+  <h1 class="text-2xl font-bold text-center py-8">进度百分比文案位置对比</h1>
+
+  <div class="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-8 px-6 pb-16">
+
+    <!-- A. 进度条右侧 -->
+    <div class="card rounded-xl p-6">
+      <h3 class="text-sm font-medium text-gray-500 mb-2">A. 百分比在右侧</h3>
+
+      <div class="flex items-center gap-2 mb-4">
+        <div class="flex-1 progress-wrap">
+          <div class="progress-inner"></div>
+        </div>
+        <span class="text-xs text-gray-500">30%</span>
+      </div>
+
+      <div class="flex justify-between text-sm">
+        <span>已使用：<b class="text-lg font-semibold">3059</b> 个</span>
+        <span>总量：<b class="text-lg font-semibold">9999</b> 个</span>
+      </div>
+    </div>
+
+    <!-- B. 百分比在进度条内部 -->
+    <div class="card rounded-xl p-6">
+      <h3 class="text-sm font-medium text-gray-500 mb-2">B. 百分比在进度条内部</h3>
+
+      <div class="progress-wrap mb-4">
+        <div class="progress-inner"></div>
+        <span class="progress-label-inside">30%</span>
+      </div>
+
+      <div class="flex justify-between text-sm">
+        <span>已使用：<b class="text-lg font-semibold">3059</b> 个</span>
+        <span>总量：<b class="text-lg font-semibold">9999</b> 个</span>
+      </div>
+    </div>
+
+    <!-- C. 百分比在进度条上方 -->
+    <div class="card rounded-xl p-6">
+      <h3 class="text-sm font-medium text-gray-500 mb-2">C. 百分比在进度条上方</h3>
+
+      <div class="flex justify-end mb-1">
+        <span class="progress-label-above">30%</span>
+      </div>
+      <div class="progress-wrap mb-4">
+        <div class="progress-inner"></div>
+      </div>
+
+      <div class="flex justify-between text-sm">
+        <span>已使用：<b class="text-lg font-semibold">3059</b> 个</span>
+        <span>总量：<b class="text-lg font-semibold">9999</b> 个</span>
+      </div>
+    </div>
+
+    <!-- D. 百分比写在已用/总量后 -->
+    <div class="card rounded-xl p-6">
+      <h3 class="text-sm font-medium text-gray-500 mb-2">D. 百分比在数据行</h3>
+
+      <div class="progress-wrap mb-4">
+        <div class="progress-inner"></div>
+      </div>
+
+      <div class="flex justify-between text-sm">
+        <span>已使用：<b class="text-lg font-semibold">3059</b> / 9999（30%）</span>
+        <span></span> <!-- 占位，保持左右对齐 -->
+      </div>
+    </div>
+
+  </div>
+</body>
+</html> 

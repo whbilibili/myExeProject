@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业设置 - Bots Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': {
+                            '50': '#eff6ff', '100': '#dbeafe', '200': '#bfdbfe', '300': '#93c5fd', '400': '#60a5fa',
+                            '500': '#3b82f6', '600': '#2563eb', '700': '#1d4ed8', '800': '#1e40af', '900': '#1e3a8a'
+                        },
+                        'slate': {
+                            '50': '#f8fafc', '100': '#f1f5f9', '200': '#e2e8f0', '300': '#cbd5e1', '400': '#94a3b8',
+                            '500': '#64748b', '600': '#475569', '700': '#334155', '800': '#1e293b', '900': '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://rsms.me/inter/inter.css');
+        html { font-family: 'Inter', sans-serif; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background-color: #64748b; }
+
+        .sidebar-link.active {
+            background-color: #1e3a8a; /* primary-900 */
+            color: #dbeafe; /* primary-100 */
+            font-weight: 600;
+        }
+        .sidebar-link.active i { color: #93c5fd; /* primary-300 */ }
+
+        .sidebar-link:not(.active):hover { background-color: #334155; /* slate-700 */ }
+
+        #content-frame { transition: opacity 0.3s ease-in-out; }
+        #content-frame.loading { opacity: 0.5; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-300">
+
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-800 flex flex-col border-r border-slate-700">
+            <!-- Logo -->
+            <div class="h-16 flex items-center px-6 border-b border-slate-700">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-building text-white text-sm"></i>
+                    </div>
+                    <span class="text-xl font-bold text-white">企业设置</span>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-4 space-y-2">
+                <a href="dashboard.html" class="sidebar-link active flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-home w-6 text-center text-slate-400"></i>
+                    <span class="ml-3 text-sm">企业概览</span>
+                </a>
+                <a href="members.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-users w-6 text-center text-slate-400"></i>
+                    <span class="ml-3 text-sm">成员与组织</span>
+                </a>
+
+                <a href="space_management.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-th-large w-6 text-center text-slate-400"></i>
+                    <span class="ml-3 text-sm">空间管理</span>
+                </a>
+                
+                <!-- NEW UNIFIED MENU ITEM -->
+                <a href="usage_and_authorization.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-sliders-h w-6 text-center text-slate-400"></i>
+                    <span class="ml-3 text-sm">用量与授权</span>
+                </a>
+                
+                <a href="tenant_equity.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-file-invoice-dollar w-6 text-center text-slate-400"></i>
+                    <span class="ml-3 text-sm">租户权益</span>
+                </a>
+
+                <a href="general.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-cog w-6 text-center text-slate-400"></i>
+                    <span class="ml-3 text-sm">通用设置</span>
+                </a>
+                <a href="security.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-shield-halved w-6 text-center text-slate-400"></i>
+                    <span class="ml-3 text-sm">安全中心</span>
+                </a>
+            </nav>
+
+            <!-- User Profile -->
+            <div class="p-4 border-t border-slate-700 space-y-3">
+                <div class="flex items-center">
+                    <img class="w-10 h-10 rounded-full object-cover" src="https://images.unsplash.com/photo-1579783483458-83d02161294e?w=100&h=100&fit=crop" alt="用户头像">
+                    <div class="ml-3">
+                        <p class="text-sm font-semibold text-white">张三</p>
+                        <p class="text-xs text-slate-400">租户管理员</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 bg-slate-900">
+            <iframe id="content-frame" name="content-frame" src="dashboard.html" class="w-full h-full border-none" onload="this.classList.remove('loading')"></iframe>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('.sidebar-link');
+            const iframe = document.getElementById('content-frame');
+
+            function handleLinkClick(e) {
+                e.preventDefault();
+                const link = e.currentTarget;
+                const url = link.getAttribute('href');
+
+                if (url && url !== '#') {
+                    iframe.classList.add('loading');
+                    iframe.src = url;
+                    links.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            }
+
+            links.forEach(link => {
+                link.addEventListener('click', handleLinkClick);
+            });
+
+            const currentSrc = iframe.getAttribute('src');
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentSrc) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
